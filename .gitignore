@@ -1,3 +1,15 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+*.VC.db
+*.VC.VC.opendb
+*.vcxproj
+*.user
+*.vcxproj.filters
+*.vcxproj.suo
+
 # Ignore folders
 **bin
 **.vs
