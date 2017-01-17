@@ -1,0 +1,4 @@
+Fix cmake
+Manual fix:
+Copy lib to build/externals/openvr/Debug
+Copy dll to build/bins
