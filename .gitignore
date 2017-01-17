@@ -5,10 +5,9 @@
 *.obj
 *.VC.db
 *.VC.VC.opendb
-*.vcxproj
-*.user
-*.vcxproj.filters
-*.vcxproj.suo
+#*.vcxproj
+#*.user
+#*.vcxproj.filters
 
 # Ignore folders
 **bin
