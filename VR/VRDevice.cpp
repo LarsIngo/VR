@@ -11,7 +11,7 @@ VRDevice::VRDevice()
 
 VRDevice::~VRDevice()
 {
-    Shutdown();
+    if (IsActive()) Shutdown();
 }
 
 bool VRDevice::Init()
@@ -54,10 +54,9 @@ bool VRDevice::IsActive()
 
 void VRDevice::Shutdown()
 {
+    vr::VR_Shutdown();
     mpHMD = nullptr;
     mpRenderModels = nullptr;
-    vr::VRCompositor()->ClearLastSubmittedFrame();
-    vr::VR_Shutdown();
 }
 
 void VRDevice::Update()
