@@ -1,5 +1,6 @@
 #include "Renderer.hpp"
 #include "DxAssert.hpp"
+#include <iostream>
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -76,11 +77,15 @@ void Renderer::Render(Scene& scene, Camera& camera) const
 
 void Renderer::Render(Scene& scene, VRDevice& hmd) const
 {
-    // Make sure to call WaitGetPoses() before Submit().
+    vr::EVRCompositorError eError;
+
     vr::Texture_t leftEyeTexture = { mHmdLeftTex, vr::TextureType_DirectX, vr::ColorSpace_Gamma };
-    DxAssert(vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture), vr::VRCompositorError_None);
+    eError = vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
+    if (eError != vr::VRCompositorError_None) std::cout << "HMD Err rendering left eye" << std::endl;
+
     vr::Texture_t rightEyeTexture = { mHmdRightTex, vr::TextureType_DirectX, vr::ColorSpace_Gamma };
-    DxAssert(vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture), vr::VRCompositorError_None);
+    eError = vr::VRCompositor()->Submit(vr::Eye_Left, &rightEyeTexture);
+    if (eError != vr::VRCompositorError_None) std::cout << "HMD Err rendering right eye" << std::endl;
 
     // Copy left eye texture to back buffer.
     D3D11_BOX box;

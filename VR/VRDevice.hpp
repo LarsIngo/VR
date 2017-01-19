@@ -4,7 +4,6 @@
 #include <openvr.h>
 #include <string>
 
-
 class VRDevice
 {
     private:

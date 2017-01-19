@@ -1,7 +1,5 @@
 #pragma once
 
-#define VR
-
 #define _CRTDBG_MAP_ALLOC
 #include <chrono>
 #include <crtdbg.h>
@@ -51,13 +49,11 @@ int main()
             camera.Update(20.f, dt, &renderer);
             
             // Renderer.
-            if (hmd.IsActive())
-            {
-                hmd.Update();
-                renderer.Render(scene, hmd); // Render hmd.
-            }
+            if (hmd.IsActive()) renderer.Render(scene, hmd); // Render hmd.
                 
             renderer.Render(scene, camera); // Render camera.
+
+            if (hmd.IsActive()) hmd.Update(); // Update hmd.
         }
     }
 
