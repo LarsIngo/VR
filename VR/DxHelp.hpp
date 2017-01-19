@@ -4,6 +4,7 @@
 #pragma comment(lib, "d3dcompiler.lib")
 #include <d3d11.h>
 #include <d3dcompiler.h>
+#include <string>
 
 #include "DxAssert.hpp"
 
@@ -59,6 +60,18 @@ namespace DxHelp
     // buffer Buffer to write.
     template <typename T>
     void WriteBuffer(ID3D11DeviceContext* deviceContext, T* data, unsigned int numOfElements, ID3D11Buffer* buffer);
+
+    // Create vertex shader.
+    // device D3D11 device.
+    // shaderPath Path to shader.
+    // shader Created shader.
+    void CreateVS(ID3D11Device* device, std::wstring& shaderPath, ID3D11VertexShader** shader);
+
+    // Create pixel shader.
+    // device D3D11 device.
+    // shaderPath Path to shader.
+    // shader Created shader.
+    void CreatePS(ID3D11Device* device, std::wstring& shaderPath, ID3D11PixelShader** shader);
 }
 
 template <typename T>
@@ -187,4 +200,78 @@ inline void DxHelp::WriteBuffer(ID3D11DeviceContext* deviceContext, T* data, uns
     DxAssert(deviceContext->Map(buffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mappedResource), S_OK);
     memcpy(mappedResource.pData, data, sizeof(T) * numOfElements);
     deviceContext->Unmap(buffer, 0);
+}
+
+inline void DxHelp::CreateVS(ID3D11Device* device, std::wstring& shaderPath, ID3D11VertexShader** shader)
+{
+    ID3DBlob* compiledShader = nullptr;
+    ID3DBlob* errorBlob = nullptr;
+    HRESULT hr = D3DCompileFromFile(
+        shaderPath.c_str(),
+        nullptr,
+        nullptr,
+        "main",	
+        "vs_5_0",
+        0,
+        0,
+        &compiledShader,
+        &errorBlob
+    );
+    if (FAILED(hr)) {
+        std::string errorMsg = (char*)errorBlob->GetBufferPointer();
+        OutputDebugStringA(errorMsg.c_str());
+        errorBlob->Release();
+    }
+
+    device->CreateVertexShader(
+        compiledShader->GetBufferPointer(),
+        compiledShader->GetBufferSize(),
+        NULL,
+        shader
+    );
+
+    //if (inputDesc != nullptr) {
+    //    // Create the input layout to go with our vertex shader (the layout is validated against
+    //    // the shader's input signature).
+    //    int inputLayoutSize = sizeOfInputDesc / sizeof(D3D11_INPUT_ELEMENT_DESC);
+    //    Core().device->CreateInputLayout(
+    //        inputDesc,
+    //        inputLayoutSize,
+    //        compiledShader->GetBufferPointer(),
+    //        compiledShader->GetBufferSize(),
+    //        inputLayout
+    //    );
+    //    compiledShader->Release();
+    //}
+    compiledShader->Release();
+}
+
+inline void DxHelp::CreatePS(ID3D11Device* device, std::wstring& shaderPath, ID3D11PixelShader** shader)
+{
+    ID3DBlob* compiledShader = nullptr;
+    ID3DBlob* errorBlob = nullptr;
+    HRESULT hr = D3DCompileFromFile(
+        shaderPath.c_str(),
+        nullptr,
+        nullptr,
+        "main",
+        "ps_5_0",
+        0,
+        0,
+        &compiledShader,
+        &errorBlob
+    );
+    if (FAILED(hr)) {
+        std::string errorMsg = (char*)errorBlob->GetBufferPointer();
+        OutputDebugStringA(errorMsg.c_str());
+        errorBlob->Release();
+    }
+
+    device->CreatePixelShader(
+        compiledShader->GetBufferPointer(),
+        compiledShader->GetBufferSize(),
+        NULL,
+        shader
+    );
+    compiledShader->Release();
 }

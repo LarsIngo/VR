@@ -45,15 +45,18 @@ int main()
             dt = static_cast<float>(newTime - lastTime)/1000.f;
             lastTime = newTime;
 
+            // VR.
+            if (hmd.IsActive())
+            {
+                hmd.Update();
+                renderer.Render(scene, hmd);
+            }   
             // Camera.
-            camera.Update(20.f, dt, &renderer);
-            
-            // Renderer.
-            if (hmd.IsActive()) renderer.Render(scene, hmd); // Render hmd.
-                
-            renderer.Render(scene, camera); // Render camera.
-
-            if (hmd.IsActive()) hmd.Update(); // Update hmd.
+            else
+            {
+                camera.Update(20.f, dt, &renderer);
+                renderer.Render(scene, camera);
+            }
         }
     }
 

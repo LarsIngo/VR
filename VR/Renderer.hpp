@@ -66,7 +66,6 @@ class Renderer
 
         // mWinWidth Window width in pixels.
         unsigned int mWinWidth;
-
         // mWinHeight Window height in pixels.
         unsigned int mWinHeight;
 
@@ -75,39 +74,43 @@ class Renderer
 
         // mHmdRenderWidth Hmd render target width in pixels.
         unsigned int mHmdRenderWidth;
-
         // mHmdRenderHeight Hmd render target height in pixels.
         unsigned int mHmdRenderHeight;
 
         // Window handle.
         HWND mHWND;
-
         // Window swap chain.
         IDXGISwapChain* mSwapChain;
 
         // DirectX device.
         ID3D11Device* mDevice;
-
         // DirectX device context.
         ID3D11DeviceContext* mDeviceContext;
 
         // Backbuffer texture.
         ID3D11Texture2D* mBackBufferTex;
-
         // Backbuffer render target view.
         ID3D11RenderTargetView* mBackBufferRTV;
 
         // VR left eye texture.
         ID3D11Texture2D* mHmdLeftTex;
-
         // VR right eye texture.
         ID3D11Texture2D* mHmdRightTex;
 
+        // VR left eye shader resource.
+        ID3D11ShaderResourceView* mHmdLeftSRV;
+        // VR right eye shader resource.
+        ID3D11ShaderResourceView* mHmdRightSRV;
+
         // VR left eye render target.
         ID3D11RenderTargetView* mHmdLeftRTV;
-
         // VR right eye render target.
         ID3D11RenderTargetView* mHmdRightRTV;
+
+        // Sceen quad vertex shader.
+        ID3D11VertexShader* mScreenQuadVS;
+        // Companion window pixel shader.
+        ID3D11PixelShader* mCompanionWindowPS;
 
     private:
         // Initialise HWND(window).
@@ -118,6 +121,9 @@ class Renderer
 
         // Initialise HMD(VR).
         void InitialiseHMD();
+
+        // Render companion window.
+        void RenderCompanionWindow() const;
 
         // Mouse position.
         glm::vec2 mMousePosition;

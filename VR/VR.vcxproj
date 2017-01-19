@@ -99,7 +99,8 @@
       <AdditionalLibraryDirectories>$(SolutionDir)externals\openvr\lib\win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y "$(SolutionDir)externals\openvr\bin\win32\openvr_api.dll" "$(OutputPath)openvr_api.dll"</Command>
+      <Command>echo f | xcopy "$(SolutionDir)externals\openvr\bin\win32\openvr_api.dll" "$(OutputPath)openvr_api.dll" /E /Y
+echo d | xcopy "$(ProjectDir)resources" "$(OutputPath)resources" /E /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -113,7 +114,8 @@
       <AdditionalLibraryDirectories>$(SolutionDir)externals\openvr\lib\win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>echo f | xcopy "$(SolutionDir)externals\openvr\bin\win64\openvr_api.dll" "$(OutputPath)openvr_api.dll" /E /Y</Command>
+      <Command>echo f | xcopy "$(SolutionDir)externals\openvr\bin\win64\openvr_api.dll" "$(OutputPath)openvr_api.dll" /E /Y
+echo d | xcopy "$(ProjectDir)resources" "$(OutputPath)resources" /E /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -131,7 +133,8 @@
       <AdditionalLibraryDirectories>$(SolutionDir)externals\openvr\lib\win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y "$(SolutionDir)externals\openvr\bin\win32\openvr_api.dll" "$(OutputPath)openvr_api.dll"</Command>
+      <Command>echo f | xcopy "$(SolutionDir)externals\openvr\bin\win32\openvr_api.dll" "$(OutputPath)openvr_api.dll" /E /Y
+echo d | xcopy "$(ProjectDir)resources" "$(OutputPath)resources" /E /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -149,7 +152,8 @@
       <AdditionalLibraryDirectories>$(SolutionDir)externals\openvr\lib\win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>echo f | xcopy "$(SolutionDir)externals\openvr\bin\win64\openvr_api.dll" "$(OutputPath)openvr_api.dll" /E /Y</Command>
+      <Command>echo f | xcopy "$(SolutionDir)externals\openvr\bin\win64\openvr_api.dll" "$(OutputPath)openvr_api.dll" /E /Y
+echo d | xcopy "$(ProjectDir)resources" "$(OutputPath)resources" /E /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -168,6 +172,14 @@
     <ClInclude Include="Renderer.hpp" />
     <ClInclude Include="Scene.hpp" />
     <ClInclude Include="VRDevice.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\shaders\CompanionWindow_PS.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="..\shaders\ScreenQuad_VS.hlsl">
+      <FileType>Document</FileType>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
