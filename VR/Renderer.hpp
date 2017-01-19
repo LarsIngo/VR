@@ -91,7 +91,10 @@ class Renderer
         // DirectX device context.
         ID3D11DeviceContext* mDeviceContext;
 
-        // Backbuffer. Used to render to window.
+        // Backbuffer texture.
+        ID3D11Texture2D* mBackBufferTex;
+
+        // Backbuffer render target view.
         ID3D11RenderTargetView* mBackBufferRTV;
 
         // VR left eye texture.

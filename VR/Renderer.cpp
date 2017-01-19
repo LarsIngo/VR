@@ -31,6 +31,7 @@ Renderer::~Renderer()
     mDeviceContext->Release();
     mSwapChain->Release();
     mBackBufferRTV->Release();
+    mBackBufferTex->Release();
     if (mHmdLeftTex != nullptr) mHmdLeftTex->Release();
     if (mHmdRightTex != nullptr) mHmdRightTex->Release();
     if (mHmdLeftRTV != nullptr) mHmdLeftRTV->Release();
@@ -70,8 +71,8 @@ void Renderer::Close()
 void Renderer::Render(Scene& scene, Camera& camera) const
 {
     // Clear render target.
-    float clrColor[4] = { 0.f, 0.2f, 0.f, 0.f };
-    mDeviceContext->ClearRenderTargetView(mBackBufferRTV, clrColor);
+    //float clrColor[4] = { 0.f, 0.2f, 0.f, 0.f };
+    //mDeviceContext->ClearRenderTargetView(mBackBufferRTV, clrColor);
 
     // Present to window.
     mSwapChain->Present(0, 0);
@@ -83,6 +84,8 @@ void Renderer::Render(Scene& scene, VRDevice& hmd) const
     vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
     vr::Texture_t rightEyeTexture = { (void*)mHmdRightTex, vr::TextureType_DirectX, vr::ColorSpace_Gamma };
     vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
+
+    mDeviceContext->CopyResource(mBackBufferTex, mHmdLeftTex);
 }
 
 bool Renderer::GetKeyPressed(int vKey)
@@ -221,10 +224,8 @@ void Renderer::InitialiseD3D()
     vp.TopLeftY = 0;
     mDeviceContext->RSSetViewports(1, &vp);
 
-    ID3D11Texture2D* backBuffer;
-    DxAssert(mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuffer)), S_OK);
-    DxAssert(mDevice->CreateRenderTargetView(backBuffer, nullptr, &mBackBufferRTV), S_OK);
-    backBuffer->Release();
+    DxAssert(mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&mBackBufferTex)), S_OK);
+    DxAssert(mDevice->CreateRenderTargetView(mBackBufferTex, nullptr, &mBackBufferRTV), S_OK);
 }
 
 void Renderer::InitialiseHMD()
@@ -238,7 +239,8 @@ void Renderer::InitialiseHMD()
     texDesc.MipLevels = 1;
     texDesc.ArraySize = 1;
     texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    //texDesc.SampleDesc
+    texDesc.SampleDesc.Count = 1;
+    texDesc.SampleDesc.Quality = 0;
     texDesc.Usage = D3D11_USAGE_DEFAULT;
     texDesc.BindFlags = D3D11_BIND_RENDER_TARGET;
     texDesc.CPUAccessFlags = 0;
