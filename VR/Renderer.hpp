@@ -11,9 +11,9 @@
 #include <vector>
 #include <Windows.h>
 
+#include "Camera.hpp"
 #include "Scene.hpp"
-
-class ParticleRenderer;
+#include "VRDevice.hpp"
 
 // Window call back procedure.
 static LRESULT CALLBACK WindowProcedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam);
@@ -23,9 +23,12 @@ class Renderer
 {
     public:
         // Constructor.
-        // mWidth Window width in pixels.
-        // mHeight Window height in pixels.
-        Renderer(unsigned int mWidth, unsigned int mHeight);
+        // winWidth Window width in pixels.
+        // winHeight Window height in pixels.
+        // fullscreen Whether to run window in fullscreen.
+        // hmdRenderWidth Hmd render target width in pixels.
+        // hmdRenderHeight Hmd render target height in pixels.
+        Renderer(unsigned int winWidth = 640, unsigned int winHeight = 640, bool fullscreen = false, unsigned int hmdRenderWidth = 0, unsigned int hmdRenderHeight = 0);
 
         // Destructor.
         ~Renderer();
@@ -38,7 +41,11 @@ class Renderer
 
         // Render scene.
         // scene Scene to render.
-        void Render(Scene& scene) const;
+        // camera Camera to render from.
+        void Render(Scene& scene, Camera& camera) const;
+        // scene Scene to render.
+        // hmd VrDevice to render from.
+        void Render(Scene& scene, VRDevice& hmd) const;
 
         // Get key status.
         // vKey Windows virtual key.
@@ -57,11 +64,20 @@ class Renderer
         // Return whether mouse left button is pressed or not.
         bool GetMouseLeftButtonPressed();
 
-        // mWidth Window width in pixels.
-        unsigned int mWidth;
+        // mWinWidth Window width in pixels.
+        unsigned int mWinWidth;
 
-        // mHeight Window height in pixels.
-        unsigned int mHeight;
+        // mWinHeight Window height in pixels.
+        unsigned int mWinHeight;
+
+        // mFullscreen Whether window is in fullscreen.
+        bool mFullscreen;
+
+        // mHmdRenderWidth Hmd render target width in pixels.
+        unsigned int mHmdRenderWidth;
+
+        // mHmdRenderHeight Hmd render target height in pixels.
+        unsigned int mHmdRenderHeight;
 
         // Window handle.
         HWND mHWND;
@@ -79,14 +95,17 @@ class Renderer
         ID3D11RenderTargetView* mBackBufferRTV = nullptr;
 
     private:
-        // Initialise window, device and device context.
-        void Initialise();
+        // Initialise HWND(window).
+        void InitialiseHWND();
+
+        // Initialise D3D(directX).
+        void InitialiseD3D();
+
+        // Initialise HMD(VR).
+        void InitialiseHMD();
 
         // Mouse position.
         glm::vec2 mMousePosition;
-
-        // Particle renderer used to renderer particles.
-        ParticleRenderer* mParticleRenderer;
 
         // Window should close.
         bool mClose;

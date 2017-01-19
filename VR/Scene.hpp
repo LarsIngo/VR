@@ -5,8 +5,6 @@
 #include <d3d11.h>
 #include <d3dcompiler.inl>
 
-#include "Camera.hpp"
-
 class Scene
 {
     public:
@@ -17,9 +15,6 @@ class Scene
 
         // Destructor.
         ~Scene();
-
-        // Camera.
-        Camera mCamera;
 
     private:
         ID3D11Device* mpDevice;

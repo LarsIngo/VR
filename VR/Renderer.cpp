@@ -3,12 +3,22 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-Renderer::Renderer(unsigned int width, unsigned int height) 
+Renderer::Renderer(unsigned int winWidth, unsigned int winHeight, bool fullscreen, unsigned int hmdRenderWidth, unsigned int hmdRenderHeight)
 {
-    mWidth = width;
-    mHeight = height;
+    mWinWidth = winWidth;
+    mWinHeight = winHeight;
+    mFullscreen = fullscreen;
+    mHmdRenderWidth = hmdRenderWidth;
+    mHmdRenderHeight = hmdRenderHeight;
     mClose = false;
-    Initialise();
+
+    // Window
+    InitialiseHWND();
+    // DirectX
+    InitialiseD3D();
+    // VR
+    if (mHmdRenderWidth != 0 && mHmdRenderHeight != 0)
+        InitialiseHMD();
 }
 
 Renderer::~Renderer() 
@@ -49,14 +59,24 @@ void Renderer::Close()
     mClose = true;
 }
 
-void Renderer::Render(Scene& scene) const
+void Renderer::Render(Scene& scene, Camera& camera) const
 {
     // Clear render target.
-    float clrColor[4] = { 0.f, 0.f, 0.f, 0.f };
+    float clrColor[4] = { 0.f, 0.2f, 0.f, 0.f };
     mDeviceContext->ClearRenderTargetView(mBackBufferRTV, clrColor);
 
     // Present to window.
     mSwapChain->Present(0, 0);
+}
+
+void Renderer::Render(Scene& scene, VRDevice& hmd) const
+{
+    // Clear render target.
+    //float clrColor[4] = { 0.f, 0.f, 0.f, 0.f };
+    //mDeviceContext->ClearRenderTargetView(mBackBufferRTV, clrColor);
+
+    // Present to window.
+    //mSwapChain->Present(0, 0);
 }
 
 bool Renderer::GetKeyPressed(int vKey)
@@ -84,7 +104,7 @@ bool Renderer::GetMouseInsideWindow()
 
             // If mouse cursor is inside rect.
             if (PtInRect(&rcClient, pos)) {
-                mMousePosition = glm::vec2(static_cast<float>(pos.x) / mWidth * 2.f - 1.f, -(static_cast<float>(pos.y) / mHeight * 2.f - 1.f));
+                mMousePosition = glm::vec2(static_cast<float>(pos.x) / mWinWidth * 2.f - 1.f, -(static_cast<float>(pos.y) / mWinHeight * 2.f - 1.f));
                 return true;
             }
         }
@@ -97,7 +117,20 @@ bool Renderer::GetMouseLeftButtonPressed()
     return (GetKeyState(VK_LBUTTON) & 0x80) != 0;
 }
 
-void Renderer::Initialise() 
+LRESULT CALLBACK WindowProcedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    switch (message)
+    {
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return 0;
+    }
+
+    // If a message has not been handled, send it to the default window procedure for handling.
+    return DefWindowProc(handle, message, wParam, lParam);
+}
+
+void Renderer::InitialiseHWND()
 {
     // Register the window class to create.
     HINSTANCE applicationHandle = GetModuleHandle(NULL);
@@ -115,7 +148,7 @@ void Renderer::Initialise()
 
     RegisterClass(&windowClass);
 
-    RECT rect = { 0, 0, (long)mWidth, (long)mHeight };
+    RECT rect = { 0, 0, (long)mWinWidth, (long)mWinHeight };
     AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
 
     mHWND = CreateWindow(
@@ -134,11 +167,16 @@ void Renderer::Initialise()
 
     ShowWindow(mHWND, SW_SHOWDEFAULT);
     UpdateWindow(mHWND);
+}
+
+void Renderer::InitialiseD3D()
+{
+    assert(mHWND != NULL);
 
     // We initiate the device, device context and swap chain.
     DXGI_SWAP_CHAIN_DESC scDesc;
-    scDesc.BufferDesc.Width = mWidth; 		// Using the window's size avoids weird effects. If 0 the window's client width is used.
-    scDesc.BufferDesc.Height = mHeight;		// Using the window's size avoids weird effects. If 0 the window's client height is used.
+    scDesc.BufferDesc.Width = mWinWidth; 		// Using the window's size avoids weird effects. If 0 the window's client width is used.
+    scDesc.BufferDesc.Height = mWinHeight;		// Using the window's size avoids weird effects. If 0 the window's client height is used.
     scDesc.BufferDesc.RefreshRate.Numerator = 0;	// Screen refresh rate as RationalNumber. Zeroing it out makes DXGI calculate it.
     scDesc.BufferDesc.RefreshRate.Denominator = 0;	// Screen refresh rate as RationalNumber. Zeroing it out makes DXGI calculate it.
     scDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;						// The most common format. Variations include [...]UNORM_SRGB.
@@ -149,7 +187,7 @@ void Renderer::Initialise()
     scDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;						// The back buffer will be rendered to.
     scDesc.BufferCount = 1;							// We only have one back buffer.
     scDesc.OutputWindow = mHWND;			// Must point to the handle for the window used for rendering.
-    scDesc.Windowed = true;							// Run in windowed mode. Fullscreen is covered in a later sample.
+    scDesc.Windowed = !mFullscreen;					// Run in windowed mode. Fullscreen is covered in a later sample.
     scDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;	// This makes the display driver select the most efficient technique.
     scDesc.Flags = 0;								// No additional options.
 
@@ -169,8 +207,8 @@ void Renderer::Initialise()
     ), S_OK);
 
     D3D11_VIEWPORT vp;
-    vp.Width = (float)mWidth;
-    vp.Height = (float)mHeight;
+    vp.Width = (float)mWinWidth;
+    vp.Height = (float)mWinHeight;
     vp.MinDepth = 0.0f;
     vp.MaxDepth = 1.0f;
     vp.TopLeftX = 0;
@@ -183,15 +221,8 @@ void Renderer::Initialise()
     backBuffer->Release();
 }
 
-LRESULT CALLBACK WindowProcedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam)
+void Renderer::InitialiseHMD()
 {
-    switch (message)
-    {
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        return 0;
-    }
+    assert(mHmdRenderWidth != 0 && mHmdRenderHeight != 0);
 
-    // If a message has not been handled, send it to the default window procedure for handling.
-    return DefWindowProc(handle, message, wParam, lParam);
 }
