@@ -18,7 +18,7 @@ bool VRDevice::Init()
 {
     if (mpHMD != nullptr)
     {
-        std::cout << "HMD Already initiated." << std::endl;
+        std::cout << "HMD Already initialised." << std::endl;
         return true;
     }
 
@@ -136,12 +136,14 @@ glm::mat4 VRDevice::ConvertMatrix(const vr::HmdMatrix34_t& matPose)
 
 std::uint32_t VRDevice::GetRenderWidth()
 {
-    assert(mpHMD != nullptr);
-    return mRenderWidth;
+    if(mpHMD != nullptr) return mRenderWidth;
+    std::cout << "HMD not initialised." << std::endl;
+    return 0;
 }
 
 std::uint32_t VRDevice::GetRenderHeight()
 {
-    assert(mpHMD != nullptr);
-    return mRenderHeight;
+    if (mpHMD != nullptr) return mRenderHeight;
+    std::cout << "HMD not initialised." << std::endl;
+    return 0;
 }

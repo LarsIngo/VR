@@ -92,7 +92,19 @@ class Renderer
         ID3D11DeviceContext* mDeviceContext;
 
         // Backbuffer. Used to render to window.
-        ID3D11RenderTargetView* mBackBufferRTV = nullptr;
+        ID3D11RenderTargetView* mBackBufferRTV;
+
+        // VR left eye texture.
+        ID3D11Texture2D* mHmdLeftTex;
+
+        // VR right eye texture.
+        ID3D11Texture2D* mHmdRightTex;
+
+        // VR left eye render target.
+        ID3D11RenderTargetView* mHmdLeftRTV;
+
+        // VR right eye render target.
+        ID3D11RenderTargetView* mHmdRightRTV;
 
     private:
         // Initialise HWND(window).

@@ -11,6 +11,10 @@ Renderer::Renderer(unsigned int winWidth, unsigned int winHeight, bool fullscree
     mHmdRenderWidth = hmdRenderWidth;
     mHmdRenderHeight = hmdRenderHeight;
     mClose = false;
+    mHmdLeftTex = nullptr;
+    mHmdRightTex = nullptr;
+    mHmdLeftRTV = nullptr;
+    mHmdRightRTV = nullptr;
 
     // Window
     InitialiseHWND();
@@ -27,6 +31,10 @@ Renderer::~Renderer()
     mDeviceContext->Release();
     mSwapChain->Release();
     mBackBufferRTV->Release();
+    if (mHmdLeftTex != nullptr) mHmdLeftTex->Release();
+    if (mHmdRightTex != nullptr) mHmdRightTex->Release();
+    if (mHmdLeftRTV != nullptr) mHmdLeftRTV->Release();
+    if (mHmdRightRTV != nullptr) mHmdRightRTV->Release();
 }
 
 bool Renderer::Running() const 
@@ -71,12 +79,10 @@ void Renderer::Render(Scene& scene, Camera& camera) const
 
 void Renderer::Render(Scene& scene, VRDevice& hmd) const
 {
-    // Clear render target.
-    //float clrColor[4] = { 0.f, 0.f, 0.f, 0.f };
-    //mDeviceContext->ClearRenderTargetView(mBackBufferRTV, clrColor);
-
-    // Present to window.
-    //mSwapChain->Present(0, 0);
+    vr::Texture_t leftEyeTexture = { (void*)mHmdLeftTex, vr::TextureType_DirectX, vr::ColorSpace_Gamma };
+    vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
+    vr::Texture_t rightEyeTexture = { (void*)mHmdRightTex, vr::TextureType_DirectX, vr::ColorSpace_Gamma };
+    vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
 }
 
 bool Renderer::GetKeyPressed(int vKey)
@@ -225,4 +231,36 @@ void Renderer::InitialiseHMD()
 {
     assert(mHmdRenderWidth != 0 && mHmdRenderHeight != 0);
 
+    D3D11_TEXTURE2D_DESC texDesc;
+    ZeroMemory(&texDesc, sizeof(D3D11_TEXTURE2D_DESC));
+    texDesc.Width = mHmdRenderWidth;
+    texDesc.Height = mHmdRenderHeight;
+    texDesc.MipLevels = 1;
+    texDesc.ArraySize = 1;
+    texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    //texDesc.SampleDesc
+    texDesc.Usage = D3D11_USAGE_DEFAULT;
+    texDesc.BindFlags = D3D11_BIND_RENDER_TARGET;
+    texDesc.CPUAccessFlags = 0;
+    texDesc.MiscFlags = 0;
+    DxAssert(mDevice->CreateTexture2D(&texDesc, NULL, &mHmdLeftTex), S_OK);;
+    DxAssert(mDevice->CreateTexture2D(&texDesc, NULL, &mHmdRightTex), S_OK);;
+
+    D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
+    ZeroMemory(&rtvDesc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
+    rtvDesc.Format = texDesc.Format;
+    rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+    rtvDesc.Texture2D.MipSlice = 0;
+    DxAssert(mDevice->CreateRenderTargetView(mHmdLeftTex, &rtvDesc, &mHmdLeftRTV), S_OK);;
+    DxAssert(mDevice->CreateRenderTargetView(mHmdRightTex, &rtvDesc, &mHmdRightRTV), S_OK);;
+
+    // TMP Clear render target.
+    {
+        float clrColor[4] = { 0.2f, 0.f, 0.f, 0.f };
+        mDeviceContext->ClearRenderTargetView(mHmdLeftRTV, clrColor);
+    }
+    {
+        float clrColor[4] = { 0.f, 0.f, 0.2f, 0.f };
+        mDeviceContext->ClearRenderTargetView(mHmdRightRTV, clrColor);
+    }
 }
