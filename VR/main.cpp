@@ -1,5 +1,7 @@
 #pragma once
 
+#define VR
+
 #define _CRTDBG_MAP_ALLOC
 #include <chrono>
 #include <crtdbg.h>
@@ -21,7 +23,7 @@ int main()
     hmd.Init();
 
     // Create renderer.
-    Renderer renderer(1024, 1024, false/*, hmd.GetRenderWidth(), hmd.GetRenderHeight()*/);
+    Renderer renderer(1024, 1024, false, hmd.GetRenderWidth(), hmd.GetRenderHeight());
 
     // Create scene.
     Scene scene(renderer.mDevice, renderer.mDeviceContext);
@@ -51,7 +53,7 @@ int main()
             // Renderer.
             if (hmd.IsActive())
             {
-                hmd.Update();
+                //hmd.Update();
                 renderer.Render(scene, hmd); // Render hmd.
             }
                 

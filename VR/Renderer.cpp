@@ -70,22 +70,22 @@ void Renderer::Close()
 
 void Renderer::Render(Scene& scene, Camera& camera) const
 {
-    // Clear render target.
-    //float clrColor[4] = { 0.f, 0.2f, 0.f, 0.f };
-    //mDeviceContext->ClearRenderTargetView(mBackBufferRTV, clrColor);
-
     // Present to window.
     mSwapChain->Present(0, 0);
 }
 
 void Renderer::Render(Scene& scene, VRDevice& hmd) const
 {
-    vr::Texture_t leftEyeTexture = { (void*)mHmdLeftTex, vr::TextureType_DirectX, vr::ColorSpace_Gamma };
-    vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
-    vr::Texture_t rightEyeTexture = { (void*)mHmdRightTex, vr::TextureType_DirectX, vr::ColorSpace_Gamma };
-    vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
+    vr::Texture_t leftEyeTexture = { mHmdLeftTex, vr::TextureType_DirectX, vr::ColorSpace_Gamma };
+    DxAssert(vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture), vr::VRCompositorError_None);
+    vr::Texture_t rightEyeTexture = { mHmdRightTex, vr::TextureType_DirectX, vr::ColorSpace_Gamma };
+    DxAssert(vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture), vr::VRCompositorError_None);
 
-    mDeviceContext->CopyResource(mBackBufferTex, mHmdLeftTex);
+    // Copy left eye texture to back buffer.
+    D3D11_BOX box;
+    box.left = 0; box.top = 0; box.front = 0;
+    box.right = mWinWidth; box.bottom = mWinHeight; box.back = 1;
+    mDeviceContext->CopySubresourceRegion(mBackBufferTex, 0, 0, 0, 0, mHmdLeftTex, 0, &box);
 }
 
 bool Renderer::GetKeyPressed(int vKey)
@@ -226,6 +226,10 @@ void Renderer::InitialiseD3D()
 
     DxAssert(mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&mBackBufferTex)), S_OK);
     DxAssert(mDevice->CreateRenderTargetView(mBackBufferTex, nullptr, &mBackBufferRTV), S_OK);
+
+    // Clear render target.
+    float clrColor[4] = { 0.f, 0.2f, 0.f, 0.f };
+    mDeviceContext->ClearRenderTargetView(mBackBufferRTV, clrColor);
 }
 
 void Renderer::InitialiseHMD()
@@ -256,7 +260,7 @@ void Renderer::InitialiseHMD()
     DxAssert(mDevice->CreateRenderTargetView(mHmdLeftTex, &rtvDesc, &mHmdLeftRTV), S_OK);;
     DxAssert(mDevice->CreateRenderTargetView(mHmdRightTex, &rtvDesc, &mHmdRightRTV), S_OK);;
 
-    // TMP Clear render target.
+    // Clear render targets.
     {
         float clrColor[4] = { 0.2f, 0.f, 0.f, 0.f };
         mDeviceContext->ClearRenderTargetView(mHmdLeftRTV, clrColor);
