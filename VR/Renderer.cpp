@@ -96,7 +96,7 @@ void Renderer::Render(Scene& scene, VRDevice& hmd) const
 
     // Right eye.
     vr::Texture_t rightEyeTexture = { mHmdRightTex, vr::TextureType_DirectX, vr::ColorSpace_Gamma };
-    eError = vr::VRCompositor()->Submit(vr::Eye_Left, &rightEyeTexture);
+    eError = vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
     if (eError != vr::VRCompositorError_None) std::cout << "HMD Error rendering right eye" << std::endl;
 
     // Render compainion window.
