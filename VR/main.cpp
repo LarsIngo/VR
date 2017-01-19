@@ -53,7 +53,7 @@ int main()
             // Renderer.
             if (hmd.IsActive())
             {
-                //hmd.Update();
+                hmd.Update();
                 renderer.Render(scene, hmd); // Render hmd.
             }
                 

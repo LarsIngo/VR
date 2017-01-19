@@ -16,11 +16,11 @@ Renderer::Renderer(unsigned int winWidth, unsigned int winHeight, bool fullscree
     mHmdLeftRTV = nullptr;
     mHmdRightRTV = nullptr;
 
-    // Window
+    // Window.
     InitialiseHWND();
-    // DirectX
+    // DirectX.
     InitialiseD3D();
-    // VR
+    // VR.
     if (mHmdRenderWidth != 0 && mHmdRenderHeight != 0)
         InitialiseHMD();
 }
@@ -76,6 +76,7 @@ void Renderer::Render(Scene& scene, Camera& camera) const
 
 void Renderer::Render(Scene& scene, VRDevice& hmd) const
 {
+    // Make sure to call WaitGetPoses() before Submit().
     vr::Texture_t leftEyeTexture = { mHmdLeftTex, vr::TextureType_DirectX, vr::ColorSpace_Gamma };
     DxAssert(vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture), vr::VRCompositorError_None);
     vr::Texture_t rightEyeTexture = { mHmdRightTex, vr::TextureType_DirectX, vr::ColorSpace_Gamma };

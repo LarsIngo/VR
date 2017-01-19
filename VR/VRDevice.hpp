@@ -12,7 +12,7 @@ class VRDevice
 
         vr::IVRSystem* mpHMD;
         vr::IVRRenderModels* mpRenderModels;
-        vr::TrackedDevicePose_t* mTrackedDevicePose;
+        vr::TrackedDevicePose_t mTrackedDevicePose[vr::k_unMaxTrackedDeviceCount];
         int mValidPoseCount;
         std::string mStrPoseClasses;
         glm::mat4 mDeviceTransforms[vr::k_unMaxTrackedDeviceCount];

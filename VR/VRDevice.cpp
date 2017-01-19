@@ -43,6 +43,8 @@ bool VRDevice::Init()
 
     // SetupStereoRenderTargets.
     mpHMD->GetRecommendedRenderTargetSize(&mRenderWidth, &mRenderHeight);
+
+    return true;
 }
 
 bool VRDevice::IsActive()
@@ -54,6 +56,7 @@ void VRDevice::Shutdown()
 {
     mpHMD = nullptr;
     mpRenderModels = nullptr;
+    vr::VRCompositor()->ClearLastSubmittedFrame();
     vr::VR_Shutdown();
 }
 
