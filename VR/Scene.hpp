@@ -5,6 +5,8 @@
 #include <d3d11.h>
 #include <d3dcompiler.inl>
 
+class Material;
+
 class Scene
 {
     public:
@@ -15,6 +17,9 @@ class Scene
 
         // Destructor.
         ~Scene();
+
+        // Standard material.
+        Material* mStandardMaterial;
 
     private:
         ID3D11Device* mpDevice;

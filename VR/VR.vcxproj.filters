@@ -33,6 +33,9 @@
     <ClCompile Include="VRDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Material.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Scene.hpp">
@@ -56,13 +59,14 @@
     <ClInclude Include="VRDevice.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Material.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="..\shaders\CompanionWindow_PS.hlsl">
-      <Filter>Resource Files</Filter>
-    </FxCompile>
-    <FxCompile Include="..\shaders\ScreenQuad_VS.hlsl">
-      <Filter>Resource Files</Filter>
-    </FxCompile>
+    <FxCompile Include="resources\shaders\Standard_PS.hlsl" />
+    <FxCompile Include="resources\shaders\Standard_VS.hlsl" />
+    <FxCompile Include="resources\shaders\CompanionWindow_PS.hlsl" />
+    <FxCompile Include="resources\shaders\ScreenQuad_VS.hlsl" />
   </ItemGroup>
 </Project>

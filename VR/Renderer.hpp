@@ -14,6 +14,7 @@
 #include "Camera.hpp"
 #include "Scene.hpp"
 #include "VRDevice.hpp"
+#include "Material.hpp"
 
 // Window call back procedure.
 static LRESULT CALLBACK WindowProcedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam);
@@ -46,6 +47,12 @@ class Renderer
         // scene Scene to render.
         // hmd VrDevice to render from.
         void Render(Scene& scene, VRDevice& hmd) const;
+
+        // Render to render target view.
+        // scene Scene to render.
+        // material Material to use.
+        // rtv Render target.
+        void RenderRTV(Scene& scene, Material* material, ID3D11RenderTargetView* rtv) const;
 
         // Get key status.
         // vKey Windows virtual key.

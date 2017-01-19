@@ -1,9 +1,11 @@
 #include "Renderer.hpp"
 #include "DxAssert.hpp"
 #include "DxHelp.hpp"
+#include "Material.hpp"
 
-#include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
+#include <vector>
 
 Renderer::Renderer(unsigned int winWidth, unsigned int winHeight, bool fullscreen, unsigned int hmdRenderWidth, unsigned int hmdRenderHeight)
 {
@@ -81,29 +83,88 @@ void Renderer::Close()
 
 void Renderer::Render(Scene& scene, Camera& camera) const
 {
+    // Render from camera.
+    float clrColor[4] = { 0.f, 0.2f, 0.f, 0.f };
+    mDeviceContext->ClearRenderTargetView(mBackBufferRTV, clrColor);
+    RenderRTV(scene, scene.mStandardMaterial, mBackBufferRTV);
+
     // Present to window.
     mSwapChain->Present(0, 0);
 }
 
 void Renderer::Render(Scene& scene, VRDevice& hmd) const
 {
-    vr::EVRCompositorError eError;
+    {   // Render left eye.
+        float clrColor[4] = { 0.2f, 0.0f, 0.f, 0.f };
+        mDeviceContext->ClearRenderTargetView(mHmdLeftRTV, clrColor);
+        RenderRTV(scene, scene.mStandardMaterial, mHmdLeftRTV);
+    }
+    {   // Render right eye.
+        float clrColor[4] = { 0.f, 0.f, 0.2f, 0.f };
+        mDeviceContext->ClearRenderTargetView(mHmdRightRTV, clrColor);
+        RenderRTV(scene, scene.mStandardMaterial, mHmdRightRTV);
+    }
 
-    // Left eye.
-    vr::Texture_t leftEyeTexture = { mHmdLeftTex, vr::TextureType_DirectX, vr::ColorSpace_Gamma };
-    eError = vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
-    if (eError != vr::VRCompositorError_None) std::cout << "HMD Error rendering left eye" << std::endl;
-
-    // Right eye.
-    vr::Texture_t rightEyeTexture = { mHmdRightTex, vr::TextureType_DirectX, vr::ColorSpace_Gamma };
-    eError = vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
-    if (eError != vr::VRCompositorError_None) std::cout << "HMD Error rendering right eye" << std::endl;
+    {   // Submit left eye.
+        vr::Texture_t leftEyeTexture = { mHmdLeftTex, vr::TextureType_DirectX, vr::ColorSpace_Gamma };
+        vr::EVRCompositorError eError = vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
+        if (eError != vr::VRCompositorError_None) std::cout << "HMD Error rendering left eye" << std::endl;
+    }
+    {   // Submit right eye.
+        vr::Texture_t rightEyeTexture = { mHmdRightTex, vr::TextureType_DirectX, vr::ColorSpace_Gamma };
+        vr::EVRCompositorError eError = vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
+        if (eError != vr::VRCompositorError_None) std::cout << "HMD Error rendering right eye" << std::endl;
+    }
 
     // Render compainion window.
     RenderCompanionWindow();
 
     // Present to window.
     mSwapChain->Present(0, 0);
+}
+
+void Renderer::RenderRTV(Scene& scene, Material* material, ID3D11RenderTargetView* rtv) const
+{
+    std::vector<Material::Vertex> vertexArr;
+    Material::Vertex vert;
+
+    vert.position = glm::vec3(0.f, 0.f, 1.f);
+    vert.normal = glm::vec3(0.f, 0.f, -1.f);
+    vert.uv = glm::vec2(0.f, 0.f);
+    vertexArr.push_back(vert);
+
+    vert.position = glm::vec3(0.5f, -0.5f, 1.f);
+    vert.normal = glm::vec3(0.f, 0.f, -1.f);
+    vert.uv = glm::vec2(1.f, 1.f);
+    vertexArr.push_back(vert);
+
+    vert.position = glm::vec3(0.f, -0.5f, 1.f);
+    vert.normal = glm::vec3(0.f, 0.f, -1.f);
+    vert.uv = glm::vec2(0.f, 1.f);
+    vertexArr.push_back(vert);
+
+    unsigned int numVertices = vertexArr.size();
+    ID3D11Buffer* vertexBuffer;
+    DxHelp::CreateVertexBuffer(mDevice, vertexArr.size(), vertexArr.data(), &vertexBuffer);
+
+    // +++ Render +++ //
+    mDeviceContext->OMSetRenderTargets(1, &rtv, nullptr);
+    mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    unsigned int stride = sizeof(Material::Vertex);
+    unsigned int offset = 0;
+    mDeviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+    mDeviceContext->IASetInputLayout(material->mInputLayout);
+    mDeviceContext->VSSetShader(material->mVS, nullptr, 0);
+    mDeviceContext->PSSetShader(material->mPS, nullptr, 0);
+
+    mDeviceContext->Draw(numVertices, 0);
+
+    void* p[1] = { NULL };
+    mDeviceContext->OMSetRenderTargets(1, (ID3D11RenderTargetView**)p, nullptr);
+    mDeviceContext->IASetVertexBuffers(0, 1, (ID3D11Buffer**)p, &stride, &offset);
+    // --- Render --- //
+
+    vertexBuffer->Release();
 }
 
 bool Renderer::GetKeyPressed(int vKey)

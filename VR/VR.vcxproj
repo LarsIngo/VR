@@ -159,6 +159,7 @@ echo d | xcopy "$(ProjectDir)resources" "$(OutputPath)resources" /E /Y</Command>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Material.cpp" />
     <ClCompile Include="Profiler.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Scene.cpp" />
@@ -168,16 +169,25 @@ echo d | xcopy "$(ProjectDir)resources" "$(OutputPath)resources" /E /Y</Command>
     <ClInclude Include="Camera.hpp" />
     <ClInclude Include="DxAssert.hpp" />
     <ClInclude Include="DxHelp.hpp" />
+    <ClInclude Include="Material.hpp" />
     <ClInclude Include="Profiler.hpp" />
     <ClInclude Include="Renderer.hpp" />
     <ClInclude Include="Scene.hpp" />
     <ClInclude Include="VRDevice.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\shaders\CompanionWindow_PS.hlsl">
+    <None Include="resources\shaders\Standard_PS.hlsl">
       <FileType>Document</FileType>
     </None>
-    <None Include="..\shaders\ScreenQuad_VS.hlsl">
+    <None Include="resources\shaders\Standard_VS.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\shaders\CompanionWindow_PS.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="resources\shaders\ScreenQuad_VS.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

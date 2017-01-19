@@ -5,6 +5,7 @@
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <string>
+#include <vector>
 
 #include "DxAssert.hpp"
 
@@ -13,9 +14,10 @@ namespace DxHelp
     // Creates vertex buffer.
     // device D3D11 device.
     // numOfElements Maximum number of elements (size of buffer equals sizeOf(T) * numOfElements).
+    // initData Initial data.
     // vBuffer Vertex buffer.
     template <typename T>
-    void CreateVertexBuffer(ID3D11Device* device, unsigned int numOfElements, ID3D11Buffer** vBuffer);
+    void CreateVertexBuffer(ID3D11Device* device, unsigned int numOfElements, T* initData, ID3D11Buffer** vBuffer);
 
     // Creates constant buffer.
     // device D3D11 device.
@@ -65,7 +67,9 @@ namespace DxHelp
     // device D3D11 device.
     // shaderPath Path to shader.
     // shader Created shader.
-    void CreateVS(ID3D11Device* device, std::wstring& shaderPath, ID3D11VertexShader** shader);
+    // inputDesc Input layout description.
+    // inputLayout Input layout.
+    void CreateVS(ID3D11Device* device, std::wstring& shaderPath, ID3D11VertexShader** shader, std::vector<D3D11_INPUT_ELEMENT_DESC>* inputDesc = nullptr, ID3D11InputLayout** inputLayout = nullptr);
 
     // Create pixel shader.
     // device D3D11 device.
@@ -75,7 +79,7 @@ namespace DxHelp
 }
 
 template <typename T>
-inline void DxHelp::CreateVertexBuffer(ID3D11Device* device, unsigned int numOfElements, ID3D11Buffer** vBuffer)
+inline void DxHelp::CreateVertexBuffer(ID3D11Device* device, unsigned int numOfElements, T* initData, ID3D11Buffer** vBuffer)
 {
     D3D11_BUFFER_DESC buffDesc;
     ZeroMemory(&buffDesc, sizeof(D3D11_BUFFER_DESC));
@@ -84,8 +88,19 @@ inline void DxHelp::CreateVertexBuffer(ID3D11Device* device, unsigned int numOfE
     buffDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
     buffDesc.CPUAccessFlags = 0;
     buffDesc.MiscFlags = 0;
-    buffDesc.StructureByteStride = 0;
-    DxAssert(device->CreateBuffer(&buffDesc, NULL, vBuffer), S_OK);
+    buffDesc.StructureByteStride = sizeof(T);
+    if (numOfElements != 0 && initData != nullptr)
+    {
+        D3D11_SUBRESOURCE_DATA subRes;
+        ZeroMemory(&subRes, sizeof(D3D11_SUBRESOURCE_DATA));
+        subRes.pSysMem = initData;
+        subRes.SysMemPitch = sizeof(T) * numOfElements;
+        DxAssert(device->CreateBuffer(&buffDesc, &subRes, vBuffer), S_OK);
+    }
+    else
+    {
+        DxAssert(device->CreateBuffer(&buffDesc, NULL, vBuffer), S_OK);
+    }
 }
 
 template <typename T>
@@ -202,7 +217,7 @@ inline void DxHelp::WriteBuffer(ID3D11DeviceContext* deviceContext, T* data, uns
     deviceContext->Unmap(buffer, 0);
 }
 
-inline void DxHelp::CreateVS(ID3D11Device* device, std::wstring& shaderPath, ID3D11VertexShader** shader)
+inline void DxHelp::CreateVS(ID3D11Device* device, std::wstring& shaderPath, ID3D11VertexShader** shader, std::vector<D3D11_INPUT_ELEMENT_DESC>* inputDesc, ID3D11InputLayout** inputLayout)
 {
     ID3DBlob* compiledShader = nullptr;
     ID3DBlob* errorBlob = nullptr;
@@ -223,26 +238,23 @@ inline void DxHelp::CreateVS(ID3D11Device* device, std::wstring& shaderPath, ID3
         errorBlob->Release();
     }
 
-    device->CreateVertexShader(
+    DxAssert(device->CreateVertexShader(
         compiledShader->GetBufferPointer(),
         compiledShader->GetBufferSize(),
         NULL,
         shader
-    );
+    ), S_OK);
 
-    //if (inputDesc != nullptr) {
-    //    // Create the input layout to go with our vertex shader (the layout is validated against
-    //    // the shader's input signature).
-    //    int inputLayoutSize = sizeOfInputDesc / sizeof(D3D11_INPUT_ELEMENT_DESC);
-    //    Core().device->CreateInputLayout(
-    //        inputDesc,
-    //        inputLayoutSize,
-    //        compiledShader->GetBufferPointer(),
-    //        compiledShader->GetBufferSize(),
-    //        inputLayout
-    //    );
-    //    compiledShader->Release();
-    //}
+    if (inputDesc != nullptr) {
+        DxAssert(device->CreateInputLayout(
+            inputDesc->data(),
+            inputDesc->size(),
+            compiledShader->GetBufferPointer(),
+            compiledShader->GetBufferSize(),
+            inputLayout
+        ), S_OK);
+        compiledShader->Release();
+    }
     compiledShader->Release();
 }
 
@@ -267,11 +279,11 @@ inline void DxHelp::CreatePS(ID3D11Device* device, std::wstring& shaderPath, ID3
         errorBlob->Release();
     }
 
-    device->CreatePixelShader(
+    DxAssert(device->CreatePixelShader(
         compiledShader->GetBufferPointer(),
         compiledShader->GetBufferSize(),
         NULL,
         shader
-    );
+    ), S_OK);
     compiledShader->Release();
 }
