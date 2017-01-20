@@ -12,9 +12,11 @@
 #include <Windows.h>
 
 #include "Camera.hpp"
+#include "FrameBuffer.hpp"
 #include "Scene.hpp"
 #include "VRDevice.hpp"
-#include "Material.hpp"
+
+class Material;
 
 // Window call back procedure.
 static LRESULT CALLBACK WindowProcedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam);
@@ -45,6 +47,9 @@ class Renderer
         // hmd VrDevice to render from.
         void Render(Scene& scene, VRDevice& hmd) const;
 
+        // Clear backbuffer.
+        void WinClear();
+
         // Present rendered result to window.
         void WinPresent();
         // Submit rendered result to HMD.
@@ -53,8 +58,8 @@ class Renderer
         // Render to render target view.
         // scene Scene to render.
         // material Material to use.
-        // rtv Render target.
-        void RenderRTV(Scene& scene, Material* material, ID3D11RenderTargetView* rtv) const;
+        // fb Frame buffer to render.
+        void RenderFrameBuffer(Scene& scene, Material* material, FrameBuffer* fb) const;
 
         // Get key status.
         // vKey Windows virtual key.
@@ -88,10 +93,8 @@ class Renderer
         // DirectX device context.
         ID3D11DeviceContext* mDeviceContext;
 
-        // Backbuffer texture.
-        ID3D11Texture2D* mBackBufferTex;
-        // Backbuffer render target view.
-        ID3D11RenderTargetView* mBackBufferRTV;
+        // Window frame buffer.
+        FrameBuffer* mWinFrameBuffer;
 
         // Screen quad vertex shader.
         ID3D11VertexShader* mScreenQuadVS;

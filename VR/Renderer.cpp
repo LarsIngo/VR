@@ -2,7 +2,6 @@
 #include "DxAssert.hpp"
 #include "DxHelp.hpp"
 #include "Material.hpp"
-#include "DxHelp.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
@@ -31,8 +30,7 @@ Renderer::~Renderer()
     mDevice->Release();
     mDeviceContext->Release();
     mSwapChain->Release();
-    mBackBufferRTV->Release();
-    mBackBufferTex->Release();
+    delete mWinFrameBuffer;
     mScreenQuadVS->Release();
     mCompanionWindowPS->Release();
 }
@@ -70,31 +68,32 @@ void Renderer::Close()
 void Renderer::Render(Scene& scene, Camera& camera) const
 {
     // Render from camera.
-    float clrColor[4] = { 0.f, 0.2f, 0.f, 0.f };
-    mDeviceContext->ClearRenderTargetView(mBackBufferRTV, clrColor);
     Material* material = scene.mStandardMaterial;
     material->mGSMeta.mvpMatrix = glm::perspectiveFovLH(45.f, (float)mWinWidth, (float)mWinHeight, 0.01f, 200.f) * camera.mViewMatrix * glm::translate(glm::mat4(), -camera.mPosition);
-    RenderRTV(scene, material, mBackBufferRTV);
+    RenderFrameBuffer(scene, material, mWinFrameBuffer);
 }
 
 void Renderer::Render(Scene& scene, VRDevice& hmd) const
 {
     {   // Render left eye.
-        float clrColor[4] = { 0.2f, 0.0f, 0.f, 0.f };
-        mDeviceContext->ClearRenderTargetView(hmd.mHmdLeftRTV, clrColor);
+        hmd.mLeftEyeFB->Clear(0.2f, 0.f, 0.f, 0.f);
         Material* material = scene.mStandardMaterial;
         material->mGSMeta.mvpMatrix = hmd.mMVPLeft;
-        RenderRTV(scene, material, hmd.mHmdLeftRTV);
+        RenderFrameBuffer(scene, material, hmd.mLeftEyeFB);
     }
     {   // Render right eye.
-        float clrColor[4] = { 0.f, 0.f, 0.2f, 0.f };
-        mDeviceContext->ClearRenderTargetView(hmd.mHmdRightRTV, clrColor);
+        hmd.mRightEyeFB->Clear(0.f, 0.f, 0.2f, 0.f);
         Material* material = scene.mStandardMaterial;
         material->mGSMeta.mvpMatrix = hmd.mMVPRight;
-        RenderRTV(scene, material, hmd.mHmdRightRTV);
+        RenderFrameBuffer(scene, material, hmd.mRightEyeFB);
     }
     // Render compainion window.
-    RenderCompanionWindow(hmd.mHmdLeftSRV, hmd.mHmdRightSRV, mBackBufferRTV);
+    RenderCompanionWindow(hmd.mLeftEyeFB->mColSRV, hmd.mRightEyeFB->mColSRV, mWinFrameBuffer->mColRTV);
+}
+
+void Renderer::WinClear()
+{
+    mWinFrameBuffer->Clear(0.2f, 0.2f, 0.2f, 0.f);
 }
 
 void Renderer::WinPresent()
@@ -106,18 +105,18 @@ void Renderer::WinPresent()
 void Renderer::HMDPresent(VRDevice& hmd)
 {
     {   // Submit left eye.
-        vr::Texture_t leftEyeTexture = { hmd.mHmdLeftTex, vr::TextureType_DirectX, vr::ColorSpace_Auto };
+        vr::Texture_t leftEyeTexture = { hmd.mLeftEyeFB->mColTex, vr::TextureType_DirectX, vr::ColorSpace_Auto };
         vr::EVRCompositorError eError = vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
         if (eError != vr::VRCompositorError_None) std::cout << "HMD Error rendering left eye" << std::endl;
     }
     {   // Submit right eye.
-        vr::Texture_t rightEyeTexture = { hmd.mHmdRightTex, vr::TextureType_DirectX, vr::ColorSpace_Auto };
+        vr::Texture_t rightEyeTexture = { hmd.mRightEyeFB->mColTex, vr::TextureType_DirectX, vr::ColorSpace_Auto };
         vr::EVRCompositorError eError = vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
         if (eError != vr::VRCompositorError_None) std::cout << "HMD Error rendering right eye" << std::endl;
     }
 }
 
-void Renderer::RenderRTV(Scene& scene, Material* material, ID3D11RenderTargetView* rtv) const
+void Renderer::RenderFrameBuffer(Scene& scene, Material* material, FrameBuffer* fb) const
 {
     std::vector<Material::Vertex> vertexArr;
     Material::Vertex vert;
@@ -145,7 +144,7 @@ void Renderer::RenderRTV(Scene& scene, Material* material, ID3D11RenderTargetVie
     material->mGSMeta.modelMatrix = glm::mat4();
     material->mGSMeta.mvpMatrix = glm::transpose(material->mGSMeta.mvpMatrix);
     DxHelp::WriteStructuredBuffer<Material::GSMeta>(mDeviceContext, &material->mGSMeta, 1, material->mGSMetaBuff);
-    mDeviceContext->OMSetRenderTargets(1, &rtv, nullptr);
+    mDeviceContext->OMSetRenderTargets(1, &fb->mColRTV, nullptr);
     mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     unsigned int stride = sizeof(Material::Vertex);
     unsigned int offset = 0;
@@ -275,7 +274,7 @@ void Renderer::InitialiseD3D()
     scDesc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;					// Since the back buffer and window sizes matches, scaling doesn't matter.
     scDesc.SampleDesc.Count = 1;												// Disable multisampling.
     scDesc.SampleDesc.Quality = 0;												// Disable multisampling.
-    scDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;						// The back buffer will be rendered to.
+    scDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;   // The back buffer will be rendered to.
     scDesc.BufferCount = 1;							        // We only have one back buffer.
     scDesc.OutputWindow = mHWND;			                // Must point to the handle for the window used for rendering.
     scDesc.Windowed = true;					                // Run in windowed mode.
@@ -306,12 +305,9 @@ void Renderer::InitialiseD3D()
     vp.TopLeftY = 0;
     mDeviceContext->RSSetViewports(1, &vp);
 
-    DxAssert(mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&mBackBufferTex)), S_OK);
-    DxAssert(mDevice->CreateRenderTargetView(mBackBufferTex, nullptr, &mBackBufferRTV), S_OK);
-
-    // Clear render target.
-    float clrColor[4] = { 0.f, 0.2f, 0.f, 0.f };
-    mDeviceContext->ClearRenderTargetView(mBackBufferRTV, clrColor);
+    ID3D11Texture2D* backBufferTex;
+    DxAssert(mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBufferTex)), S_OK);
+    mWinFrameBuffer = new FrameBuffer(mDevice, mDeviceContext, mWinWidth, mWinHeight, D3D11_BIND_RENDER_TARGET, backBufferTex);
 }
 
 void Renderer::RenderCompanionWindow(ID3D11ShaderResourceView* leftEye, ID3D11ShaderResourceView* RightEye, ID3D11RenderTargetView* rtv) const

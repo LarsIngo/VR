@@ -44,6 +44,9 @@ int main()
             dt = static_cast<float>(newTime - lastTime)/1000.f;
             lastTime = newTime;
 
+            // Clear window.
+            renderer.WinClear();
+
             // VR.
             if (hmd.IsActive())
             {

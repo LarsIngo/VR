@@ -4,10 +4,11 @@
 #pragma comment(lib, "d3dcompiler.lib")
 #include <d3d11.h>
 #include <d3dcompiler.inl>
-
 #include <glm/glm.hpp>
 #include <openvr.h>
 #include <string>
+
+class FrameBuffer;
 
 class VRDevice
 {
@@ -33,20 +34,8 @@ class VRDevice
         std::uint32_t GetRenderWidth();
         std::uint32_t GetRenderHeight();
 
-        // VR left eye texture.
-        ID3D11Texture2D* mHmdLeftTex;
-        // VR right eye texture.
-        ID3D11Texture2D* mHmdRightTex;
-
-        // VR left eye shader resource.
-        ID3D11ShaderResourceView* mHmdLeftSRV;
-        // VR right eye shader resource.
-        ID3D11ShaderResourceView* mHmdRightSRV;
-
-        // VR left eye render target.
-        ID3D11RenderTargetView* mHmdLeftRTV;
-        // VR right eye render target.
-        ID3D11RenderTargetView* mHmdRightRTV;
+        FrameBuffer* mLeftEyeFB;
+        FrameBuffer* mRightEyeFB;
 
         glm::mat4 mHMDTransform;
 

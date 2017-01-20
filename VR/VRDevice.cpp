@@ -1,5 +1,6 @@
 #include "VRDevice.hpp"
 #include "DxAssert.hpp"
+#include "FrameBuffer.hpp"
 
 #include <assert.h>
 #include <iostream>
@@ -10,24 +11,15 @@ VRDevice::VRDevice(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext)
     mpDeviceContext = pDeviceContext;
     mpHMD = nullptr;
     mpRenderModels = nullptr;
-    mHmdLeftTex = nullptr;
-    mHmdRightTex = nullptr;
-    mHmdLeftRTV = nullptr;
-    mHmdRightRTV = nullptr;
-    if (InitHMD())
-    {
-        InitD3D();
-    }
+    mLeftEyeFB = nullptr;
+    mRightEyeFB = nullptr;
+    if (InitHMD()) InitD3D();
 }
 
 VRDevice::~VRDevice()
 {
-    if (mHmdLeftTex != nullptr) mHmdLeftTex->Release();
-    if (mHmdRightTex != nullptr) mHmdRightTex->Release();
-    if (mHmdLeftRTV != nullptr) mHmdLeftRTV->Release();
-    if (mHmdRightRTV != nullptr) mHmdRightRTV->Release();
-    if (mHmdLeftSRV != nullptr) mHmdLeftSRV->Release();
-    if (mHmdRightSRV != nullptr) mHmdRightSRV->Release();
+    if (mLeftEyeFB != nullptr) delete mLeftEyeFB;
+    if (mRightEyeFB != nullptr) delete mRightEyeFB;
     if (IsActive()) Shutdown();
 }
 
@@ -72,50 +64,8 @@ void VRDevice::InitD3D()
     assert(mpHMD != nullptr);
     assert(mRenderWidth != 0 && mRenderHeight != 0);
 
-    D3D11_TEXTURE2D_DESC texDesc;
-    {   // --- Create VR render targets --- //
-        ZeroMemory(&texDesc, sizeof(D3D11_TEXTURE2D_DESC));
-        texDesc.Width = mRenderWidth;
-        texDesc.Height = mRenderHeight;
-        texDesc.MipLevels = 1;
-        texDesc.ArraySize = 1;
-        texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        texDesc.SampleDesc.Count = 1;
-        texDesc.SampleDesc.Quality = 0;
-        texDesc.Usage = D3D11_USAGE_DEFAULT;
-        texDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-        texDesc.CPUAccessFlags = 0;
-        texDesc.MiscFlags = 0;
-        DxAssert(mpDevice->CreateTexture2D(&texDesc, NULL, &mHmdLeftTex), S_OK);;
-        DxAssert(mpDevice->CreateTexture2D(&texDesc, NULL, &mHmdRightTex), S_OK);;
-
-        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-        ZeroMemory(&srvDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
-        srvDesc.Format = texDesc.Format;
-        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-        srvDesc.Texture2D.MipLevels = 1;
-        srvDesc.Texture2D.MostDetailedMip = 0;
-        DxAssert(mpDevice->CreateShaderResourceView(mHmdLeftTex, &srvDesc, &mHmdLeftSRV), S_OK);;
-        DxAssert(mpDevice->CreateShaderResourceView(mHmdRightTex, &srvDesc, &mHmdRightSRV), S_OK);;
-
-        D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
-        ZeroMemory(&rtvDesc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
-        rtvDesc.Format = texDesc.Format;
-        rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-        rtvDesc.Texture2D.MipSlice = 0;
-        DxAssert(mpDevice->CreateRenderTargetView(mHmdLeftTex, &rtvDesc, &mHmdLeftRTV), S_OK);;
-        DxAssert(mpDevice->CreateRenderTargetView(mHmdRightTex, &rtvDesc, &mHmdRightRTV), S_OK);;
-
-        // Clear render targets.
-        {
-            float clrColor[4] = { 0.2f, 0.f, 0.f, 0.f };
-            mpDeviceContext->ClearRenderTargetView(mHmdLeftRTV, clrColor);
-        }
-        {
-            float clrColor[4] = { 0.f, 0.f, 0.2f, 0.f };
-            mpDeviceContext->ClearRenderTargetView(mHmdRightRTV, clrColor);
-        }
-    }
+    mLeftEyeFB = new FrameBuffer(mpDevice, mpDeviceContext, mRenderWidth, mRenderHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
+    mRightEyeFB = new FrameBuffer(mpDevice, mpDeviceContext, mRenderWidth, mRenderHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
 }
 
 bool VRDevice::IsActive()
