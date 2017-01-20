@@ -161,6 +161,7 @@ echo d | xcopy "$(ProjectDir)resources" "$(OutputPath)resources" /E /Y</Command>
     <ClCompile Include="FrameBuffer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Material.cpp" />
+    <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Profiler.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Scene.cpp" />
@@ -172,6 +173,7 @@ echo d | xcopy "$(ProjectDir)resources" "$(OutputPath)resources" /E /Y</Command>
     <ClInclude Include="DxHelp.hpp" />
     <ClInclude Include="FrameBuffer.hpp" />
     <ClInclude Include="Material.hpp" />
+    <ClInclude Include="Mesh.hpp" />
     <ClInclude Include="Profiler.hpp" />
     <ClInclude Include="Renderer.hpp" />
     <ClInclude Include="Scene.hpp" />

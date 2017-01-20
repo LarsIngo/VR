@@ -118,44 +118,28 @@ void Renderer::HMDPresent(VRDevice& hmd)
 
 void Renderer::RenderFrameBuffer(Scene& scene, Material* material, FrameBuffer* fb) const
 {
-    std::vector<Material::Vertex> vertexArr;
-    Material::Vertex vert;
-
-    vert.position = glm::vec3(0.f, 0.f, 1.f);
-    vert.normal = glm::vec3(0.f, 0.f, -1.f);
-    vert.uv = glm::vec2(0.f, 0.f);
-    vertexArr.push_back(vert);
-
-    vert.position = glm::vec3(0.5f, -0.5f, 1.f);
-    vert.normal = glm::vec3(0.f, 0.f, -1.f);
-    vert.uv = glm::vec2(1.f, 1.f);
-    vertexArr.push_back(vert);
-
-    vert.position = glm::vec3(0.f, -0.5f, 1.f);
-    vert.normal = glm::vec3(0.f, 0.f, -1.f);
-    vert.uv = glm::vec2(0.f, 1.f);
-    vertexArr.push_back(vert);
-
-    unsigned int numVertices = vertexArr.size();
-    ID3D11Buffer* vertexBuffer;
-    DxHelp::CreateVertexBuffer(mDevice, vertexArr.size(), vertexArr.data(), &vertexBuffer);
-
     // +++ Render +++ //
     material->mGSMeta.modelMatrix = glm::mat4();
     material->mGSMeta.mvpMatrix = glm::transpose(material->mGSMeta.mvpMatrix);
     DxHelp::WriteStructuredBuffer<Material::GSMeta>(mDeviceContext, &material->mGSMeta, 1, material->mGSMetaBuff);
     mDeviceContext->OMSetRenderTargets(1, &fb->mColRTV, nullptr);
     mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    unsigned int stride = sizeof(Material::Vertex);
-    unsigned int offset = 0;
-    mDeviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
     mDeviceContext->GSSetShaderResources(0, 1, &material->mGSMetaBuff);
     mDeviceContext->IASetInputLayout(material->mInputLayout);
     mDeviceContext->VSSetShader(material->mVS, nullptr, 0);
     mDeviceContext->GSSetShader(material->mGS, nullptr, 0);
     mDeviceContext->PSSetShader(material->mPS, nullptr, 0);
+    unsigned int stride;
+    unsigned int offset;
 
-    mDeviceContext->Draw(numVertices, 0);
+    for (std::size_t i = 0; i < scene.mMeshList.size(); ++i)
+    {
+        Mesh* mesh = scene.mMeshList[i];
+        stride = sizeof(Material::Vertex);
+        offset = 0;
+        mDeviceContext->IASetVertexBuffers(0, 1, &mesh->mVertexBuffer, &stride, &offset);
+        mDeviceContext->Draw(mesh->mNumVertices, 0);
+    }
 
     void* p[1] = { NULL };
     mDeviceContext->OMSetRenderTargets(1, (ID3D11RenderTargetView**)p, nullptr);
@@ -165,8 +149,6 @@ void Renderer::RenderFrameBuffer(Scene& scene, Material* material, FrameBuffer* 
     mDeviceContext->GSSetShader(NULL, nullptr, 0);
     mDeviceContext->PSSetShader(NULL, nullptr, 0);
     // --- Render --- //
-
-    vertexBuffer->Release();
 }
 
 bool Renderer::GetKeyPressed(int vKey)

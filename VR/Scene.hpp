@@ -4,6 +4,9 @@
 #pragma comment(lib, "d3dcompiler.lib")
 #include <d3d11.h>
 #include <d3dcompiler.inl>
+#include <vector>
+
+#include "Mesh.hpp"
 
 class Material;
 
@@ -20,6 +23,9 @@ class Scene
 
         // Standard material.
         Material* mStandardMaterial;
+
+        // List of meshes in scene.
+        std::vector<Mesh*> mMeshList;
 
     private:
         ID3D11Device* mpDevice;
