@@ -9,3 +9,4 @@
 #*.vcxproj.filters
 .suo
 /build
+/packages

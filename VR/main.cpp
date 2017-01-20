@@ -13,6 +13,7 @@
 #include "Profiler.hpp"
 #include "Renderer.hpp"
 #include "Scene.hpp"
+#include "Texture2D.hpp"
 #include "VRDevice.hpp"
 
 int main()
@@ -43,10 +44,14 @@ int main()
 
     // Create scene.
     Mesh* mesh;
+    Texture2D* texture2D;
     Scene scene(renderer.mDevice, renderer.mDeviceContext);
     {
         mesh = new Mesh(renderer.mDevice, renderer.mDeviceContext, scene.mStandardMaterial);
         mesh->Load("resources/assets/OBJBox.obj");
+        texture2D = new Texture2D(renderer.mDevice, renderer.mDeviceContext);
+        texture2D->Load("resources/assets/DefaultDiffuse.png");
+
         Entity entity;
         entity.mpMesh = mesh;
         {
@@ -63,7 +68,6 @@ int main()
 
     // Create camera.
     Camera camera;
-    camera.mPosition = glm::vec3(0.f, 0.f, 0.f);
 
     // Set Frame Latency.
     //IDXGIDevice1 * pDXGIDevice;
@@ -110,6 +114,7 @@ int main()
             if (hmd.IsActive())
             {
                 renderer.HMDPresent(hmd);
+                hmd.mPosition = camera.mPosition;
                 hmd.Update();
             }
         }
@@ -124,6 +129,7 @@ int main()
 
         // Clear.
         delete mesh;
+        delete texture2D;
         scene.Clear();
         hmd.Shutdown();
         renderer.Shutdown();

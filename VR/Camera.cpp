@@ -97,7 +97,6 @@ void Camera::Yaw(float rotation)
     glm::quat q = glm::angleAxis(rotation, mUpDirection);
     mRightDirection = glm::normalize(q * mRightDirection);
     mFrontDirection = glm::normalize(q * mFrontDirection);
-    
 }
 
 void Camera::Pitch(float rotation)

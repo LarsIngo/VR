@@ -4,6 +4,7 @@
 #include <vector>
 
 class Mesh;
+class Texture2D;
 
 class Entity
 {
@@ -18,4 +19,7 @@ class Entity
 
         // Mesh.
         Mesh* mpMesh;
+
+        // Texture2D.
+        Texture2D* mpTexture2D;
 };

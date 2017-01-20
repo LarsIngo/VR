@@ -3,6 +3,7 @@
 #include "FrameBuffer.hpp"
 
 #include <assert.h>
+#include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 
 VRDevice::VRDevice()
@@ -61,7 +62,7 @@ void VRDevice::InitD3D(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContex
 {
     assert(mpHMD != nullptr);
     assert(mRenderWidth != 0 && mRenderHeight != 0);
-    assert(mLeftEyeFB == nullptr, mRightEyeFB == nullptr);
+    assert(mLeftEyeFB == nullptr && mRightEyeFB == nullptr);
 
     mpDevice = pDevice;
     mpDeviceContext = pDeviceContext;
@@ -136,9 +137,11 @@ void VRDevice::Update()
         mProjectionRight = ConvertMatrix(mpHMD->GetProjectionMatrix(vr::Hmd_Eye::Eye_Right, nearZ, farZ));
     }
 
+    glm::mat4 translation = glm::translate(glm::mat4(), mPosition);
+
     // GetCurrentViewProjectionMatrix.
-    mMVPLeft = mProjectionLeft * mEyePosLeft * mHMDTransform;
-    mMVPRight = mProjectionRight * mEyePosRight * mHMDTransform;
+    mMVPLeft = mProjectionLeft * mEyePosLeft * mHMDTransform * translation;
+    mMVPRight = mProjectionRight * mEyePosRight * mHMDTransform * translation;
 }
 
 glm::mat4 VRDevice::ConvertMatrix(const vr::HmdMatrix34_t& mat)

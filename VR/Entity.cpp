@@ -4,6 +4,7 @@ Entity::Entity()
 {
     mPosition = glm::vec3(0.f, 0.f, 0.f);
     mpMesh = nullptr;
+    mpTexture2D = nullptr;
 }
 
 Entity::~Entity()
