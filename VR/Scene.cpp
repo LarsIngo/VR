@@ -22,5 +22,10 @@ Scene::Scene(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext)
 
 Scene::~Scene()
 {
-    delete mStandardMaterial;
+    Clear();
+}
+
+void Scene::Clear()
+{
+    if (mStandardMaterial != nullptr) { delete mStandardMaterial; mStandardMaterial = nullptr; }
 }

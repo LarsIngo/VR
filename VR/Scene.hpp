@@ -21,6 +21,9 @@ class Scene
         // Destructor.
         ~Scene();
 
+        // Clear scene.
+        void Clear();
+
         // Standard material.
         Material* mStandardMaterial;
 

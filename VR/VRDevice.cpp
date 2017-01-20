@@ -61,6 +61,7 @@ void VRDevice::InitD3D(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContex
 {
     assert(mpHMD != nullptr);
     assert(mRenderWidth != 0 && mRenderHeight != 0);
+    assert(mLeftEyeFB == nullptr, mRightEyeFB == nullptr);
 
     mpDevice = pDevice;
     mpDeviceContext = pDeviceContext;
@@ -78,6 +79,8 @@ void VRDevice::Shutdown()
     vr::VR_Shutdown();
     mpHMD = nullptr;
     mpRenderModels = nullptr;
+    if (mLeftEyeFB != nullptr) { delete mLeftEyeFB; mLeftEyeFB = nullptr; }
+    if (mRightEyeFB != nullptr) { delete mRightEyeFB; mRightEyeFB = nullptr; }
 }
 
 void VRDevice::Update()

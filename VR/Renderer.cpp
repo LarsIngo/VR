@@ -28,7 +28,15 @@ Renderer::Renderer(unsigned int winWidth, unsigned int winHeight)
 
 Renderer::~Renderer() 
 {
+    if (mDevice != nullptr) Shutdown();
+}
+
+void Renderer::Shutdown()
+{
+    mDeviceContext->ClearState();
+    mDeviceContext->Flush();
     mDevice->Release();
+    mDevice = nullptr;
     mDeviceContext->Release();
     mSwapChain->Release();
     delete mWinFrameBuffer;
@@ -293,6 +301,7 @@ void Renderer::InitialiseD3D()
         &mDeviceContext				// [out] The created device context.
     ), S_OK);
 
+    // Window frame buffer.
     ID3D11Texture2D* backBufferTex;
     DxAssert(mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBufferTex)), S_OK);
     mWinFrameBuffer = new FrameBuffer(mDevice, mDeviceContext, mWinWidth, mWinHeight, D3D11_BIND_RENDER_TARGET, backBufferTex);

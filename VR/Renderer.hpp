@@ -33,6 +33,9 @@ class Renderer
         // Destructor.
         ~Renderer();
 
+        // Shutdown.
+        void Shutdown();
+
         // Whether window is running of not.
         bool Running() const;
 

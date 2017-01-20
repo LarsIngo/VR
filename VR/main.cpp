@@ -20,8 +20,21 @@ int main()
     // Create VRDevice.
     VRDevice hmd;
 
+    unsigned int winWidth;
+    unsigned int winHeight;
+    if (hmd.IsActive())
+    {
+        winWidth = (hmd.GetRenderWidth());
+        winHeight = (hmd.GetRenderHeight() / 2);
+    }
+    else 
+    {
+        winWidth = 1024;
+        winHeight = 1024;
+    }
+
     // Create renderer.
-    Renderer renderer(1024, 1024 / 2);
+    Renderer renderer(winWidth, winHeight);
 
     // Init3D3 (Frame buffers).
     if (hmd.IsActive()) hmd.InitD3D(renderer.mDevice, renderer.mDeviceContext);
@@ -92,7 +105,22 @@ int main()
         }
     }
 
-    delete mesh;
+
+    // --- Shutdown --- //
+    {
+        // DirectX debug device.
+        ID3D11Debug* debug;
+        renderer.mDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&debug));
+
+        // Clear.
+        delete mesh;
+        scene.Clear();
+        hmd.Shutdown();
+        renderer.Shutdown();
+
+        debug->ReportLiveDeviceObjects(D3D11_RLDO_SUMMARY); //D3D11_RLDO_SUMMARY or D3D11_RLDO_DETAIL
+        debug->Release();
+    }
         
     return 0;
 }
