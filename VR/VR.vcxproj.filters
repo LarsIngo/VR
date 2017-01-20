@@ -64,9 +64,10 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="resources\shaders\Standard_PS.hlsl" />
-    <FxCompile Include="resources\shaders\Standard_VS.hlsl" />
-    <FxCompile Include="resources\shaders\CompanionWindow_PS.hlsl" />
-    <FxCompile Include="resources\shaders\ScreenQuad_VS.hlsl" />
+    <None Include="resources\shaders\Standard_PS.hlsl" />
+    <None Include="resources\shaders\Standard_VS.hlsl" />
+    <None Include="resources\shaders\CompanionWindow_PS.hlsl" />
+    <None Include="resources\shaders\ScreenQuad_VS.hlsl" />
+    <None Include="resources\shaders\Standard_GS.hlsl" />
   </ItemGroup>
 </Project>

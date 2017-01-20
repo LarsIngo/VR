@@ -28,12 +28,14 @@ public:
     ~Material();
 
     // Intialise.
-    void Init(std::vector<D3D11_INPUT_ELEMENT_DESC>& inputDesc, std::wstring& VSPath, std::wstring& PSPath);
+    void Init(std::vector<D3D11_INPUT_ELEMENT_DESC>& inputDesc, std::wstring& VSPath, std::wstring& GSPath, std::wstring& PSPath);
 
     // D3D11 input layout.
     ID3D11InputLayout* mInputLayout;
     // Vertex shader.
     ID3D11VertexShader* mVS;
+    // Geometry shader.
+    ID3D11GeometryShader* mGS;
     // Pixel shader.
     ID3D11PixelShader* mPS;
 

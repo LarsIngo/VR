@@ -142,6 +142,7 @@ void Renderer::RenderRTV(Scene& scene, Material* material, ID3D11RenderTargetVie
     mDeviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
     mDeviceContext->IASetInputLayout(material->mInputLayout);
     mDeviceContext->VSSetShader(material->mVS, nullptr, 0);
+    mDeviceContext->GSSetShader(material->mGS, nullptr, 0);
     mDeviceContext->PSSetShader(material->mPS, nullptr, 0);
 
     mDeviceContext->Draw(numVertices, 0);

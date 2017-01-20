@@ -71,6 +71,12 @@ namespace DxHelp
     // inputLayout Input layout.
     void CreateVS(ID3D11Device* device, std::wstring& shaderPath, ID3D11VertexShader** shader, std::vector<D3D11_INPUT_ELEMENT_DESC>* inputDesc = nullptr, ID3D11InputLayout** inputLayout = nullptr);
 
+    // Create geometry shader.
+    // device D3D11 device.
+    // shaderPath Path to shader.
+    // shader Created shader.
+    void CreateGS(ID3D11Device* device, std::wstring& shaderPath, ID3D11GeometryShader** shader);
+
     // Create pixel shader.
     // device D3D11 device.
     // shaderPath Path to shader.
@@ -257,6 +263,37 @@ inline void DxHelp::CreateVS(ID3D11Device* device, std::wstring& shaderPath, ID3
     }
     compiledShader->Release();
 }
+
+inline void DxHelp::CreateGS(ID3D11Device* device, std::wstring& shaderPath, ID3D11GeometryShader** shader)
+{
+    ID3DBlob* compiledShader = nullptr;
+    ID3DBlob* errorBlob = nullptr;
+    HRESULT hr = D3DCompileFromFile(
+        shaderPath.c_str(),
+        nullptr,
+        nullptr,
+        "main",
+        "gs_5_0",
+        0,
+        0,
+        &compiledShader,
+        &errorBlob
+    );
+    if (FAILED(hr)) {
+        std::string errorMsg = (char*)errorBlob->GetBufferPointer();
+        OutputDebugStringA(errorMsg.c_str());
+        errorBlob->Release();
+    }
+
+    DxAssert(device->CreateGeometryShader(
+        compiledShader->GetBufferPointer(),
+        compiledShader->GetBufferSize(),
+        NULL,
+        shader
+    ), S_OK);
+    compiledShader->Release();
+}
+
 
 inline void DxHelp::CreatePS(ID3D11Device* device, std::wstring& shaderPath, ID3D11PixelShader** shader)
 {
