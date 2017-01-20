@@ -9,7 +9,4 @@
 #*.user
 #*.vcxproj.filters
 .suo
-
-# Ignore folders
-Debug/
-Release/
+/build

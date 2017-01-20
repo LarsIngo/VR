@@ -69,8 +69,8 @@ void Mesh::Load(const char* meshPath)
     //mNumVertices = (unsigned int)vertices.size();
     mNumVertices = (unsigned int)vertices.size();
     mNumIndices = (unsigned int)indices.size();
-    DxHelp::CreateBuffer(mpDevice, D3D11_USAGE_DEFAULT, D3D11_BIND_VERTEX_BUFFER, 0, &mVertexBuffer, vertices.data(), mNumVertices);
-    DxHelp::CreateBuffer(mpDevice, D3D11_USAGE_DEFAULT, D3D11_BIND_INDEX_BUFFER, 0, &mIndexBuffer, indices.data(), mNumIndices);
+    DxHelp::CreateBuffer(mpDevice, D3D11_USAGE_IMMUTABLE, D3D11_BIND_VERTEX_BUFFER, 0, &mVertexBuffer, vertices.data(), mNumVertices);
+    DxHelp::CreateBuffer(mpDevice, D3D11_USAGE_IMMUTABLE, D3D11_BIND_INDEX_BUFFER, 0, &mIndexBuffer, indices.data(), mNumIndices);
 }
 
 void Mesh::LoadAssimpScene(const aiScene* aScene)
