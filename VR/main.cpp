@@ -59,8 +59,12 @@ int main()
             // Present.
             renderer.WinPresent();
 
-            // Update VR pose.
-            if (hmd.IsActive()) hmd.Update();
+            // Render and update VR pose.
+            if (hmd.IsActive())
+            {
+                renderer.HMDPresent(hmd);
+                hmd.Update();
+            }
         }
     }
 
