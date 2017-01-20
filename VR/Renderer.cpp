@@ -7,24 +7,16 @@
 #include <iostream>
 #include <vector>
 
-Renderer::Renderer(unsigned int winWidth, unsigned int winHeight, VRDevice* pHMD)
+Renderer::Renderer(unsigned int winWidth, unsigned int winHeight)
 {
     mWinWidth = winWidth;
     mWinHeight = winHeight;
-    mpHMD = pHMD;
-
     mClose = false;
-    mHmdLeftTex = nullptr;
-    mHmdRightTex = nullptr;
-    mHmdLeftRTV = nullptr;
-    mHmdRightRTV = nullptr;
 
     // Window.
     InitialiseHWND();
     // DirectX.
     InitialiseD3D();
-    // VR.
-    if (mpHMD != nullptr) InitialiseHMD();
 
     // Init shader
     std::wstring VS = L"resources/shaders/ScreenQuad_VS.hlsl";
@@ -35,18 +27,11 @@ Renderer::Renderer(unsigned int winWidth, unsigned int winHeight, VRDevice* pHMD
 
 Renderer::~Renderer() 
 {
-    mpHMD = nullptr;
     mDevice->Release();
     mDeviceContext->Release();
     mSwapChain->Release();
     mBackBufferRTV->Release();
     mBackBufferTex->Release();
-    if (mHmdLeftTex != nullptr) mHmdLeftTex->Release();
-    if (mHmdRightTex != nullptr) mHmdRightTex->Release();
-    if (mHmdLeftRTV != nullptr) mHmdLeftRTV->Release();
-    if (mHmdRightRTV != nullptr) mHmdRightRTV->Release();
-    if (mHmdLeftSRV != nullptr) mHmdLeftSRV->Release();
-    if (mHmdRightSRV != nullptr) mHmdRightSRV->Release();
     mScreenQuadVS->Release();
     mCompanionWindowPS->Release();
 }
@@ -93,38 +78,36 @@ void Renderer::Render(Scene& scene, VRDevice& hmd) const
 {
     {   // Render left eye.
         float clrColor[4] = { 0.2f, 0.0f, 0.f, 0.f };
-        mDeviceContext->ClearRenderTargetView(mHmdLeftRTV, clrColor);
-        RenderRTV(scene, scene.mStandardMaterial, mHmdLeftRTV);
+        mDeviceContext->ClearRenderTargetView(hmd.mHmdLeftRTV, clrColor);
+        RenderRTV(scene, scene.mStandardMaterial, hmd.mHmdLeftRTV);
     }
     {   // Render right eye.
         float clrColor[4] = { 0.f, 0.f, 0.2f, 0.f };
-        mDeviceContext->ClearRenderTargetView(mHmdRightRTV, clrColor);
-        RenderRTV(scene, scene.mStandardMaterial, mHmdRightRTV);
+        mDeviceContext->ClearRenderTargetView(hmd.mHmdRightRTV, clrColor);
+        RenderRTV(scene, scene.mStandardMaterial, hmd.mHmdRightRTV);
     }
+    // Render compainion window.
+    RenderCompanionWindow(hmd.mHmdLeftSRV, hmd.mHmdRightSRV, mBackBufferRTV);
 }
 
-void Renderer::Present()
+void Renderer::WinPresent()
 {
-    if (mpHMD != nullptr)
-    {
-        {   // Submit left eye.
-            vr::Texture_t leftEyeTexture = { mHmdLeftTex, vr::TextureType_DirectX, vr::ColorSpace_Auto };
-            vr::EVRCompositorError eError = vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
-            if (eError != vr::VRCompositorError_None) std::cout << "HMD Error rendering left eye" << std::endl;
-        }
-        {   // Submit right eye.
-            vr::Texture_t rightEyeTexture = { mHmdRightTex, vr::TextureType_DirectX, vr::ColorSpace_Auto };
-            vr::EVRCompositorError eError = vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
-            if (eError != vr::VRCompositorError_None) std::cout << "HMD Error rendering right eye" << std::endl;
-        }
-        // Render compainion window.
-        RenderCompanionWindow();
-    }
-
     // Present to window.
     mSwapChain->Present(0, 0);
+}
 
-    if (mpHMD != nullptr) mpHMD->Update(); 
+void Renderer::HMDPresent(VRDevice& hmd)
+{
+    {   // Submit left eye.
+        vr::Texture_t leftEyeTexture = { hmd.mHmdLeftTex, vr::TextureType_DirectX, vr::ColorSpace_Auto };
+        vr::EVRCompositorError eError = vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
+        if (eError != vr::VRCompositorError_None) std::cout << "HMD Error rendering left eye" << std::endl;
+    }
+    {   // Submit right eye.
+        vr::Texture_t rightEyeTexture = { hmd.mHmdRightTex, vr::TextureType_DirectX, vr::ColorSpace_Auto };
+        vr::EVRCompositorError eError = vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
+        if (eError != vr::VRCompositorError_None) std::cout << "HMD Error rendering right eye" << std::endl;
+    }
 }
 
 void Renderer::RenderRTV(Scene& scene, Material* material, ID3D11RenderTargetView* rtv) const
@@ -315,67 +298,13 @@ void Renderer::InitialiseD3D()
     mDeviceContext->ClearRenderTargetView(mBackBufferRTV, clrColor);
 }
 
-void Renderer::InitialiseHMD()
+void Renderer::RenderCompanionWindow(ID3D11ShaderResourceView* leftEye, ID3D11ShaderResourceView* RightEye, ID3D11RenderTargetView* rtv) const
 {
-    assert(mpHMD != nullptr);
-    std::uint32_t hmdWidth = mpHMD->GetRenderWidth();
-    std::uint32_t hmdHeight = mpHMD->GetRenderHeight();
-    assert(hmdWidth != 0 && hmdHeight != 0);
-
-    D3D11_TEXTURE2D_DESC texDesc;
-    {   // --- Create VR render targets --- //
-        ZeroMemory(&texDesc, sizeof(D3D11_TEXTURE2D_DESC));
-        texDesc.Width = hmdWidth;
-        texDesc.Height = hmdHeight;
-        texDesc.MipLevels = 1;
-        texDesc.ArraySize = 1;
-        texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        texDesc.SampleDesc.Count = 1;
-        texDesc.SampleDesc.Quality = 0;
-        texDesc.Usage = D3D11_USAGE_DEFAULT;
-        texDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-        texDesc.CPUAccessFlags = 0;
-        texDesc.MiscFlags = 0;
-        DxAssert(mDevice->CreateTexture2D(&texDesc, NULL, &mHmdLeftTex), S_OK);;
-        DxAssert(mDevice->CreateTexture2D(&texDesc, NULL, &mHmdRightTex), S_OK);;
-
-        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-        ZeroMemory(&srvDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
-        srvDesc.Format = texDesc.Format;
-        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-        srvDesc.Texture2D.MipLevels = 1;
-        srvDesc.Texture2D.MostDetailedMip = 0;
-        DxAssert(mDevice->CreateShaderResourceView(mHmdLeftTex, &srvDesc, &mHmdLeftSRV), S_OK);;
-        DxAssert(mDevice->CreateShaderResourceView(mHmdRightTex, &srvDesc, &mHmdRightSRV), S_OK);;
-
-        D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
-        ZeroMemory(&rtvDesc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
-        rtvDesc.Format = texDesc.Format;
-        rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-        rtvDesc.Texture2D.MipSlice = 0;
-        DxAssert(mDevice->CreateRenderTargetView(mHmdLeftTex, &rtvDesc, &mHmdLeftRTV), S_OK);;
-        DxAssert(mDevice->CreateRenderTargetView(mHmdRightTex, &rtvDesc, &mHmdRightRTV), S_OK);;
-
-        // Clear render targets.
-        {
-            float clrColor[4] = { 0.2f, 0.f, 0.f, 0.f };
-            mDeviceContext->ClearRenderTargetView(mHmdLeftRTV, clrColor);
-        }
-        {
-            float clrColor[4] = { 0.f, 0.f, 0.2f, 0.f };
-            mDeviceContext->ClearRenderTargetView(mHmdRightRTV, clrColor);
-        }
-    }
-}
-
-void Renderer::RenderCompanionWindow() const
-{
-    ID3D11RenderTargetView* rtv[] = { mBackBufferRTV };
-    mDeviceContext->OMSetRenderTargets(1, rtv, nullptr);
+    mDeviceContext->OMSetRenderTargets(1, &rtv, nullptr);
     mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
     mDeviceContext->VSSetShader(mScreenQuadVS, nullptr, 0);
     mDeviceContext->PSSetShader(mCompanionWindowPS, nullptr, 0);
-    ID3D11ShaderResourceView* srv[] = { mHmdLeftSRV, mHmdRightSRV };
+    ID3D11ShaderResourceView* srv[] = { leftEye, RightEye };
     mDeviceContext->PSSetShaderResources(0, 2, srv);
 
     mDeviceContext->Draw(4, 0);

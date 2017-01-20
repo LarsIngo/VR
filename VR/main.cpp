@@ -16,12 +16,11 @@ int main()
 {
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
-    // Create VRDevice.
-    VRDevice hmd;
-    hmd.Init();
-
     // Create renderer.
-    Renderer renderer(1024, 1024, hmd.IsActive() ? &hmd : nullptr);
+    Renderer renderer(1024, 1024);
+
+    // Create VRDevice.
+    VRDevice hmd(renderer.mDevice, renderer.mDeviceContext);
 
     // Create scene.
     Scene scene(renderer.mDevice, renderer.mDeviceContext);
@@ -48,7 +47,6 @@ int main()
             // VR.
             if (hmd.IsActive())
             {
-                //hmd.Update();
                 renderer.Render(scene, hmd);
             }   
             // Camera.
@@ -59,7 +57,10 @@ int main()
             }
 
             // Present.
-            renderer.Present();
+            renderer.WinPresent();
+
+            // Update VR pose.
+            if (hmd.IsActive()) hmd.Update();
         }
     }
 

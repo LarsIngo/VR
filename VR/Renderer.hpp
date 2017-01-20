@@ -26,8 +26,7 @@ class Renderer
         // Constructor.
         // winWidth Window width in pixels.
         // winHeight Window height in pixels.
-        // pHMD VR Device.
-        Renderer(unsigned int winWidth = 640, unsigned int winHeight = 640, VRDevice* pHMD = nullptr);
+        Renderer(unsigned int winWidth = 640, unsigned int winHeight = 640);
 
         // Destructor.
         ~Renderer();
@@ -46,8 +45,10 @@ class Renderer
         // hmd VrDevice to render from.
         void Render(Scene& scene, VRDevice& hmd) const;
 
-        // Display rendered result.
-        void Present();
+        // Present rendered result to window.
+        void WinPresent();
+        // Submit rendered result to HMD.
+        void HMDPresent(VRDevice& hmd);
 
         // Render to render target view.
         // scene Scene to render.
@@ -92,24 +93,7 @@ class Renderer
         // Backbuffer render target view.
         ID3D11RenderTargetView* mBackBufferRTV;
 
-        // VR Device.
-        VRDevice* mpHMD;
-        // VR left eye texture.
-        ID3D11Texture2D* mHmdLeftTex;
-        // VR right eye texture.
-        ID3D11Texture2D* mHmdRightTex;
-
-        // VR left eye shader resource.
-        ID3D11ShaderResourceView* mHmdLeftSRV;
-        // VR right eye shader resource.
-        ID3D11ShaderResourceView* mHmdRightSRV;
-
-        // VR left eye render target.
-        ID3D11RenderTargetView* mHmdLeftRTV;
-        // VR right eye render target.
-        ID3D11RenderTargetView* mHmdRightRTV;
-
-        // Sceen quad vertex shader.
+        // Screen quad vertex shader.
         ID3D11VertexShader* mScreenQuadVS;
         // Companion window pixel shader.
         ID3D11PixelShader* mCompanionWindowPS;
@@ -121,11 +105,8 @@ class Renderer
         // Initialise D3D(directX).
         void InitialiseD3D();
 
-        // Initialise HMD(VR).
-        void InitialiseHMD();
-
         // Render companion window.
-        void RenderCompanionWindow() const;
+        void RenderCompanionWindow(ID3D11ShaderResourceView* leftEye, ID3D11ShaderResourceView* RightEye, ID3D11RenderTargetView* rtv) const;
 
         // Mouse position.
         glm::vec2 mMousePosition;
