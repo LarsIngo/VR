@@ -26,29 +26,10 @@ int main()
     Mesh* mesh;
     Scene scene(renderer.mDevice, renderer.mDeviceContext);
     {
-        std::vector<Material::Vertex> vertexArr;
-        Material::Vertex vert;
-
-        vert.position = glm::vec3(0.f, 0.f, 1.f);
-        vert.normal = glm::vec3(0.f, 0.f, -1.f);
-        vert.uv = glm::vec2(0.f, 0.f);
-        vertexArr.push_back(vert);
-
-        vert.position = glm::vec3(0.5f, -0.5f, 1.f);
-        vert.normal = glm::vec3(0.f, 0.f, -1.f);
-        vert.uv = glm::vec2(1.f, 1.f);
-        vertexArr.push_back(vert);
-
-        vert.position = glm::vec3(0.f, -0.5f, 1.f);
-        vert.normal = glm::vec3(0.f, 0.f, -1.f);
-        vert.uv = glm::vec2(0.f, 1.f);
-        vertexArr.push_back(vert);
-
         mesh = new Mesh(renderer.mDevice, renderer.mDeviceContext, scene.mStandardMaterial);
-        mesh->Load(vertexArr);
+        mesh->Load("");
         scene.mMeshList.push_back(mesh);
     }
-
 
     // Create camera.
     Camera camera;

@@ -6,6 +6,7 @@
 #include <d3dcompiler.inl>
 #include <glm/glm.hpp>
 #include <vector>
+#include <string>
 
 #include "Material.hpp"
 
@@ -22,7 +23,8 @@ class Mesh
         ~Mesh();
 
         // Load mesh.
-        void Load(std::vector<Material::Vertex>& vertArr);
+        // meshPath Path to mesh.
+        void Load(std::string meshPath);
 
         // Material.
         Material* mMaterial;
