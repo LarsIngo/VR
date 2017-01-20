@@ -11,6 +11,7 @@ VRDevice::VRDevice()
     mpRenderModels = nullptr;
     mLeftEyeFB = nullptr;
     mRightEyeFB = nullptr;
+    InitHMD();
 }
 
 VRDevice::~VRDevice()
@@ -129,9 +130,7 @@ void VRDevice::Update()
         float nearZ = 0.1f;
         float farZ = 200.f;
         mProjectionLeft = ConvertMatrix(mpHMD->GetProjectionMatrix(vr::Hmd_Eye::Eye_Left, nearZ, farZ));
-        //mProjectionLeft = glm::inverse(mProjectionLeft);
         mProjectionRight = ConvertMatrix(mpHMD->GetProjectionMatrix(vr::Hmd_Eye::Eye_Right, nearZ, farZ));
-        //mProjectionRight = glm::inverse(mProjectionRight);
     }
 
     // GetCurrentViewProjectionMatrix.

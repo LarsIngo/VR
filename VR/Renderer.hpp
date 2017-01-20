@@ -42,10 +42,10 @@ class Renderer
         // Render scene.
         // scene Scene to render.
         // camera Camera to render from.
-        void Render(Scene& scene, Camera& camera) const;
+        void Render(Scene& scene, Camera& camera);
         // scene Scene to render.
         // hmd VrDevice to render from.
-        void Render(Scene& scene, VRDevice& hmd) const;
+        void Render(Scene& scene, VRDevice& hmd);
 
         // Clear backbuffer.
         void WinClear();
@@ -59,7 +59,7 @@ class Renderer
         // scene Scene to render.
         // material Material to use.
         // fb Frame buffer to render.
-        void RenderFrameBuffer(Scene& scene, Material* material, FrameBuffer* fb) const;
+        void RenderFrameBuffer(Scene& scene, Material* material, FrameBuffer* fb);
 
         // Get key status.
         // vKey Windows virtual key.
@@ -109,7 +109,7 @@ class Renderer
         void InitialiseD3D();
 
         // Render companion window.
-        void RenderCompanionWindow(ID3D11ShaderResourceView* leftEye, ID3D11ShaderResourceView* RightEye, ID3D11RenderTargetView* rtv) const;
+        void RenderCompanionWindow(ID3D11ShaderResourceView* leftEye, ID3D11ShaderResourceView* RightEye, ID3D11RenderTargetView* rtv);
 
         // Mouse position.
         glm::vec2 mMousePosition;

@@ -66,7 +66,7 @@ void Renderer::Close()
     mClose = true;
 }
 
-void Renderer::Render(Scene& scene, Camera& camera) const
+void Renderer::Render(Scene& scene, Camera& camera)
 {
     // Render from camera.
     Material* material = scene.mStandardMaterial;
@@ -74,7 +74,7 @@ void Renderer::Render(Scene& scene, Camera& camera) const
     RenderFrameBuffer(scene, material, mWinFrameBuffer);
 }
 
-void Renderer::Render(Scene& scene, VRDevice& hmd) const
+void Renderer::Render(Scene& scene, VRDevice& hmd)
 {
     {   // Render left eye.
         hmd.mLeftEyeFB->Clear(0.2f, 0.f, 0.f, 0.f);
@@ -117,7 +117,7 @@ void Renderer::HMDPresent(VRDevice& hmd)
     }
 }
 
-void Renderer::RenderFrameBuffer(Scene& scene, Material* material, FrameBuffer* fb) const
+void Renderer::RenderFrameBuffer(Scene& scene, Material* material, FrameBuffer* fb)
 {
     // +++ Render +++ //
     glm::mat4 vpMatix = material->mGSMeta.mvpMatrix;
@@ -130,11 +130,12 @@ void Renderer::RenderFrameBuffer(Scene& scene, Material* material, FrameBuffer* 
     mDeviceContext->PSSetShader(material->mPS, nullptr, 0);
     unsigned int stride;
     unsigned int offset;
+    glm::mat4 modelMatix;
 
     for (std::size_t i = 0; i < scene.mEntityList.size(); ++i)
     {
         Entity& entity = scene.mEntityList[i];
-        glm::mat4 modelMatix = glm::translate(glm::mat4(), entity.mPosition);
+        modelMatix = glm::translate(glm::mat4(), entity.mPosition);
         material->mGSMeta.modelMatrix = glm::transpose(modelMatix);
         material->mGSMeta.mvpMatrix = glm::transpose(vpMatix * modelMatix);
         DxHelp::WriteStructuredBuffer<Material::GSMeta>(mDeviceContext, &material->mGSMeta, 1, material->mGSMetaBuff);
@@ -298,7 +299,7 @@ void Renderer::InitialiseD3D()
     mWinFrameBuffer = new FrameBuffer(mDevice, mDeviceContext, mWinWidth, mWinHeight, D3D11_BIND_RENDER_TARGET, backBufferTex);
 }
 
-void Renderer::RenderCompanionWindow(ID3D11ShaderResourceView* leftEye, ID3D11ShaderResourceView* RightEye, ID3D11RenderTargetView* rtv) const
+void Renderer::RenderCompanionWindow(ID3D11ShaderResourceView* leftEye, ID3D11ShaderResourceView* RightEye, ID3D11RenderTargetView* rtv)
 {
     mDeviceContext->OMSetRenderTargets(1, &rtv, nullptr);
     mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
