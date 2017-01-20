@@ -21,7 +21,7 @@ int main()
     hmd.Init();
 
     // Create renderer.
-    Renderer renderer(1024, 1024, false, hmd.GetRenderWidth(), hmd.GetRenderHeight());
+    Renderer renderer(1024, 1024, hmd.IsActive() ? &hmd : nullptr);
 
     // Create scene.
     Scene scene(renderer.mDevice, renderer.mDeviceContext);
@@ -31,16 +31,16 @@ int main()
     camera.mPosition = glm::vec3(0.f, 0.f, -5.f);
 
     // Set Frame Latency.
-    IDXGIDevice1 * pDXGIDevice;
-    DxAssert(renderer.mDevice->QueryInterface(__uuidof(IDXGIDevice), (void **)&pDXGIDevice), S_OK);
-    DxAssert(pDXGIDevice->SetMaximumFrameLatency(1), S_OK);
-    pDXGIDevice->Release();
+    //IDXGIDevice1 * pDXGIDevice;
+    //DxAssert(renderer.mDevice->QueryInterface(__uuidof(IDXGIDevice), (void **)&pDXGIDevice), S_OK);
+    //DxAssert(pDXGIDevice->SetMaximumFrameLatency(1), S_OK);
+    //pDXGIDevice->Release();
 
     long long lastTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     float dt = 0.f;
     while (renderer.Running())
     {
-        { PROFILE("FRAME: " + std::to_string(10), false);
+        { PROFILE("FRAME: " + std::to_string(10), true);
             long long newTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
             dt = static_cast<float>(newTime - lastTime)/1000.f;
             lastTime = newTime;
@@ -48,7 +48,7 @@ int main()
             // VR.
             if (hmd.IsActive())
             {
-                hmd.Update();
+                //hmd.Update();
                 renderer.Render(scene, hmd);
             }   
             // Camera.
@@ -57,6 +57,9 @@ int main()
                 camera.Update(20.f, dt, &renderer);
                 renderer.Render(scene, camera);
             }
+
+            // Present.
+            renderer.Present();
         }
     }
 

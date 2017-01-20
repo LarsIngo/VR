@@ -7,13 +7,12 @@
 #include <iostream>
 #include <vector>
 
-Renderer::Renderer(unsigned int winWidth, unsigned int winHeight, bool fullscreen, unsigned int hmdRenderWidth, unsigned int hmdRenderHeight)
+Renderer::Renderer(unsigned int winWidth, unsigned int winHeight, VRDevice* pHMD)
 {
     mWinWidth = winWidth;
     mWinHeight = winHeight;
-    mFullscreen = fullscreen;
-    mHmdRenderWidth = hmdRenderWidth;
-    mHmdRenderHeight = hmdRenderHeight;
+    mpHMD = pHMD;
+
     mClose = false;
     mHmdLeftTex = nullptr;
     mHmdRightTex = nullptr;
@@ -25,7 +24,7 @@ Renderer::Renderer(unsigned int winWidth, unsigned int winHeight, bool fullscree
     // DirectX.
     InitialiseD3D();
     // VR.
-    if (mHmdRenderWidth != 0 && mHmdRenderHeight != 0) InitialiseHMD();
+    if (mpHMD != nullptr) InitialiseHMD();
 
     // Init shader
     std::wstring VS = L"resources/shaders/ScreenQuad_VS.hlsl";
@@ -36,6 +35,7 @@ Renderer::Renderer(unsigned int winWidth, unsigned int winHeight, bool fullscree
 
 Renderer::~Renderer() 
 {
+    mpHMD = nullptr;
     mDevice->Release();
     mDeviceContext->Release();
     mSwapChain->Release();
@@ -87,9 +87,6 @@ void Renderer::Render(Scene& scene, Camera& camera) const
     float clrColor[4] = { 0.f, 0.2f, 0.f, 0.f };
     mDeviceContext->ClearRenderTargetView(mBackBufferRTV, clrColor);
     RenderRTV(scene, scene.mStandardMaterial, mBackBufferRTV);
-
-    // Present to window.
-    mSwapChain->Present(0, 0);
 }
 
 void Renderer::Render(Scene& scene, VRDevice& hmd) const
@@ -104,23 +101,30 @@ void Renderer::Render(Scene& scene, VRDevice& hmd) const
         mDeviceContext->ClearRenderTargetView(mHmdRightRTV, clrColor);
         RenderRTV(scene, scene.mStandardMaterial, mHmdRightRTV);
     }
+}
 
-    {   // Submit left eye.
-        vr::Texture_t leftEyeTexture = { mHmdLeftTex, vr::TextureType_DirectX, vr::ColorSpace_Gamma };
-        vr::EVRCompositorError eError = vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
-        if (eError != vr::VRCompositorError_None) std::cout << "HMD Error rendering left eye" << std::endl;
+void Renderer::Present()
+{
+    if (mpHMD != nullptr)
+    {
+        {   // Submit left eye.
+            vr::Texture_t leftEyeTexture = { mHmdLeftTex, vr::TextureType_DirectX, vr::ColorSpace_Auto };
+            vr::EVRCompositorError eError = vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
+            if (eError != vr::VRCompositorError_None) std::cout << "HMD Error rendering left eye" << std::endl;
+        }
+        {   // Submit right eye.
+            vr::Texture_t rightEyeTexture = { mHmdRightTex, vr::TextureType_DirectX, vr::ColorSpace_Auto };
+            vr::EVRCompositorError eError = vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
+            if (eError != vr::VRCompositorError_None) std::cout << "HMD Error rendering right eye" << std::endl;
+        }
+        // Render compainion window.
+        RenderCompanionWindow();
     }
-    {   // Submit right eye.
-        vr::Texture_t rightEyeTexture = { mHmdRightTex, vr::TextureType_DirectX, vr::ColorSpace_Gamma };
-        vr::EVRCompositorError eError = vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
-        if (eError != vr::VRCompositorError_None) std::cout << "HMD Error rendering right eye" << std::endl;
-    }
-
-    // Render compainion window.
-    RenderCompanionWindow();
 
     // Present to window.
     mSwapChain->Present(0, 0);
+
+    if (mpHMD != nullptr) mpHMD->Update(); 
 }
 
 void Renderer::RenderRTV(Scene& scene, Material* material, ID3D11RenderTargetView* rtv) const
@@ -265,19 +269,19 @@ void Renderer::InitialiseD3D()
     DXGI_SWAP_CHAIN_DESC scDesc;
     scDesc.BufferDesc.Width = mWinWidth; 		// Using the window's size avoids weird effects. If 0 the window's client width is used.
     scDesc.BufferDesc.Height = mWinHeight;		// Using the window's size avoids weird effects. If 0 the window's client height is used.
-    scDesc.BufferDesc.RefreshRate.Numerator = 0;	// Screen refresh rate as RationalNumber. Zeroing it out makes DXGI calculate it.
-    scDesc.BufferDesc.RefreshRate.Denominator = 0;	// Screen refresh rate as RationalNumber. Zeroing it out makes DXGI calculate it.
+    scDesc.BufferDesc.RefreshRate.Numerator = 60;	// Screen refresh rate as RationalNumber. Zeroing it out makes DXGI calculate it.
+    scDesc.BufferDesc.RefreshRate.Denominator = 1;	// Screen refresh rate as RationalNumber. Zeroing it out makes DXGI calculate it.
     scDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;						// The most common format. Variations include [...]UNORM_SRGB.
     scDesc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;	// The order pixel rows are drawn to the back buffer doesn't matter.
     scDesc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;					// Since the back buffer and window sizes matches, scaling doesn't matter.
     scDesc.SampleDesc.Count = 1;												// Disable multisampling.
     scDesc.SampleDesc.Quality = 0;												// Disable multisampling.
     scDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;						// The back buffer will be rendered to.
-    scDesc.BufferCount = 1;							// We only have one back buffer.
-    scDesc.OutputWindow = mHWND;			        // Must point to the handle for the window used for rendering.
-    scDesc.Windowed = !mFullscreen;					// Run in windowed mode. Fullscreen is covered in a later sample.
-    scDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;	// This makes the display driver select the most efficient technique.
-    scDesc.Flags = 0;								// No additional options.
+    scDesc.BufferCount = 1;							        // We only have one back buffer.
+    scDesc.OutputWindow = mHWND;			                // Must point to the handle for the window used for rendering.
+    scDesc.Windowed = true;					                // Run in windowed mode.
+    scDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;	        // This makes the display driver select the most efficient technique.
+    scDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;  // Alt-enter fullscreen.
 
     DxAssert(D3D11CreateDeviceAndSwapChain(
         nullptr,					// Use the default adapter.
@@ -313,13 +317,16 @@ void Renderer::InitialiseD3D()
 
 void Renderer::InitialiseHMD()
 {
-    assert(mHmdRenderWidth != 0 && mHmdRenderHeight != 0);
+    assert(mpHMD != nullptr);
+    std::uint32_t hmdWidth = mpHMD->GetRenderWidth();
+    std::uint32_t hmdHeight = mpHMD->GetRenderHeight();
+    assert(hmdWidth != 0 && hmdHeight != 0);
 
     D3D11_TEXTURE2D_DESC texDesc;
     {   // --- Create VR render targets --- //
         ZeroMemory(&texDesc, sizeof(D3D11_TEXTURE2D_DESC));
-        texDesc.Width = mHmdRenderWidth;
-        texDesc.Height = mHmdRenderHeight;
+        texDesc.Width = hmdWidth;
+        texDesc.Height = hmdHeight;
         texDesc.MipLevels = 1;
         texDesc.ArraySize = 1;
         texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;

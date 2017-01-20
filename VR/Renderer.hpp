@@ -26,10 +26,8 @@ class Renderer
         // Constructor.
         // winWidth Window width in pixels.
         // winHeight Window height in pixels.
-        // fullscreen Whether to run window in fullscreen.
-        // hmdRenderWidth Hmd render target width in pixels.
-        // hmdRenderHeight Hmd render target height in pixels.
-        Renderer(unsigned int winWidth = 640, unsigned int winHeight = 640, bool fullscreen = false, unsigned int hmdRenderWidth = 0, unsigned int hmdRenderHeight = 0);
+        // pHMD VR Device.
+        Renderer(unsigned int winWidth = 640, unsigned int winHeight = 640, VRDevice* pHMD = nullptr);
 
         // Destructor.
         ~Renderer();
@@ -47,6 +45,9 @@ class Renderer
         // scene Scene to render.
         // hmd VrDevice to render from.
         void Render(Scene& scene, VRDevice& hmd) const;
+
+        // Display rendered result.
+        void Present();
 
         // Render to render target view.
         // scene Scene to render.
@@ -76,14 +77,6 @@ class Renderer
         // mWinHeight Window height in pixels.
         unsigned int mWinHeight;
 
-        // mFullscreen Whether window is in fullscreen.
-        bool mFullscreen;
-
-        // mHmdRenderWidth Hmd render target width in pixels.
-        unsigned int mHmdRenderWidth;
-        // mHmdRenderHeight Hmd render target height in pixels.
-        unsigned int mHmdRenderHeight;
-
         // Window handle.
         HWND mHWND;
         // Window swap chain.
@@ -99,6 +92,8 @@ class Renderer
         // Backbuffer render target view.
         ID3D11RenderTargetView* mBackBufferRTV;
 
+        // VR Device.
+        VRDevice* mpHMD;
         // VR left eye texture.
         ID3D11Texture2D* mHmdLeftTex;
         // VR right eye texture.

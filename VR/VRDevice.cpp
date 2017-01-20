@@ -28,6 +28,7 @@ bool VRDevice::Init()
     if (eError != vr::VRInitError_None)
     {
         mpHMD = nullptr;
+        vr::VR_Shutdown();
         std::cout << "Unable to init VR runtime: " << vr::VR_GetVRInitErrorAsEnglishDescription(eError) << std::endl;
         return false;
     }
@@ -43,6 +44,9 @@ bool VRDevice::Init()
 
     // SetupStereoRenderTargets.
     mpHMD->GetRecommendedRenderTargetSize(&mRenderWidth, &mRenderHeight);
+
+    // Get focus.
+    vr::VRCompositor()->WaitGetPoses(NULL, 0, NULL, 0);
 
     return true;
 }
