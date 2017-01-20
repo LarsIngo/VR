@@ -41,6 +41,9 @@ class VRDevice
         FrameBuffer* mRightEyeFB;
 
         glm::vec3 mPosition;
+		glm::vec3 mRightDir;
+		glm::vec3 mUpDir;
+		glm::vec3 mFrontDir;
 
         glm::mat4 mHMDTransform;
 

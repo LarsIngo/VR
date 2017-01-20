@@ -1,6 +1,6 @@
 #pragma once
 
-#define CAMERA_CONTROLL 1
+#define CAMERA_CONTROLL 0
 
 #define _CRTDBG_MAP_ALLOC
 #include <chrono>
@@ -93,12 +93,12 @@ int main()
             {
                 renderer.Render(scene, hmd);
             }
-
+			
+			camera.Update(20.f, dt, &renderer);
 
             // Window.
             if (!hmd.IsActive() || CAMERA_CONTROLL)
             {
-                camera.Update(20.f, dt, &renderer);
                 renderer.Render(scene, camera);
             }
             else if (hmd.IsActive())
@@ -114,8 +114,9 @@ int main()
             if (hmd.IsActive())
             {
                 renderer.HMDPresent(hmd);
-                hmd.mPosition = camera.mPosition;
+                //.mPosition = camera.mPosition;
                 hmd.Update();
+				hmd.mPosition += hmd.mFrontDir * dt * 20.f;
             }
         }
     }
