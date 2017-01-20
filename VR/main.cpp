@@ -27,7 +27,7 @@ int main()
 
     // Create camera.
     Camera camera;
-    camera.mPosition = glm::vec3(0.f, 0.f, -5.f);
+    camera.mPosition = glm::vec3(0.f, 0.f, 0.f);
 
     // Set Frame Latency.
     //IDXGIDevice1 * pDXGIDevice;
