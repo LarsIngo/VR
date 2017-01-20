@@ -19,6 +19,12 @@ public:
         glm::vec2 uv;
     };
 
+    struct GSMeta
+    {
+        glm::mat4 modelMatrix;
+        glm::mat4 mvpMatrix;
+    } mGSMeta;
+
     // Constructor.
     // pDevice Pointer to D3D11 device.
     // pDeviceContext Pointer to D3D11 device context.
@@ -38,6 +44,9 @@ public:
     ID3D11GeometryShader* mGS;
     // Pixel shader.
     ID3D11PixelShader* mPS;
+
+    // GS Meta buffer.
+    ID3D11ShaderResourceView* mGSMetaBuff;
 
 private:
     ID3D11Device* mpDevice;

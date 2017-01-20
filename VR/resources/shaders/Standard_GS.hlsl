@@ -13,15 +13,24 @@ struct Output
     float2 uv : UV;
 };
 
+struct Meta
+{
+    float4x4 modelMatrix;
+    float4x4 mvpMatrix;
+};
+StructuredBuffer<Meta> g_Meta : register(t0);
+
 [maxvertexcount(3)]
 void main(triangle Input input[3], inout TriangleStream<Output> outStream)
 {
     Output output;
+
+    Meta meta = g_Meta[0];
  
     for (uint i = 0; i < 3; ++i)
     {
-        output.position = float4(input[i].position, 1.f); //mul(float4(position, 1.f), wvpMatrix);
-        output.worldPosition = input[i].position; //mul(float4(position, 1.f), worldMatrix).xyz;
+        output.position = mul(float4(input[i].position, 1.f), meta.mvpMatrix);
+        output.worldPosition = mul(float4(input[i].position, 1.f), meta.modelMatrix).xyz;
         output.normal = input[i].normal;
         output.uv = input[i].uv;
         outStream.Append(output);

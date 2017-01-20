@@ -2,6 +2,7 @@
 #include "DxAssert.hpp"
 #include "DxHelp.hpp"
 #include "Material.hpp"
+#include "DxHelp.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
@@ -71,7 +72,9 @@ void Renderer::Render(Scene& scene, Camera& camera) const
     // Render from camera.
     float clrColor[4] = { 0.f, 0.2f, 0.f, 0.f };
     mDeviceContext->ClearRenderTargetView(mBackBufferRTV, clrColor);
-    RenderRTV(scene, scene.mStandardMaterial, mBackBufferRTV);
+    Material* material = scene.mStandardMaterial;
+    material->mGSMeta.mvpMatrix = camera.mViewMatrix * glm::translate(glm::mat4(), -camera.mPosition);
+    RenderRTV(scene, material, mBackBufferRTV);
 }
 
 void Renderer::Render(Scene& scene, VRDevice& hmd) const
@@ -135,11 +138,15 @@ void Renderer::RenderRTV(Scene& scene, Material* material, ID3D11RenderTargetVie
     DxHelp::CreateVertexBuffer(mDevice, vertexArr.size(), vertexArr.data(), &vertexBuffer);
 
     // +++ Render +++ //
+    material->mGSMeta.modelMatrix = glm::mat4();
+    material->mGSMeta.mvpMatrix = glm::transpose(glm::perspectiveFovLH(45.f, (float)mWinWidth, (float)mWinHeight, 0.01f, 200.f) * material->mGSMeta.mvpMatrix);
+    DxHelp::WriteStructuredBuffer<Material::GSMeta>(mDeviceContext, &material->mGSMeta, 1, material->mGSMetaBuff);
     mDeviceContext->OMSetRenderTargets(1, &rtv, nullptr);
     mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     unsigned int stride = sizeof(Material::Vertex);
     unsigned int offset = 0;
     mDeviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+    mDeviceContext->GSSetShaderResources(0, 1, &material->mGSMetaBuff);
     mDeviceContext->IASetInputLayout(material->mInputLayout);
     mDeviceContext->VSSetShader(material->mVS, nullptr, 0);
     mDeviceContext->GSSetShader(material->mGS, nullptr, 0);
@@ -150,6 +157,7 @@ void Renderer::RenderRTV(Scene& scene, Material* material, ID3D11RenderTargetVie
     void* p[1] = { NULL };
     mDeviceContext->OMSetRenderTargets(1, (ID3D11RenderTargetView**)p, nullptr);
     mDeviceContext->IASetVertexBuffers(0, 1, (ID3D11Buffer**)p, &stride, &offset);
+    mDeviceContext->GSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);
     // --- Render --- //
 
     vertexBuffer->Release();
