@@ -162,6 +162,9 @@ void Renderer::RenderRTV(Scene& scene, Material* material, ID3D11RenderTargetVie
     mDeviceContext->OMSetRenderTargets(1, (ID3D11RenderTargetView**)p, nullptr);
     mDeviceContext->IASetVertexBuffers(0, 1, (ID3D11Buffer**)p, &stride, &offset);
     mDeviceContext->GSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);
+    mDeviceContext->VSSetShader(NULL, nullptr, 0);
+    mDeviceContext->GSSetShader(NULL, nullptr, 0);
+    mDeviceContext->PSSetShader(NULL, nullptr, 0);
     // --- Render --- //
 
     vertexBuffer->Release();
@@ -265,8 +268,8 @@ void Renderer::InitialiseD3D()
     DXGI_SWAP_CHAIN_DESC scDesc;
     scDesc.BufferDesc.Width = mWinWidth; 		// Using the window's size avoids weird effects. If 0 the window's client width is used.
     scDesc.BufferDesc.Height = mWinHeight;		// Using the window's size avoids weird effects. If 0 the window's client height is used.
-    scDesc.BufferDesc.RefreshRate.Numerator = 60;	// Screen refresh rate as RationalNumber. Zeroing it out makes DXGI calculate it.
-    scDesc.BufferDesc.RefreshRate.Denominator = 1;	// Screen refresh rate as RationalNumber. Zeroing it out makes DXGI calculate it.
+    scDesc.BufferDesc.RefreshRate.Numerator = 0;	// Screen refresh rate as RationalNumber. Zeroing it out makes DXGI calculate it.
+    scDesc.BufferDesc.RefreshRate.Denominator = 0;	// Screen refresh rate as RationalNumber. Zeroing it out makes DXGI calculate it.
     scDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;						// The most common format. Variations include [...]UNORM_SRGB.
     scDesc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;	// The order pixel rows are drawn to the back buffer doesn't matter.
     scDesc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;					// Since the back buffer and window sizes matches, scaling doesn't matter.
@@ -326,4 +329,6 @@ void Renderer::RenderCompanionWindow(ID3D11ShaderResourceView* leftEye, ID3D11Sh
     mDeviceContext->OMSetRenderTargets(1, (ID3D11RenderTargetView**)p, nullptr);
     mDeviceContext->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);
     mDeviceContext->PSSetShaderResources(1, 1, (ID3D11ShaderResourceView**)p);
+    mDeviceContext->VSSetShader(NULL, nullptr, 0);
+    mDeviceContext->PSSetShader(NULL, nullptr, 0);
 }
