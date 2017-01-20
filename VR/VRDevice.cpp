@@ -5,15 +5,12 @@
 #include <assert.h>
 #include <iostream>
 
-VRDevice::VRDevice(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext)
+VRDevice::VRDevice()
 {
-    mpDevice = pDevice;
-    mpDeviceContext = pDeviceContext;
     mpHMD = nullptr;
     mpRenderModels = nullptr;
     mLeftEyeFB = nullptr;
     mRightEyeFB = nullptr;
-    if (InitHMD()) InitD3D();
 }
 
 VRDevice::~VRDevice()
@@ -59,11 +56,13 @@ bool VRDevice::InitHMD()
     return true;
 }
 
-void VRDevice::InitD3D()
+void VRDevice::InitD3D(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext)
 {
     assert(mpHMD != nullptr);
     assert(mRenderWidth != 0 && mRenderHeight != 0);
 
+    mpDevice = pDevice;
+    mpDeviceContext = pDeviceContext;
     mLeftEyeFB = new FrameBuffer(mpDevice, mpDeviceContext, mRenderWidth, mRenderHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
     mRightEyeFB = new FrameBuffer(mpDevice, mpDeviceContext, mRenderWidth, mRenderHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
 }
@@ -130,14 +129,14 @@ void VRDevice::Update()
         float nearZ = 0.1f;
         float farZ = 200.f;
         mProjectionLeft = ConvertMatrix(mpHMD->GetProjectionMatrix(vr::Hmd_Eye::Eye_Left, nearZ, farZ));
-        mProjectionLeft = glm::inverse(mProjectionLeft);
+        //mProjectionLeft = glm::inverse(mProjectionLeft);
         mProjectionRight = ConvertMatrix(mpHMD->GetProjectionMatrix(vr::Hmd_Eye::Eye_Right, nearZ, farZ));
-        mProjectionRight = glm::inverse(mProjectionRight);
+        //mProjectionRight = glm::inverse(mProjectionRight);
     }
 
     // GetCurrentViewProjectionMatrix.
     mMVPLeft = mProjectionLeft * mEyePosLeft * mHMDTransform;
-    mMVPRight = mProjectionRight * mEyePosRight *  mHMDTransform;
+    mMVPRight = mProjectionRight * mEyePosRight * mHMDTransform;
 }
 
 glm::mat4 VRDevice::ConvertMatrix(const vr::HmdMatrix34_t& mat)

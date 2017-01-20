@@ -17,11 +17,14 @@ int main()
 {
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
-    // Create renderer.
-    Renderer renderer(1024, 1024);
-
     // Create VRDevice.
-    VRDevice hmd(renderer.mDevice, renderer.mDeviceContext);
+    VRDevice hmd;
+
+    // Create renderer.
+    Renderer renderer(hmd.IsActive() ? hmd.GetRenderWidth() : 1024, hmd.IsActive() ? hmd.GetRenderHeight() : 1024);
+
+    // Init3D3 (Frame buffers).
+    if (hmd.IsActive()) hmd.InitD3D(renderer.mDevice, renderer.mDeviceContext);
 
     // Create scene.
     Mesh* mesh;

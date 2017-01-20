@@ -14,12 +14,15 @@ class VRDevice
 {
     public:
         // Constructor.
-        // pDevice Pointer to D3D11 device.
-        // pDeviceContext Pointer to D3D11 device context.
-        VRDevice(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext);
+        VRDevice();
 
         // Destructor.
         ~VRDevice();
+
+        // Init D3D resources.
+        // pDevice Pointer to D3D11 device.
+        // pDeviceContext Pointer to D3D11 device context.
+        void InitD3D(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext);
 
         // IsActive.
         bool IsActive();
@@ -51,9 +54,6 @@ class VRDevice
     private:
         // Init HMD(VR).
         bool InitHMD();
-
-        // Init D3D resources.
-        void InitD3D();
 
         // Covert to glm matrix.
         glm::mat4 ConvertMatrix(const vr::HmdMatrix34_t& matPose);
