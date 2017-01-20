@@ -171,40 +171,45 @@ void VRDevice::Update()
    
     // GetHMDMatrixPoseEye.
     {
-        vr::HmdMatrix34_t matEye;
-        matEye = mpHMD->GetEyeToHeadTransform(vr::Hmd_Eye::Eye_Left);
-        mProjectionLeft = glm::mat4(
-            matEye.m[0][0], matEye.m[1][0], matEye.m[2][0], 0.0,
-            matEye.m[0][1], matEye.m[1][1], matEye.m[2][1], 0.0,
-            matEye.m[0][2], matEye.m[1][2], matEye.m[2][2], 0.0,
-            matEye.m[0][3], matEye.m[1][3], matEye.m[2][3], 1.0f
-        );
+        mEyePosLeft = ConvertMatrix(mpHMD->GetEyeToHeadTransform(vr::Hmd_Eye::Eye_Left));
+        mEyePosLeft = glm::inverse(mEyePosLeft);
+        mEyePosRight = ConvertMatrix(mpHMD->GetEyeToHeadTransform(vr::Hmd_Eye::Eye_Right));
+        mEyePosRight = glm::inverse(mEyePosRight);
+    }
+    {
+        float nearZ = 0.1f;
+        float farZ = 200.f;
+        mProjectionLeft = ConvertMatrix(mpHMD->GetProjectionMatrix(vr::Hmd_Eye::Eye_Left, nearZ, farZ));
         mProjectionLeft = glm::inverse(mProjectionLeft);
-
-        matEye = mpHMD->GetEyeToHeadTransform(vr::Hmd_Eye::Eye_Right);
-        mProjectionRight = glm::mat4(
-            matEye.m[0][0], matEye.m[1][0], matEye.m[2][0], 0.0,
-            matEye.m[0][1], matEye.m[1][1], matEye.m[2][1], 0.0,
-            matEye.m[0][2], matEye.m[1][2], matEye.m[2][2], 0.0,
-            matEye.m[0][3], matEye.m[1][3], matEye.m[2][3], 1.0f
-        );
+        mProjectionRight = ConvertMatrix(mpHMD->GetProjectionMatrix(vr::Hmd_Eye::Eye_Right, nearZ, farZ));
         mProjectionRight = glm::inverse(mProjectionRight);
     }
 
     // GetCurrentViewProjectionMatrix.
-    mMVPLeft = mProjectionLeft * mEyeTransformLeft * mHMDTransform; // TODO order!
-    mMVPRight = mProjectionRight * mEyeTransformRight *  mHMDTransform;
+    mMVPLeft = mProjectionLeft * mEyePosLeft * mHMDTransform;
+    mMVPRight = mProjectionRight * mEyePosRight *  mHMDTransform;
 }
 
-glm::mat4 VRDevice::ConvertMatrix(const vr::HmdMatrix34_t& matPose)
+glm::mat4 VRDevice::ConvertMatrix(const vr::HmdMatrix34_t& mat)
 {
-    glm::mat4 matrixObj(
-        matPose.m[0][0], matPose.m[1][0], matPose.m[2][0], 0.0,
-        matPose.m[0][1], matPose.m[1][1], matPose.m[2][1], 0.0,
-        matPose.m[0][2], matPose.m[1][2], matPose.m[2][2], 0.0,
-        matPose.m[0][3], matPose.m[1][3], matPose.m[2][3], 1.0f
+    glm::mat4 glmMat(
+        mat.m[0][0], mat.m[1][0], mat.m[2][0], 0.0,
+        mat.m[0][1], mat.m[1][1], mat.m[2][1], 0.0,
+        mat.m[0][2], mat.m[1][2], mat.m[2][2], 0.0,
+        mat.m[0][3], mat.m[1][3], mat.m[2][3], 1.0f
     );
-    return matrixObj;
+    return glmMat;
+}
+
+glm::mat4 VRDevice::ConvertMatrix(const vr::HmdMatrix44_t& mat)
+{
+    glm::mat4 glmMat(
+        mat.m[0][0], mat.m[1][0], mat.m[2][0], mat.m[3][0],
+		mat.m[0][1], mat.m[1][1], mat.m[2][1], mat.m[3][1],
+		mat.m[0][2], mat.m[1][2], mat.m[2][2], mat.m[3][2],
+		mat.m[0][3], mat.m[1][3], mat.m[2][3], mat.m[3][3]
+    );
+    return glmMat;
 }
 
 std::uint32_t VRDevice::GetRenderWidth()

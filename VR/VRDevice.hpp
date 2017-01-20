@@ -49,8 +49,9 @@ class VRDevice
         ID3D11RenderTargetView* mHmdRightRTV;
 
         glm::mat4 mHMDTransform;
-        glm::mat4 mEyeTransformLeft;
-        glm::mat4 mEyeTransformRight;
+
+        glm::mat4 mEyePosLeft;
+        glm::mat4 mEyePosRight;
 
         glm::mat4 mProjectionLeft;
         glm::mat4 mProjectionRight;
@@ -67,6 +68,7 @@ class VRDevice
 
         // Covert to glm matrix.
         glm::mat4 ConvertMatrix(const vr::HmdMatrix34_t& matPose);
+        glm::mat4 ConvertMatrix(const vr::HmdMatrix44_t& matPose);
 
         // D3D
         ID3D11Device* mpDevice;
