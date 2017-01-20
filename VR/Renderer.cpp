@@ -2,6 +2,7 @@
 #include "DxAssert.hpp"
 #include "DxHelp.hpp"
 #include "Material.hpp"
+#include "Mesh.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
@@ -119,10 +120,8 @@ void Renderer::HMDPresent(VRDevice& hmd)
 void Renderer::RenderFrameBuffer(Scene& scene, Material* material, FrameBuffer* fb) const
 {
     // +++ Render +++ //
-    material->mGSMeta.modelMatrix = glm::mat4();
-    material->mGSMeta.mvpMatrix = glm::transpose(material->mGSMeta.mvpMatrix);
-    DxHelp::WriteStructuredBuffer<Material::GSMeta>(mDeviceContext, &material->mGSMeta, 1, material->mGSMetaBuff);
-    mDeviceContext->OMSetRenderTargets(1, &fb->mColRTV, nullptr);
+    glm::mat4 vpMatix = material->mGSMeta.mvpMatrix;
+    mDeviceContext->OMSetRenderTargets(1, &fb->mColRTV, fb->mDepthDSV);
     mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     mDeviceContext->GSSetShaderResources(0, 1, &material->mGSMetaBuff);
     mDeviceContext->IASetInputLayout(material->mInputLayout);
@@ -132,13 +131,20 @@ void Renderer::RenderFrameBuffer(Scene& scene, Material* material, FrameBuffer* 
     unsigned int stride;
     unsigned int offset;
 
-    for (std::size_t i = 0; i < scene.mMeshList.size(); ++i)
+    for (std::size_t i = 0; i < scene.mEntityList.size(); ++i)
     {
-        Mesh* mesh = scene.mMeshList[i];
+        Entity& entity = scene.mEntityList[i];
+        glm::mat4 modelMatix = glm::translate(glm::mat4(), entity.mPosition);
+        material->mGSMeta.modelMatrix = glm::transpose(modelMatix);
+        material->mGSMeta.mvpMatrix = glm::transpose(vpMatix * modelMatix);
+        DxHelp::WriteStructuredBuffer<Material::GSMeta>(mDeviceContext, &material->mGSMeta, 1, material->mGSMetaBuff);
+
+        Mesh* mesh = entity.mpMesh;
         stride = sizeof(Material::Vertex);
         offset = 0;
         mDeviceContext->IASetVertexBuffers(0, 1, &mesh->mVertexBuffer, &stride, &offset);
-        mDeviceContext->Draw(mesh->mNumVertices, 0);
+        mDeviceContext->IASetIndexBuffer(mesh->mIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+        mDeviceContext->DrawIndexed(mesh->mNumIndices, 0, 0);
     }
 
     void* p[1] = { NULL };

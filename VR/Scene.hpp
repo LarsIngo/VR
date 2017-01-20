@@ -6,7 +6,7 @@
 #include <d3dcompiler.inl>
 #include <vector>
 
-#include "Mesh.hpp"
+#include "Entity.hpp"
 
 class Material;
 
@@ -24,8 +24,8 @@ class Scene
         // Standard material.
         Material* mStandardMaterial;
 
-        // List of meshes in scene.
-        std::vector<Mesh*> mMeshList;
+        // List of entities in scene.
+        std::vector<Entity> mEntityList;
 
     private:
         ID3D11Device* mpDevice;

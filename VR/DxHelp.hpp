@@ -11,20 +11,16 @@
 
 namespace DxHelp 
 {
-    // Creates vertex buffer.
+    // Creates buffer.
     // device D3D11 device.
+    // usage Buffer useage flag.
+    // bindFlags Buffer bind flags.
+    // cpuAccessFlags Buffer CPU access flags.
+    // buffer The buffer.
+    // initData Pointer to initial data.
     // numOfElements Maximum number of elements (size of buffer equals sizeOf(T) * numOfElements).
-    // initData Initial data.
-    // vBuffer Vertex buffer.
     template <typename T>
-    void CreateVertexBuffer(ID3D11Device* device, unsigned int numOfElements, T* initData, ID3D11Buffer** vBuffer);
-
-    // Creates constant buffer.
-    // device D3D11 device.
-    // data Pointer to data.
-    // cBuffer Constant buffer.
-    template <typename T>
-    void CreateConstantBuffer(ID3D11Device* device, T* data, ID3D11Buffer** cBuffer);
+    void CreateBuffer(ID3D11Device* device, D3D11_USAGE usage, UINT bindFlags, UINT cpuAccessFlags, ID3D11Buffer** buffer, T* initData = nullptr, unsigned int numOfElements = 0);
 
     // Creates source stuctured buffer (CPU write, GPU read).
     // device D3D11 device.
@@ -85,49 +81,28 @@ namespace DxHelp
 }
 
 template <typename T>
-inline void DxHelp::CreateVertexBuffer(ID3D11Device* device, unsigned int numOfElements, T* initData, ID3D11Buffer** vBuffer)
+inline void DxHelp::CreateBuffer(ID3D11Device* device, D3D11_USAGE usage, UINT bindFlags, UINT cpuAccessFlags, ID3D11Buffer** buffer, T* initData, unsigned int numOfElements)
 {
     D3D11_BUFFER_DESC buffDesc;
     ZeroMemory(&buffDesc, sizeof(D3D11_BUFFER_DESC));
     buffDesc.ByteWidth = sizeof(T) * numOfElements;
-    buffDesc.Usage = D3D11_USAGE_DEFAULT;
-    buffDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-    buffDesc.CPUAccessFlags = 0;
+    buffDesc.Usage = usage;
+    buffDesc.BindFlags = bindFlags;
+    buffDesc.CPUAccessFlags = cpuAccessFlags;
     buffDesc.MiscFlags = 0;
     buffDesc.StructureByteStride = sizeof(T);
+
     if (numOfElements != 0 && initData != nullptr)
     {
         D3D11_SUBRESOURCE_DATA subRes;
         ZeroMemory(&subRes, sizeof(D3D11_SUBRESOURCE_DATA));
         subRes.pSysMem = initData;
-        subRes.SysMemPitch = sizeof(T) * numOfElements;
-        DxAssert(device->CreateBuffer(&buffDesc, &subRes, vBuffer), S_OK);
+        subRes.SysMemPitch = 0;
+        subRes.SysMemPitch = 0;
+        DxAssert(device->CreateBuffer(&buffDesc, &subRes, buffer), S_OK);
     }
     else
-    {
-        DxAssert(device->CreateBuffer(&buffDesc, NULL, vBuffer), S_OK);
-    }
-}
-
-template <typename T>
-inline void DxHelp::CreateConstantBuffer(ID3D11Device* device, T* data, ID3D11Buffer** cBuffer)
-{
-    D3D11_BUFFER_DESC cbDesc;
-    ZeroMemory(&cbDesc, sizeof(D3D11_BUFFER_DESC));
-    cbDesc.ByteWidth = sizeof(T);
-    cbDesc.Usage = D3D11_USAGE_IMMUTABLE;
-    cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    cbDesc.CPUAccessFlags = 0;
-    cbDesc.MiscFlags = 0;
-    cbDesc.StructureByteStride = sizeof(T);
-
-    D3D11_SUBRESOURCE_DATA initData;
-    ZeroMemory(&initData, sizeof(D3D11_SUBRESOURCE_DATA));
-    initData.pSysMem = data;
-    initData.SysMemPitch = 0;
-    initData.SysMemSlicePitch = 0;
-
-    DxAssert((*mpDevice)->CreateBuffer(&cbDesc, &initData, cBuffer), S_OK);
+        DxAssert(device->CreateBuffer(&buffDesc, NULL, buffer), S_OK);
 }
 
 template <typename T>

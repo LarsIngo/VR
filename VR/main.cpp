@@ -7,6 +7,7 @@
 
 #include "Camera.hpp"
 #include "DxAssert.hpp"
+#include "Mesh.hpp"
 #include "Profiler.hpp"
 #include "Renderer.hpp"
 #include "Scene.hpp"
@@ -27,8 +28,19 @@ int main()
     Scene scene(renderer.mDevice, renderer.mDeviceContext);
     {
         mesh = new Mesh(renderer.mDevice, renderer.mDeviceContext, scene.mStandardMaterial);
-        mesh->Load("");
-        scene.mMeshList.push_back(mesh);
+        mesh->Load("resources/assets/OBJBox.obj");
+        Entity entity;
+        entity.mpMesh = mesh;
+        {
+            int r = 3;
+            for (int z = -r; z <= r; ++z)
+                for (int y = -r; y <= r; ++y)
+                    for (int x = -r; x <= r; ++x)
+                    {
+                        entity.mPosition = glm::vec3(x, y, z) * 5.f;
+                        scene.mEntityList.push_back(entity);
+                    }
+        }
     }
 
     // Create camera.

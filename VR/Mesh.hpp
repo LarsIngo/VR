@@ -4,9 +4,9 @@
 #pragma comment(lib, "d3dcompiler.lib")
 #include <d3d11.h>
 #include <d3dcompiler.inl>
+#include <assimp/Importer.hpp>
 #include <glm/glm.hpp>
 #include <vector>
-#include <string>
 
 #include "Material.hpp"
 
@@ -24,7 +24,7 @@ class Mesh
 
         // Load mesh.
         // meshPath Path to mesh.
-        void Load(std::string meshPath);
+        void Load(const char* meshPath);
 
         // Material.
         Material* mMaterial;
@@ -32,10 +32,31 @@ class Mesh
         // Number of vertices.
         unsigned int mNumVertices;
 
+        //Number of indices.
+        unsigned int mNumIndices;
+
         // Vertex buffer.
         ID3D11Buffer* mVertexBuffer;
 
+        // Index buffer.
+        ID3D11Buffer* mIndexBuffer;
+
     private:
+        struct MeshEntry {
+            unsigned int numIndices = 0;
+            unsigned int baseVertex = 0;
+            unsigned int baseIndex = 0;
+        };
+
+        void LoadAssimpScene(const aiScene* aScene);
+        void CpyVec(glm::vec3& glmVec, const aiVector3D& aiVec);
+        void CpyVec(glm::vec2& glmVec, const aiVector3D& aiVec);
+        void CpyVec(glm::vec2& glmVec, const aiVector2D& aiVec);
+
         ID3D11Device* mpDevice;
         ID3D11DeviceContext* mpDeviceContext;
+
+        static Assimp::Importer aImporter;
+        std::vector<Material::Vertex> vertices;
+        std::vector<unsigned int> indices;
 };
