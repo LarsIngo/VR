@@ -21,7 +21,7 @@ int main()
     VRDevice hmd;
 
     // Create renderer.
-    Renderer renderer(hmd.IsActive() ? hmd.GetRenderWidth() : 1024, hmd.IsActive() ? hmd.GetRenderHeight() : 1024);
+    Renderer renderer(1024, 1024 / 2);
 
     // Init3D3 (Frame buffers).
     if (hmd.IsActive()) hmd.InitD3D(renderer.mDevice, renderer.mDeviceContext);

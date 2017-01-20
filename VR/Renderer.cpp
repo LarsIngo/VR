@@ -128,6 +128,14 @@ void Renderer::RenderFrameBuffer(Scene& scene, Material* material, FrameBuffer* 
     mDeviceContext->VSSetShader(material->mVS, nullptr, 0);
     mDeviceContext->GSSetShader(material->mGS, nullptr, 0);
     mDeviceContext->PSSetShader(material->mPS, nullptr, 0);
+	D3D11_VIEWPORT vp;
+	vp.Width = (float)fb->mWidth;
+	vp.Height = (float)fb->mHeight;
+	vp.MinDepth = 0.0f;
+	vp.MaxDepth = 1.0f;
+	vp.TopLeftX = 0;
+	vp.TopLeftY = 0;
+	mDeviceContext->RSSetViewports(1, &vp);
     unsigned int stride;
     unsigned int offset;
     glm::mat4 modelMatix;
@@ -285,15 +293,6 @@ void Renderer::InitialiseD3D()
         &mDeviceContext				// [out] The created device context.
     ), S_OK);
 
-    D3D11_VIEWPORT vp;
-    vp.Width = (float)mWinWidth;
-    vp.Height = (float)mWinHeight;
-    vp.MinDepth = 0.0f;
-    vp.MaxDepth = 1.0f;
-    vp.TopLeftX = 0;
-    vp.TopLeftY = 0;
-    mDeviceContext->RSSetViewports(1, &vp);
-
     ID3D11Texture2D* backBufferTex;
     DxAssert(mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBufferTex)), S_OK);
     mWinFrameBuffer = new FrameBuffer(mDevice, mDeviceContext, mWinWidth, mWinHeight, D3D11_BIND_RENDER_TARGET, backBufferTex);
@@ -307,6 +306,14 @@ void Renderer::RenderCompanionWindow(ID3D11ShaderResourceView* leftEye, ID3D11Sh
     mDeviceContext->PSSetShader(mCompanionWindowPS, nullptr, 0);
     ID3D11ShaderResourceView* srv[] = { leftEye, RightEye };
     mDeviceContext->PSSetShaderResources(0, 2, srv);
+	D3D11_VIEWPORT vp;
+	vp.Width = (float)mWinWidth;
+	vp.Height = (float)mWinHeight;
+	vp.MinDepth = 0.0f;
+	vp.MaxDepth = 1.0f;
+	vp.TopLeftX = 0;
+	vp.TopLeftY = 0;
+	mDeviceContext->RSSetViewports(1, &vp);
 
     mDeviceContext->Draw(4, 0);
 
