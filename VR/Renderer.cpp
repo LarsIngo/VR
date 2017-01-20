@@ -85,13 +85,13 @@ void Renderer::Render(Scene& scene, Camera& camera)
 void Renderer::Render(Scene& scene, VRDevice& hmd)
 {
     {   // Render left eye.
-        hmd.mLeftEyeFB->Clear(0.2f, 0.f, 0.f, 0.f);
+        hmd.mLeftEyeFB->Clear(0.2f, 0.2f, 0.2f, 0.f);
         Material* material = scene.mStandardMaterial;
         material->mGSMeta.mvpMatrix = hmd.mMVPLeft;
         RenderFrameBuffer(scene, material, hmd.mLeftEyeFB);
     }
     {   // Render right eye.
-        hmd.mRightEyeFB->Clear(0.f, 0.f, 0.2f, 0.f);
+        hmd.mRightEyeFB->Clear(0.2f, 0.2f, 0.2f, 0.f);
         Material* material = scene.mStandardMaterial;
         material->mGSMeta.mvpMatrix = hmd.mMVPRight;
         RenderFrameBuffer(scene, material, hmd.mRightEyeFB);
