@@ -64,6 +64,9 @@ class Renderer
         // fb Frame buffer to render.
         void RenderFrameBuffer(Scene& scene, Material* material, FrameBuffer* fb);
 
+        // Render companion window.
+        void RenderCompanionWindow(FrameBuffer* leftEyeFb, FrameBuffer* rightEyeFb, FrameBuffer* windowFb);
+
         // Get key status.
         // vKey Windows virtual key.
         // Returns whether key is pressed or not.
@@ -110,9 +113,6 @@ class Renderer
 
         // Initialise D3D(directX).
         void InitialiseD3D();
-
-        // Render companion window.
-        void RenderCompanionWindow(ID3D11ShaderResourceView* leftEye, ID3D11ShaderResourceView* RightEye, ID3D11RenderTargetView* rtv);
 
         // Mouse position.
         glm::vec2 mMousePosition;

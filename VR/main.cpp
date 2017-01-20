@@ -1,5 +1,7 @@
 #pragma once
 
+#define CAMERA_CONTROLL 1
+
 #define _CRTDBG_MAP_ALLOC
 #include <chrono>
 #include <crtdbg.h>
@@ -81,16 +83,24 @@ int main()
             // Clear window.
             renderer.WinClear();
 
-            // VR.
+
+            // VR device.
             if (hmd.IsActive())
             {
                 renderer.Render(scene, hmd);
-            }   
-            // Camera.
-            else
+            }
+
+
+            // Window.
+            if (!hmd.IsActive() || CAMERA_CONTROLL)
             {
                 camera.Update(20.f, dt, &renderer);
                 renderer.Render(scene, camera);
+            }
+            else if (hmd.IsActive())
+            {
+                // Render compainion window.
+                renderer.RenderCompanionWindow(hmd.mLeftEyeFB, hmd.mRightEyeFB, renderer.mWinFrameBuffer);
             }
 
             // Present.

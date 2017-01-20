@@ -96,8 +96,6 @@ void Renderer::Render(Scene& scene, VRDevice& hmd)
         material->mGSMeta.mvpMatrix = hmd.mMVPRight;
         RenderFrameBuffer(scene, material, hmd.mRightEyeFB);
     }
-    // Render compainion window.
-    RenderCompanionWindow(hmd.mLeftEyeFB->mColSRV, hmd.mRightEyeFB->mColSRV, mWinFrameBuffer->mColRTV);
 }
 
 void Renderer::WinClear()
@@ -307,13 +305,13 @@ void Renderer::InitialiseD3D()
     mWinFrameBuffer = new FrameBuffer(mDevice, mDeviceContext, mWinWidth, mWinHeight, D3D11_BIND_RENDER_TARGET, backBufferTex);
 }
 
-void Renderer::RenderCompanionWindow(ID3D11ShaderResourceView* leftEye, ID3D11ShaderResourceView* RightEye, ID3D11RenderTargetView* rtv)
+void Renderer::RenderCompanionWindow(FrameBuffer* leftEyeFb, FrameBuffer* rightEyeFb, FrameBuffer* windowFb)
 {
-    mDeviceContext->OMSetRenderTargets(1, &rtv, nullptr);
+    mDeviceContext->OMSetRenderTargets(1, &windowFb->mColRTV, nullptr);
     mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
     mDeviceContext->VSSetShader(mScreenQuadVS, nullptr, 0);
     mDeviceContext->PSSetShader(mCompanionWindowPS, nullptr, 0);
-    ID3D11ShaderResourceView* srv[] = { leftEye, RightEye };
+    ID3D11ShaderResourceView* srv[] = { leftEyeFb->mColSRV, rightEyeFb->mColSRV };
     mDeviceContext->PSSetShaderResources(0, 2, srv);
 	D3D11_VIEWPORT vp;
 	vp.Width = (float)mWinWidth;
