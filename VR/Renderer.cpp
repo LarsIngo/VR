@@ -73,7 +73,7 @@ void Renderer::Render(Scene& scene, Camera& camera) const
     float clrColor[4] = { 0.f, 0.2f, 0.f, 0.f };
     mDeviceContext->ClearRenderTargetView(mBackBufferRTV, clrColor);
     Material* material = scene.mStandardMaterial;
-    material->mGSMeta.mvpMatrix = camera.mViewMatrix * glm::translate(glm::mat4(), -camera.mPosition);
+    material->mGSMeta.mvpMatrix = glm::perspectiveFovLH(45.f, (float)mWinWidth, (float)mWinHeight, 0.01f, 200.f) * camera.mViewMatrix * glm::translate(glm::mat4(), -camera.mPosition);
     RenderRTV(scene, material, mBackBufferRTV);
 }
 
@@ -82,12 +82,16 @@ void Renderer::Render(Scene& scene, VRDevice& hmd) const
     {   // Render left eye.
         float clrColor[4] = { 0.2f, 0.0f, 0.f, 0.f };
         mDeviceContext->ClearRenderTargetView(hmd.mHmdLeftRTV, clrColor);
-        RenderRTV(scene, scene.mStandardMaterial, hmd.mHmdLeftRTV);
+        Material* material = scene.mStandardMaterial;
+        material->mGSMeta.mvpMatrix = hmd.mMVPLeft;
+        RenderRTV(scene, material, hmd.mHmdLeftRTV);
     }
     {   // Render right eye.
         float clrColor[4] = { 0.f, 0.f, 0.2f, 0.f };
         mDeviceContext->ClearRenderTargetView(hmd.mHmdRightRTV, clrColor);
-        RenderRTV(scene, scene.mStandardMaterial, hmd.mHmdRightRTV);
+        Material* material = scene.mStandardMaterial;
+        material->mGSMeta.mvpMatrix = hmd.mMVPRight;
+        RenderRTV(scene, material, hmd.mHmdRightRTV);
     }
     // Render compainion window.
     RenderCompanionWindow(hmd.mHmdLeftSRV, hmd.mHmdRightSRV, mBackBufferRTV);
@@ -139,7 +143,7 @@ void Renderer::RenderRTV(Scene& scene, Material* material, ID3D11RenderTargetVie
 
     // +++ Render +++ //
     material->mGSMeta.modelMatrix = glm::mat4();
-    material->mGSMeta.mvpMatrix = glm::transpose(glm::perspectiveFovLH(45.f, (float)mWinWidth, (float)mWinHeight, 0.01f, 200.f) * material->mGSMeta.mvpMatrix);
+    material->mGSMeta.mvpMatrix = glm::transpose(material->mGSMeta.mvpMatrix);
     DxHelp::WriteStructuredBuffer<Material::GSMeta>(mDeviceContext, &material->mGSMeta, 1, material->mGSMetaBuff);
     mDeviceContext->OMSetRenderTargets(1, &rtv, nullptr);
     mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

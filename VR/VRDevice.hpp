@@ -48,6 +48,16 @@ class VRDevice
         // VR right eye render target.
         ID3D11RenderTargetView* mHmdRightRTV;
 
+        glm::mat4 mHMDTransform;
+        glm::mat4 mEyeTransformLeft;
+        glm::mat4 mEyeTransformRight;
+
+        glm::mat4 mProjectionLeft;
+        glm::mat4 mProjectionRight;
+
+        glm::mat4 mMVPLeft;
+        glm::mat4 mMVPRight;
+
     private:
         // Init HMD(VR).
         bool InitHMD();
@@ -71,16 +81,6 @@ class VRDevice
         glm::mat4 mDeviceTransforms[vr::k_unMaxTrackedDeviceCount];
         std::string m_strPoseClasses;                            // what classes we saw poses for this frame
         char mDeviceClassChar[vr::k_unMaxTrackedDeviceCount];   // for each device, a character representing its class
-    
-        glm::mat4 mHMDTransform;
-        glm::mat4 mEyeTransformLeft;
-        glm::mat4 mEyeTransformRight;
-
-        glm::mat4 mProjectionLeft;
-        glm::mat4 mProjectionRight;
-
-        glm::mat4 mMVPLeft;
-        glm::mat4 mMVPRight;
 
         std::uint32_t mRenderWidth;
         std::uint32_t mRenderHeight;
