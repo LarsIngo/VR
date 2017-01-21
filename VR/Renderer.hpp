@@ -119,4 +119,10 @@ class Renderer
 
         // Window should close.
         bool mClose;
+
+        // Sampler.
+        ID3D11SamplerState* mSampState;
+
+        // Rasterizer.
+        ID3D11RasterizerState* mRasState;
 };

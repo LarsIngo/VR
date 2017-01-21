@@ -48,25 +48,6 @@ void Mesh::Load(const char* meshPath)
 
     if (aScene != nullptr) LoadAssimpScene(aScene);
 
-    //std::vector<Material::Vertex> vertexArr;
-    //Material::Vertex vert;
-
-    //vert.position = glm::vec3(0.f, 0.f, 1.f);
-    //vert.normal = glm::vec3(0.f, 0.f, -1.f);
-    //vert.uv = glm::vec2(0.f, 0.f);
-    //vertexArr.push_back(vert);
-
-    //vert.position = glm::vec3(0.5f, -0.5f, 1.f);
-    //vert.normal = glm::vec3(0.f, 0.f, -1.f);
-    //vert.uv = glm::vec2(1.f, 1.f);
-    //vertexArr.push_back(vert);
-
-    //vert.position = glm::vec3(0.f, -0.5f, 1.f);
-    //vert.normal = glm::vec3(0.f, 0.f, -1.f);
-    //vert.uv = glm::vec2(0.f, 1.f);
-    //vertexArr.push_back(vert);
-
-    //mNumVertices = (unsigned int)vertices.size();
     mNumVertices = (unsigned int)vertices.size();
     mNumIndices = (unsigned int)indices.size();
     DxHelp::CreateBuffer(mpDevice, D3D11_USAGE_IMMUTABLE, D3D11_BIND_VERTEX_BUFFER, 0, &mVertexBuffer, vertices.data(), mNumVertices);
@@ -108,9 +89,9 @@ void Mesh::LoadAssimpScene(const aiScene* aScene)
         for (unsigned int i = 0; i < aMesh->mNumVertices; ++i) {
             Material::Vertex& vert = vertices[numVertices];
             CpyVec(vert.position, aMesh->mVertices[i]);
-            CpyVec(vert.normal, aMesh->mNormals[i]);
             CpyVec(vert.uv, aMesh->mTextureCoords[0][i]);
-            //CpyVec(vert.tangent, aMesh->mTangents[i]);
+            CpyVec(vert.normal, aMesh->mNormals[i]);
+            CpyVec(vert.tangent, aMesh->mTangents[i]);
             //verticesPos[numVertices] = &vertices[numVertices].position;
             numVertices++;
         }

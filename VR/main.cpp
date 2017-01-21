@@ -44,16 +44,21 @@ int main()
 
     // Create scene.
     Mesh* mesh;
-    Texture2D* texture2D;
+    Texture2D* diffuse;
+    Texture2D* normal;
     Scene scene(renderer.mDevice, renderer.mDeviceContext);
     {
         mesh = new Mesh(renderer.mDevice, renderer.mDeviceContext, scene.mStandardMaterial);
-        mesh->Load("resources/assets/OBJBox.obj");
-        texture2D = new Texture2D(renderer.mDevice, renderer.mDeviceContext);
-        texture2D->Load("resources/assets/DefaultDiffuse.png");
+        mesh->Load("resources/assets/skull/skull.obj");
+        diffuse = new Texture2D(renderer.mDevice, renderer.mDeviceContext);
+        diffuse->Load("resources/assets/skull/skull_diffuse1.jpg");
+        normal = new Texture2D(renderer.mDevice, renderer.mDeviceContext);
+        normal->Load("resources/assets/skull/skull_normal.jpg");
 
         Entity entity;
         entity.mpMesh = mesh;
+        entity.mpDiffuseTex = diffuse;
+        entity.mpNormalTex = normal;
         {
             int r = 3;
             for (int z = -r; z <= r; ++z)
@@ -116,7 +121,7 @@ int main()
                 renderer.HMDPresent(hmd);
                 //.mPosition = camera.mPosition;
                 hmd.Update();
-				hmd.mPosition += hmd.mFrontDir * dt * 20.f;
+				hmd.mPosition += hmd.mFrontDir * dt * 10.f;
             }
         }
     }
@@ -130,7 +135,8 @@ int main()
 
         // Clear.
         delete mesh;
-        delete texture2D;
+        delete diffuse;
+        delete normal;
         scene.Clear();
         hmd.Shutdown();
         renderer.Shutdown();

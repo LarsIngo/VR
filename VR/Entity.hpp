@@ -20,6 +20,9 @@ class Entity
         // Mesh.
         Mesh* mpMesh;
 
-        // Texture2D.
-        Texture2D* mpTexture2D;
+        // Diffuse.
+        Texture2D* mpDiffuseTex;
+
+        // Normal.
+        Texture2D* mpNormalTex;
 };

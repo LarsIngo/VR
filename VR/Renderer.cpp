@@ -3,6 +3,7 @@
 #include "DxHelp.hpp"
 #include "Material.hpp"
 #include "Mesh.hpp"
+#include "Texture2D.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
@@ -33,6 +34,8 @@ Renderer::~Renderer()
 
 void Renderer::Shutdown()
 {
+    mSampState->Release();
+    mRasState->Release();
     mDeviceContext->ClearState();
     mDeviceContext->Flush();
     mDevice->Release();
@@ -154,6 +157,8 @@ void Renderer::RenderFrameBuffer(Scene& scene, Material* material, FrameBuffer* 
         material->mGSMeta.mvpMatrix = glm::transpose(vpMatix * modelMatix);
         DxHelp::WriteStructuredBuffer<Material::GSMeta>(mDeviceContext, &material->mGSMeta, 1, material->mGSMetaBuff);
 
+        mDeviceContext->PSSetShaderResources(0, 1, &entity.mpDiffuseTex->mSRV);
+        mDeviceContext->PSSetShaderResources(1, 1, &entity.mpNormalTex->mSRV);
         Mesh* mesh = entity.mpMesh;
         stride = sizeof(Material::Vertex);
         offset = 0;
@@ -166,6 +171,8 @@ void Renderer::RenderFrameBuffer(Scene& scene, Material* material, FrameBuffer* 
     mDeviceContext->OMSetRenderTargets(1, (ID3D11RenderTargetView**)p, nullptr);
     mDeviceContext->IASetVertexBuffers(0, 1, (ID3D11Buffer**)p, &stride, &offset);
     mDeviceContext->GSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);
+    mDeviceContext->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);
+    mDeviceContext->PSSetShaderResources(1, 1, (ID3D11ShaderResourceView**)p);
     mDeviceContext->VSSetShader(NULL, nullptr, 0);
     mDeviceContext->GSSetShader(NULL, nullptr, 0);
     mDeviceContext->PSSetShader(NULL, nullptr, 0);
@@ -303,6 +310,37 @@ void Renderer::InitialiseD3D()
     ID3D11Texture2D* backBufferTex;
     DxAssert(mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBufferTex)), S_OK);
     mWinFrameBuffer = new FrameBuffer(mDevice, mDeviceContext, mWinWidth, mWinHeight, D3D11_BIND_RENDER_TARGET, backBufferTex);
+
+    // Sample state.
+    D3D11_SAMPLER_DESC sampDesc;
+    ZeroMemory(&sampDesc, sizeof(D3D11_SAMPLER_DESC));
+    sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sampDesc.MinLOD = -FLT_MAX;
+    sampDesc.MaxLOD = FLT_MAX;
+    sampDesc.MipLODBias = 0.f;
+    sampDesc.MaxAnisotropy = 1;
+    sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    DxAssert(mDevice->CreateSamplerState(&sampDesc, &mSampState), S_OK);
+    mDeviceContext->PSSetSamplers(0, 1, &mSampState);
+
+    // Ras state.
+    D3D11_RASTERIZER_DESC rasDesc;
+    ZeroMemory(&rasDesc, sizeof(D3D11_RASTERIZER_DESC));
+    rasDesc.FillMode = D3D11_FILL_SOLID; // D3D11_FILL_WIREFRAME
+    rasDesc.CullMode = D3D11_CULL_BACK;
+    rasDesc.FrontCounterClockwise = false;
+    rasDesc.DepthBias = 0;
+    rasDesc.SlopeScaledDepthBias = 0.f;
+    rasDesc.DepthBiasClamp = 0.f;
+    rasDesc.DepthClipEnable = true;
+    rasDesc.ScissorEnable = false;
+    rasDesc.MultisampleEnable = false;
+    rasDesc.AntialiasedLineEnable = false;
+    DxAssert(mDevice->CreateRasterizerState(&rasDesc, &mRasState), S_OK);
+    mDeviceContext->RSSetState(mRasState);
 }
 
 void Renderer::RenderCompanionWindow(FrameBuffer* leftEyeFb, FrameBuffer* rightEyeFb, FrameBuffer* windowFb)
