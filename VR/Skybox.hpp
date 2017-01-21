@@ -34,10 +34,10 @@ class Skybox
         );
 
         // Render skybox to frame buffer.
-        // viewMatrix Camera view matrix.
+        // orientationMatrix Camera orientation matrix.
         // projectionMatrix Camera projection matrix.
         // targetFb Frame buffer to render.
-        void Render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, FrameBuffer* targetFb);
+        void Render(const glm::mat4& orientationMatrix, const glm::mat4& projectionMatrix, FrameBuffer* targetFb);
 
         // Cube map.
         ID3D11ShaderResourceView* mCubeMapSRV;
@@ -45,8 +45,7 @@ class Skybox
         // PS Meta buffer.
         struct PSMeta
         {
-            glm::mat4 projectionMatrix;
-            glm::mat4 viewMatrix;
+            glm::mat4 opMatrixINV;
         } mPSMeta;
         ID3D11ShaderResourceView* mPSMetaBuff;
 

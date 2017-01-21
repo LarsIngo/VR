@@ -131,10 +131,17 @@ void VRDevice::Sync()
         mRightProjection = ConvertMatrix(mpHMD->GetProjectionMatrix(vr::Hmd_Eye::Eye_Right, nearZ, farZ));
     }
 	
-	mRightDir = glm::vec3(mHMDTransform[0][0],mHMDTransform[1][0], mHMDTransform[2][0]);
-	mUpDir = glm::vec3(mHMDTransform[0][1], mHMDTransform[1][1], mHMDTransform[2][1]);
-	mFrontDir = glm::vec3(mHMDTransform[0][2], mHMDTransform[1][2], mHMDTransform[2][2]);
+    mRightDirection = glm::vec3(mHMDTransform[0][0],mHMDTransform[1][0], mHMDTransform[2][0]);
+    mUpDirection = glm::vec3(mHMDTransform[0][1], mHMDTransform[1][1], mHMDTransform[2][1]);
+    mFrontDirection = glm::vec3(mHMDTransform[0][2], mHMDTransform[1][2], mHMDTransform[2][2]);
     glm::mat4 translation = glm::translate(glm::mat4(), glm::vec3(mPosition.x, mPosition.y, mPosition.z));
+
+    mOrientationMatrix = glm::transpose(glm::mat4(
+        glm::vec4(mRightDirection, 0.f),
+        glm::vec4(mUpDirection, 0.f),
+        glm::vec4(mFrontDirection, 0.f),
+        glm::vec4(0.f, 0.f, 0.f, 1.f)
+    ));
 
     mLeftView = mLeftPos * mHMDTransform;
     mRightView = mRightPos * mHMDTransform;

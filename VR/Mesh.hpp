@@ -9,6 +9,7 @@
 
 #include "Material.hpp"
 
+//TODO TEMPLATE <VERTEX>
 class Mesh
 {
     public:

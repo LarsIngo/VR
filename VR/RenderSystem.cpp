@@ -27,7 +27,7 @@ RenderSystem::~RenderSystem()
 void RenderSystem::Render(Scene& scene, Camera& camera)
 {
     // Skybox.
-    scene.mpSkybox->Render(camera.mViewMatrix, camera.mProjectionMatrix, camera.mpFrameBuffer);
+    scene.mpSkybox->Render(camera.mOrientationMatrix, camera.mProjectionMatrix, camera.mpFrameBuffer);
 
     // Scene
     mStandardMaterial->Render(scene, camera.mViewMatrix, camera.mProjectionMatrix, camera.mpFrameBuffer);
@@ -37,7 +37,7 @@ void RenderSystem::Render(Scene& scene, VRDevice& hmd)
 {
     {   // Render left eye.
         // Skybox.
-        scene.mpSkybox->Render(hmd.mLeftView, hmd.mLeftProjection, hmd.mpLeftFrameBuffer);
+        scene.mpSkybox->Render(hmd.mOrientationMatrix, hmd.mLeftProjection, hmd.mpLeftFrameBuffer);
 
         // Scene.
         //Material* material = scene.mStandardMaterial;
@@ -50,6 +50,6 @@ void RenderSystem::Render(Scene& scene, VRDevice& hmd)
         scene.mpSkybox->Render(hmd.mRightView, hmd.mRightProjection, hmd.mpRightFrameBuffer);
 
         // Scene.
-        mStandardMaterial->Render(scene, hmd.mRightView, hmd.mRightProjection, hmd.mpRightFrameBuffer);
+        mStandardMaterial->Render(scene, hmd.mOrientationMatrix, hmd.mRightProjection, hmd.mpRightFrameBuffer);
     }
 }

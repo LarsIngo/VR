@@ -26,7 +26,7 @@ void Skybox::Load(Texture2D* mpBK, Texture2D* mpDN, Texture2D* mpFR, Texture2D* 
 {
     assert(mCubeMapSRV == nullptr);
     
-    ID3D11Texture2D* srcTex[6] = { mpBK->mTex, mpDN->mTex, mpFR->mTex, mpLF->mTex, mpRT->mTex, mpUP->mTex };
+    ID3D11Texture2D* srcTex[6] = { mpLF->mTex, mpRT->mTex, mpUP->mTex, mpDN->mTex, mpFR->mTex, mpBK->mTex };
 
     // Assert every texture are the same.
     unsigned int width = mpBK->mWidth;
@@ -84,15 +84,14 @@ void Skybox::Load(Texture2D* mpBK, Texture2D* mpDN, Texture2D* mpFR, Texture2D* 
     textureArr->Release();
 }
 
-void Skybox::Render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, FrameBuffer* targetFb)
+void Skybox::Render(const glm::mat4& orientationMatix, const glm::mat4& projectionMatrix, FrameBuffer* targetFb)
 {
     mpDeviceContext->OMSetRenderTargets(1, &targetFb->mColRTV, nullptr);
     mpDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
     mpDeviceContext->VSSetShader(mScreenQuadVS, nullptr, 0);
     mpDeviceContext->PSSetShader(mSkyboxPS, nullptr, 0);
     mpDeviceContext->PSSetShaderResources(0, 1, &mCubeMapSRV);
-    mPSMeta.projectionMatrix = glm::transpose(glm::inverse(projectionMatrix));
-    mPSMeta.viewMatrix = glm::transpose(glm::inverse(viewMatrix));
+    mPSMeta.opMatrixINV = glm::transpose(glm::inverse(projectionMatrix * orientationMatix));
     DxHelp::WriteStructuredBuffer<PSMeta>(mpDeviceContext, &mPSMeta, 1, mPSMetaBuff);
     mpDeviceContext->PSSetShaderResources(1, 1, &mPSMetaBuff);
     D3D11_VIEWPORT vp;

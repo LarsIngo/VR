@@ -74,7 +74,7 @@ int main()
         up.Load("resources/assets/DeepSpaceBlue/upImage.png");
         skybox.Load(&bk, &dn, &fr, &lf, &rt, &up);
     }
-    Camera camera(winWidth, winHeight, renderer.mWinFrameBuffer);
+    Camera camera(winWidth, winHeight, renderer.mWinFrameBuffer); camera.mPosition.z = 1;
     RenderSystem renderSystem(renderer.mDevice, renderer.mDeviceContext);
     Mesh mesh(renderer.mDevice, renderer.mDeviceContext);
     Texture2D diffuse(renderer.mDevice, renderer.mDeviceContext);
@@ -115,7 +115,7 @@ int main()
 
             // +++ UPDATE +++ //
             if (VR)
-                hmd.mPosition += hmd.mFrontDir * dt * 10.f;
+                hmd.mPosition += hmd.mFrontDirection * dt * 10.f;
             camera.Update(20.f, dt, &renderer);
             // --- UPDATE --- //
 
