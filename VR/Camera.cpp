@@ -6,9 +6,10 @@
 #include <iostream>
 #include <Windows.h>
 
-Camera::Camera(unsigned int width, unsigned int height) 
+Camera::Camera(unsigned int width, unsigned int height, FrameBuffer* frameBuffer)
 {
     mProjectionMatrix = glm::perspectiveFovLH(45.f, (float)width, (float)height, 0.01f, 200.f);
+    mpFrameBuffer = frameBuffer;
 }
 
 Camera::~Camera() 

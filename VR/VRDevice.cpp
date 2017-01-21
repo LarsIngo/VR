@@ -10,23 +10,20 @@ VRDevice::VRDevice()
 {
     mpHMD = nullptr;
     mpRenderModels = nullptr;
-    mLeftEyeFB = nullptr;
-    mRightEyeFB = nullptr;
-    InitHMD();
+    mpLeftFrameBuffer = nullptr;
+    mpRightFrameBuffer = nullptr;
 }
 
 VRDevice::~VRDevice()
 {
-    if (mLeftEyeFB != nullptr) delete mLeftEyeFB;
-    if (mRightEyeFB != nullptr) delete mRightEyeFB;
     if (IsActive()) Shutdown();
 }
 
-bool VRDevice::InitHMD()
+bool VRDevice::Start()
 {
     if (mpHMD != nullptr)
     {
-        std::cout << "HMD Already initialised." << std::endl;
+        std::cout << "HMD Already running." << std::endl;
         return true;
     }
 
@@ -58,16 +55,15 @@ bool VRDevice::InitHMD()
     return true;
 }
 
-void VRDevice::InitD3D(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext)
+void VRDevice::InitD3D(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext, FrameBuffer* leftFrameBuffer, FrameBuffer* rightFrameBuffer)
 {
     assert(mpHMD != nullptr);
     assert(mRenderWidth != 0 && mRenderHeight != 0);
-    assert(mLeftEyeFB == nullptr && mRightEyeFB == nullptr);
 
     mpDevice = pDevice;
     mpDeviceContext = pDeviceContext;
-    mLeftEyeFB = new FrameBuffer(mpDevice, mpDeviceContext, mRenderWidth, mRenderHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
-    mRightEyeFB = new FrameBuffer(mpDevice, mpDeviceContext, mRenderWidth, mRenderHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
+    mpLeftFrameBuffer = leftFrameBuffer;
+    mpRightFrameBuffer = rightFrameBuffer;
 }
 
 bool VRDevice::IsActive()
@@ -80,11 +76,9 @@ void VRDevice::Shutdown()
     vr::VR_Shutdown();
     mpHMD = nullptr;
     mpRenderModels = nullptr;
-    if (mLeftEyeFB != nullptr) { delete mLeftEyeFB; mLeftEyeFB = nullptr; }
-    if (mRightEyeFB != nullptr) { delete mRightEyeFB; mRightEyeFB = nullptr; }
 }
 
-void VRDevice::Update()
+void VRDevice::Sync()
 {
     assert(mpHMD != nullptr);
 
@@ -125,16 +119,16 @@ void VRDevice::Update()
    
     // GetHMDMatrixPoseEye.
     {
-        mEyePosLeft = ConvertMatrix(mpHMD->GetEyeToHeadTransform(vr::Hmd_Eye::Eye_Left));
-        mEyePosLeft = glm::inverse(mEyePosLeft);
-        mEyePosRight = ConvertMatrix(mpHMD->GetEyeToHeadTransform(vr::Hmd_Eye::Eye_Right));
-        mEyePosRight = glm::inverse(mEyePosRight);
+        mLeftPos = ConvertMatrix(mpHMD->GetEyeToHeadTransform(vr::Hmd_Eye::Eye_Left));
+        mLeftPos = glm::inverse(mLeftPos);
+        mRightPos = ConvertMatrix(mpHMD->GetEyeToHeadTransform(vr::Hmd_Eye::Eye_Right));
+        mRightPos = glm::inverse(mRightPos);
     }
     {
         float nearZ = 0.1f;
         float farZ = 200.f;
-        mProjectionLeft = ConvertMatrix(mpHMD->GetProjectionMatrix(vr::Hmd_Eye::Eye_Left, nearZ, farZ));
-        mProjectionRight = ConvertMatrix(mpHMD->GetProjectionMatrix(vr::Hmd_Eye::Eye_Right, nearZ, farZ));
+        mLeftProjection = ConvertMatrix(mpHMD->GetProjectionMatrix(vr::Hmd_Eye::Eye_Left, nearZ, farZ));
+        mRightProjection = ConvertMatrix(mpHMD->GetProjectionMatrix(vr::Hmd_Eye::Eye_Right, nearZ, farZ));
     }
 	
 	mRightDir = glm::vec3(mHMDTransform[0][0],mHMDTransform[1][0], mHMDTransform[2][0]);
@@ -142,9 +136,34 @@ void VRDevice::Update()
 	mFrontDir = glm::vec3(mHMDTransform[0][2], mHMDTransform[1][2], mHMDTransform[2][2]);
     glm::mat4 translation = glm::translate(glm::mat4(), glm::vec3(mPosition.x, mPosition.y, mPosition.z));
 
+    mLeftView = mLeftPos * mHMDTransform;
+    mRightView = mRightPos * mHMDTransform;
+
     // GetCurrentViewProjectionMatrix.
-    mMVPLeft = mProjectionLeft * mEyePosLeft * mHMDTransform * translation;
-    mMVPRight = mProjectionRight * mEyePosRight * mHMDTransform * translation;
+    mLeftMVP = mLeftProjection * mLeftPos * mHMDTransform * translation;
+    mRightMVP = mRightProjection * mRightPos * mHMDTransform * translation;
+}
+
+void VRDevice::Submit()
+{
+    assert(mpLeftFrameBuffer != nullptr && mpRightFrameBuffer != nullptr);
+    {   // Submit left eye.
+        vr::Texture_t leftEyeTexture = { mpLeftFrameBuffer->mColTex, vr::TextureType_DirectX, vr::ColorSpace_Auto };
+        vr::EVRCompositorError eError = vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
+        if (eError != vr::VRCompositorError_None) std::cout << "HMD Error rendering left eye" << std::endl;
+    }
+    {   // Submit right eye.
+        vr::Texture_t rightEyeTexture = { mpRightFrameBuffer->mColTex, vr::TextureType_DirectX, vr::ColorSpace_Auto };
+        vr::EVRCompositorError eError = vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
+        if (eError != vr::VRCompositorError_None) std::cout << "HMD Error rendering right eye" << std::endl;
+    }
+}
+
+void VRDevice::ClearFrameBuffers()
+{
+    assert(mpLeftFrameBuffer != nullptr && mpRightFrameBuffer != nullptr);
+    mpLeftFrameBuffer->Clear(0.2f, 0.2f, 0.2f, 0.f);
+    mpRightFrameBuffer->Clear(0.2f, 0.2f, 0.2f, 0.f);
 }
 
 glm::mat4 VRDevice::ConvertMatrix(const vr::HmdMatrix34_t& mat)

@@ -34,9 +34,10 @@ class Skybox
         );
 
         // Render skybox to frame buffer.
-        // projectionMatrix Camera projection matrix.
         // viewMatrix Camera view matrix.
-        void Render(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, FrameBuffer* targetFb);
+        // projectionMatrix Camera projection matrix.
+        // targetFb Frame buffer to render.
+        void Render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, FrameBuffer* targetFb);
 
         // Cube map.
         ID3D11ShaderResourceView* mCubeMapSRV;

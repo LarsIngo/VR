@@ -84,7 +84,7 @@ void Skybox::Load(Texture2D* mpBK, Texture2D* mpDN, Texture2D* mpFR, Texture2D* 
     textureArr->Release();
 }
 
-void Skybox::Render(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, FrameBuffer* targetFb)
+void Skybox::Render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, FrameBuffer* targetFb)
 {
     mpDeviceContext->OMSetRenderTargets(1, &targetFb->mColRTV, nullptr);
     mpDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);

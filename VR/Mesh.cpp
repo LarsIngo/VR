@@ -11,7 +11,6 @@ Mesh::Mesh(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext)
 {
     mpDevice = pDevice;
     mpDeviceContext = pDeviceContext;
-    mpMaterial = nullptr;
     mVertexBuffer = nullptr;
     mIndexBuffer = nullptr;
     mNumVertices = 0;

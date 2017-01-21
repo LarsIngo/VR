@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 
 class Renderer;
+class FrameBuffer;
 
 // A camera.
 class Camera 
@@ -11,7 +12,8 @@ class Camera
         // Constructor.
         // width Width of screen to render in pixels.
         // height Height of screen to render in pixels.
-        Camera(unsigned int width, unsigned int height);
+        // frameBuffer Framebuffer to render.
+        Camera(unsigned int width, unsigned int height, FrameBuffer* frameBuffer);
 
         // Destructor.
         ~Camera();
@@ -57,6 +59,9 @@ class Camera
 
         // Projection matrix.
         glm::mat4 mProjectionMatrix;
+
+        // Frame buffer.
+        FrameBuffer* mpFrameBuffer;
 
     private:
         // Old mouse left button pressed status.

@@ -24,9 +24,6 @@ class Mesh
         // meshPath Path to mesh.
         void Load(const char* meshPath);
 
-        // Material.
-        Material* mpMaterial;
-
         // Number of vertices.
         unsigned int mNumVertices;
 

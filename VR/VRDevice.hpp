@@ -17,10 +17,15 @@ class VRDevice
         // Destructor.
         ~VRDevice();
 
+        // Init HMD(VR).
+        bool Start();
+
         // Init D3D resources.
         // pDevice Pointer to D3D11 device.
         // pDeviceContext Pointer to D3D11 device context.
-        void InitD3D(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext);
+        // leftFrameBuffer Frame buffer to render.
+        // rightFrameBuffer Frame buffer to render.
+        void InitD3D(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext, FrameBuffer* leftFrameBuffer, FrameBuffer* rightFrameBuffer);
 
         // IsActive.
         bool IsActive();
@@ -28,15 +33,21 @@ class VRDevice
         // Shutdown.
         void Shutdown();
 
-        // Update.
-        void Update();
+        // Sync HMD. Get poses from devices.
+        void Sync();
+
+        // Submit frame buffers to screen.
+        void Submit();
+
+        // Clear D3D frame buffers.
+        void ClearFrameBuffers();
 
         // Get render size.
         std::uint32_t GetRenderWidth();
         std::uint32_t GetRenderHeight();
 
-        FrameBuffer* mLeftEyeFB;
-        FrameBuffer* mRightEyeFB;
+        FrameBuffer* mpLeftFrameBuffer;
+        FrameBuffer* mpRightFrameBuffer;
 
         glm::vec3 mPosition;
 		glm::vec3 mRightDir;
@@ -45,19 +56,19 @@ class VRDevice
 
         glm::mat4 mHMDTransform;
 
-        glm::mat4 mEyePosLeft;
-        glm::mat4 mEyePosRight;
+        glm::mat4 mLeftPos;
+        glm::mat4 mRightPos;
 
-        glm::mat4 mProjectionLeft;
-        glm::mat4 mProjectionRight;
+        glm::mat4 mLeftProjection;
+        glm::mat4 mRightProjection;
 
-        glm::mat4 mMVPLeft;
-        glm::mat4 mMVPRight;
+        glm::mat4 mLeftView;
+        glm::mat4 mRightView;
+
+        glm::mat4 mLeftMVP;
+        glm::mat4 mRightMVP;
 
     private:
-        // Init HMD(VR).
-        bool InitHMD();
-
         // Covert to glm matrix.
         glm::mat4 ConvertMatrix(const vr::HmdMatrix34_t& matPose);
         glm::mat4 ConvertMatrix(const vr::HmdMatrix44_t& matPose);

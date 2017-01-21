@@ -174,6 +174,7 @@ echo d | xcopy "$(SolutionDir)externals\assimp\bin\win64\Release" "$(OutputPath)
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Profiler.cpp" />
     <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="RenderSystem.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="Skybox.cpp" />
     <ClCompile Include="Texture2D.cpp" />
@@ -189,6 +190,7 @@ echo d | xcopy "$(SolutionDir)externals\assimp\bin\win64\Release" "$(OutputPath)
     <ClInclude Include="Mesh.hpp" />
     <ClInclude Include="Profiler.hpp" />
     <ClInclude Include="Renderer.hpp" />
+    <ClInclude Include="RenderSystem.hpp" />
     <ClInclude Include="Scene.hpp" />
     <ClInclude Include="Skybox.hpp" />
     <ClInclude Include="Texture2D.hpp" />

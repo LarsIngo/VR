@@ -6,6 +6,10 @@
 #include <string>
 #include <vector>
 
+#include "Scene.hpp"
+
+class FrameBuffer;
+
 class Material
 {
     public:
@@ -35,6 +39,13 @@ class Material
         // Intialise.
         void Init(std::vector<D3D11_INPUT_ELEMENT_DESC>& inputDesc, const char* VSPath, const char* GSPath, const char* PSPath);
 
+        // Render scene.
+        // scene Scene to render.
+        // viewMatrix Camera view matrix.
+        // projectionMatrix Camera projection matrix.
+        // targetFb Frame buffer to render.
+        void Render(Scene& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, FrameBuffer* targetFb);
+
         // D3D11 input layout.
         ID3D11InputLayout* mInputLayout;
         // Vertex shader.
@@ -43,7 +54,6 @@ class Material
         ID3D11GeometryShader* mGS;
         // Pixel shader.
         ID3D11PixelShader* mPS;
-
         // GS Meta buffer.
         ID3D11ShaderResourceView* mGSMetaBuff;
 

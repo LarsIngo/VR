@@ -20,12 +20,6 @@ class Scene
         // Destructor.
         ~Scene();
 
-        // Clear scene.
-        void Clear();
-
-        // Standard material.
-        Material* mStandardMaterial;
-
         // List of entities in scene.
         std::vector<Entity> mEntityList;
 

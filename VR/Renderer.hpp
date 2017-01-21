@@ -42,27 +42,10 @@ class Renderer
         // Close window.
         void Close();
 
-        // Render scene.
-        // scene Scene to render.
-        // camera Camera to render from.
-        void Render(Scene& scene, Camera& camera);
-        // scene Scene to render.
-        // hmd VrDevice to render from.
-        void Render(Scene& scene, VRDevice& hmd);
-
         // Clear backbuffer.
         void WinClear();
-
         // Present rendered result to window.
         void WinPresent();
-        // Submit rendered result to HMD.
-        void HMDPresent(VRDevice& hmd);
-
-        // Render scene.
-        // scene Scene to render.
-        // material Material to use.
-        // fb Frame buffer to render.
-        void RenderScene(Scene& scene, Material* material, FrameBuffer* fb);
 
         // Render companion window.
         void RenderCompanionWindow(FrameBuffer* leftEyeFb, FrameBuffer* rightEyeFb, FrameBuffer* windowFb);

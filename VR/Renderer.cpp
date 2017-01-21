@@ -76,43 +76,6 @@ void Renderer::Close()
     mClose = true;
 }
 
-void Renderer::Render(Scene& scene, Camera& camera)
-{
-    // Skybox.
-    scene.mpSkybox->Render(camera.mProjectionMatrix, camera.mViewMatrix, mWinFrameBuffer);
-
-    // Scene.
-    Material* material = scene.mStandardMaterial;
-    material->mGSMeta.mvpMatrix = camera.mProjectionMatrix * camera.mViewMatrix * glm::translate(glm::mat4(), -camera.mPosition);
-    RenderScene(scene, material, mWinFrameBuffer);
-}
-
-void Renderer::Render(Scene& scene, VRDevice& hmd)
-{
-    {   // Render left eye.
-        hmd.mLeftEyeFB->Clear(0.2f, 0.2f, 0.2f, 0.f);
-
-        // Skybox.
-        scene.mpSkybox->Render(hmd.mProjectionLeft, hmd.mEyePosLeft, hmd.mLeftEyeFB);
-
-        // Scene.
-        Material* material = scene.mStandardMaterial;
-        material->mGSMeta.mvpMatrix = hmd.mMVPLeft;
-        RenderScene(scene, material, hmd.mLeftEyeFB);
-    }
-    {   // Render right eye.
-        hmd.mRightEyeFB->Clear(0.2f, 0.2f, 0.2f, 0.f);
-
-        // Skybox.
-        scene.mpSkybox->Render(hmd.mProjectionRight, hmd.mEyePosRight, hmd.mRightEyeFB);
-
-        // Scene.
-        Material* material = scene.mStandardMaterial;
-        material->mGSMeta.mvpMatrix = hmd.mMVPRight;
-        RenderScene(scene, material, hmd.mRightEyeFB);
-    }
-}
-
 void Renderer::WinClear()
 {
     mWinFrameBuffer->Clear(0.2f, 0.2f, 0.2f, 0.f);
@@ -122,77 +85,6 @@ void Renderer::WinPresent()
 {
     // Present to window.
     mSwapChain->Present(0, 0);
-}
-
-void Renderer::HMDPresent(VRDevice& hmd)
-{
-    {   // Submit left eye.
-        vr::Texture_t leftEyeTexture = { hmd.mLeftEyeFB->mColTex, vr::TextureType_DirectX, vr::ColorSpace_Auto };
-        vr::EVRCompositorError eError = vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
-        if (eError != vr::VRCompositorError_None) std::cout << "HMD Error rendering left eye" << std::endl;
-    }
-    {   // Submit right eye.
-        vr::Texture_t rightEyeTexture = { hmd.mRightEyeFB->mColTex, vr::TextureType_DirectX, vr::ColorSpace_Auto };
-        vr::EVRCompositorError eError = vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
-        if (eError != vr::VRCompositorError_None) std::cout << "HMD Error rendering right eye" << std::endl;
-    }
-}
-
-void Renderer::RenderScene(Scene& scene, Material* material, FrameBuffer* fb)
-{
-    // +++ Render +++ //
-    glm::mat4 vpMatix = material->mGSMeta.mvpMatrix;
-    mDeviceContext->OMSetRenderTargets(1, &fb->mColRTV, fb->mDepthDSV);
-    mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    mDeviceContext->GSSetShaderResources(0, 1, &material->mGSMetaBuff);
-    mDeviceContext->IASetInputLayout(material->mInputLayout);
-    mDeviceContext->VSSetShader(material->mVS, nullptr, 0);
-    mDeviceContext->GSSetShader(material->mGS, nullptr, 0);
-    mDeviceContext->PSSetShader(material->mPS, nullptr, 0);
-	D3D11_VIEWPORT vp;
-	vp.Width = (float)fb->mWidth;
-	vp.Height = (float)fb->mHeight;
-	vp.MinDepth = 0.0f;
-	vp.MaxDepth = 1.0f;
-	vp.TopLeftX = 0;
-	vp.TopLeftY = 0;
-	mDeviceContext->RSSetViewports(1, &vp);
-
-    // Skybox.
-    assert(scene.mpSkybox != nullptr);
-    mDeviceContext->PSSetShaderResources(8, 1, &scene.mpSkybox->mCubeMapSRV);
-
-    unsigned int stride;
-    unsigned int offset;
-    glm::mat4 modelMatix;
-    for (std::size_t i = 0; i < scene.mEntityList.size(); ++i)
-    {
-        Entity& entity = scene.mEntityList[i];
-        modelMatix = glm::translate(glm::mat4(), entity.mPosition);
-        material->mGSMeta.modelMatrix = glm::transpose(modelMatix);
-        material->mGSMeta.mvpMatrix = glm::transpose(vpMatix * modelMatix);
-        DxHelp::WriteStructuredBuffer<Material::GSMeta>(mDeviceContext, &material->mGSMeta, 1, material->mGSMetaBuff);
-
-        mDeviceContext->PSSetShaderResources(0, 1, &entity.mpDiffuseTex->mSRV);
-        mDeviceContext->PSSetShaderResources(1, 1, &entity.mpNormalTex->mSRV);
-        Mesh* mesh = entity.mpMesh;
-        stride = sizeof(Material::Vertex);
-        offset = 0;
-        mDeviceContext->IASetVertexBuffers(0, 1, &mesh->mVertexBuffer, &stride, &offset);
-        mDeviceContext->IASetIndexBuffer(mesh->mIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-        mDeviceContext->DrawIndexed(mesh->mNumIndices, 0, 0);
-    }
-
-    void* p[1] = { NULL };
-    mDeviceContext->OMSetRenderTargets(1, (ID3D11RenderTargetView**)p, nullptr);
-    mDeviceContext->IASetVertexBuffers(0, 1, (ID3D11Buffer**)p, &stride, &offset);
-    mDeviceContext->GSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);
-    mDeviceContext->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);
-    mDeviceContext->PSSetShaderResources(1, 1, (ID3D11ShaderResourceView**)p);
-    mDeviceContext->VSSetShader(NULL, nullptr, 0);
-    mDeviceContext->GSSetShader(NULL, nullptr, 0);
-    mDeviceContext->PSSetShader(NULL, nullptr, 0);
-    // --- Render --- //
 }
 
 bool Renderer::GetKeyPressed(int vKey)
