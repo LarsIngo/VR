@@ -1,9 +1,8 @@
 #pragma once
 
 #pragma comment(lib, "d3d11.lib")
-#pragma comment(lib, "d3dcompiler.lib")
 #include <d3d11.h>
-#include <d3dcompiler.inl>
+
 #include <assimp/Importer.hpp>
 #include <glm/glm.hpp>
 #include <vector>
@@ -16,8 +15,7 @@ class Mesh
         // Constructor.
         // pDevice Pointer to D3D11 device.
         // pDeviceContext Pointer to D3D11 device context.
-        // material Mesh material.
-        Mesh(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext, Material* material);
+        Mesh(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext);
 
         // Destructor.
         ~Mesh();
@@ -27,7 +25,7 @@ class Mesh
         void Load(const char* meshPath);
 
         // Material.
-        Material* mMaterial;
+        Material* mpMaterial;
 
         // Number of vertices.
         unsigned int mNumVertices;

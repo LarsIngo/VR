@@ -13,6 +13,7 @@
 #include "Profiler.hpp"
 #include "Renderer.hpp"
 #include "Scene.hpp"
+#include "Skybox.hpp"
 #include "Texture2D.hpp"
 #include "VRDevice.hpp"
 
@@ -42,23 +43,40 @@ int main()
     // Init3D3 (Frame buffers).
     if (hmd.IsActive()) hmd.InitD3D(renderer.mDevice, renderer.mDeviceContext);
 
-    // Create scene.
-    Mesh* mesh;
-    Texture2D* diffuse;
-    Texture2D* normal;
-    Scene scene(renderer.mDevice, renderer.mDeviceContext);
+    // Create skybox.
+    Skybox skybox(renderer.mDevice, renderer.mDeviceContext);
     {
-        mesh = new Mesh(renderer.mDevice, renderer.mDeviceContext, scene.mStandardMaterial);
-        mesh->Load("resources/assets/skull/skull.obj");
-        diffuse = new Texture2D(renderer.mDevice, renderer.mDeviceContext);
-        diffuse->Load("resources/assets/skull/skull_diffuse1.jpg");
-        normal = new Texture2D(renderer.mDevice, renderer.mDeviceContext);
-        normal->Load("resources/assets/skull/skull_normal.jpg");
+        Texture2D bk(renderer.mDevice, renderer.mDeviceContext);
+        bk.Load("resources/assets/DeepSpaceBlue/backImage.png");
+        Texture2D dn(renderer.mDevice, renderer.mDeviceContext);
+        dn.Load("resources/assets/DeepSpaceBlue/downImage.png");
+        Texture2D fr(renderer.mDevice, renderer.mDeviceContext);
+        fr.Load("resources/assets/DeepSpaceBlue/frontImage.png");
+        Texture2D lf(renderer.mDevice, renderer.mDeviceContext);
+        lf.Load("resources/assets/DeepSpaceBlue/leftImage.png");
+        Texture2D rt(renderer.mDevice, renderer.mDeviceContext);
+        rt.Load("resources/assets/DeepSpaceBlue/rightImage.png");
+        Texture2D up(renderer.mDevice, renderer.mDeviceContext);
+        up.Load("resources/assets/DeepSpaceBlue/upImage.png");
+        skybox.Load(&bk, &dn, &fr, &lf, &rt, &up);
+    }
+
+    // Create scene.
+    Mesh mesh(renderer.mDevice, renderer.mDeviceContext);
+    Texture2D diffuse(renderer.mDevice, renderer.mDeviceContext);
+    Texture2D normal(renderer.mDevice, renderer.mDeviceContext);
+    Scene scene(renderer.mDevice, renderer.mDeviceContext);
+    scene.mpSkybox = &skybox;
+    {
+        mesh.mpMaterial = scene.mStandardMaterial;
+        mesh.Load("resources/assets/skull/skull.obj");
+        diffuse.Load("resources/assets/skull/skull_diffuse1.jpg");
+        normal.Load("resources/assets/skull/skull_normal.jpg");
 
         Entity entity;
-        entity.mpMesh = mesh;
-        entity.mpDiffuseTex = diffuse;
-        entity.mpNormalTex = normal;
+        entity.mpMesh = &mesh;
+        entity.mpDiffuseTex = &diffuse;
+        entity.mpNormalTex = &normal;
         {
             int r = 3;
             for (int z = -r; z <= r; ++z)
@@ -72,7 +90,7 @@ int main()
     }
 
     // Create camera.
-    Camera camera;
+    Camera camera(winWidth, winHeight);
 
     // Set Frame Latency.
     //IDXGIDevice1 * pDXGIDevice;
@@ -91,7 +109,6 @@ int main()
 
             // Clear window.
             renderer.WinClear();
-
 
             // VR device.
             if (hmd.IsActive())
@@ -130,19 +147,16 @@ int main()
     // --- Shutdown --- //
     {
         // DirectX debug device.
-        ID3D11Debug* debug;
-        renderer.mDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&debug));
+        //ID3D11Debug* debug;
+        //renderer.mDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&debug));
 
         // Clear.
-        delete mesh;
-        delete diffuse;
-        delete normal;
-        scene.Clear();
-        hmd.Shutdown();
-        renderer.Shutdown();
+        //scene.Clear();
+        //hmd.Shutdown();
+        //renderer.Shutdown();
 
-        debug->ReportLiveDeviceObjects(D3D11_RLDO_SUMMARY); //D3D11_RLDO_SUMMARY or D3D11_RLDO_DETAIL
-        debug->Release();
+        //debug->ReportLiveDeviceObjects(D3D11_RLDO_SUMMARY); //D3D11_RLDO_SUMMARY or D3D11_RLDO_DETAIL
+        //debug->Release();
     }
         
     return 0;

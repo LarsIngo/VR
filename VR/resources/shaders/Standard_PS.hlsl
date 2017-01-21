@@ -9,6 +9,8 @@ struct Input
 Texture2D txDiffuse : register(t0);
 Texture2D txNormal : register(t1);
 
+TextureCube txSkybox : register(t8);
+
 SamplerState samp : register(s0);
 
 float4 main(Input input) : SV_TARGET0
@@ -17,10 +19,14 @@ float4 main(Input input) : SV_TARGET0
 
     float3 worldPosition = input.worldPosition;
     float2 uv = input.uv;
+
+    float3 skybox = txSkybox.Sample(samp, worldPosition).rgb;
+
     float3 diffuse = txDiffuse.Sample(samp, uv).rgb;
     float3 normal = mul(normalize(2.f * txNormal.Sample(samp, uv).rgb - float3(1.f, 1.f, 1.f)), input.tbn);
 
-    finalColor = diffuse * dot(normal, normalize(input.worldPosition)) + diffuse * 0.1f;
+    float df = saturate(dot(normal, normalize(input.worldPosition)));
+    finalColor = diffuse * df;// +(1.f - df) * skybox;
 
     return float4(saturate(finalColor), 1.f);
 }

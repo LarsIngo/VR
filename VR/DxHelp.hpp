@@ -65,19 +65,19 @@ namespace DxHelp
     // shader Created shader.
     // inputDesc Input layout description.
     // inputLayout Input layout.
-    void CreateVS(ID3D11Device* device, std::wstring& shaderPath, ID3D11VertexShader** shader, std::vector<D3D11_INPUT_ELEMENT_DESC>* inputDesc = nullptr, ID3D11InputLayout** inputLayout = nullptr);
+    void CreateVS(ID3D11Device* device, const char* shaderPath, ID3D11VertexShader** shader, std::vector<D3D11_INPUT_ELEMENT_DESC>* inputDesc = nullptr, ID3D11InputLayout** inputLayout = nullptr);
 
     // Create geometry shader.
     // device D3D11 device.
     // shaderPath Path to shader.
     // shader Created shader.
-    void CreateGS(ID3D11Device* device, std::wstring& shaderPath, ID3D11GeometryShader** shader);
+    void CreateGS(ID3D11Device* device, const char* shaderPath, ID3D11GeometryShader** shader);
 
     // Create pixel shader.
     // device D3D11 device.
     // shaderPath Path to shader.
     // shader Created shader.
-    void CreatePS(ID3D11Device* device, std::wstring& shaderPath, ID3D11PixelShader** shader);
+    void CreatePS(ID3D11Device* device, const char* shaderPath, ID3D11PixelShader** shader);
 }
 
 template <typename T>
@@ -198,12 +198,14 @@ inline void DxHelp::WriteBuffer(ID3D11DeviceContext* deviceContext, T* data, uns
     deviceContext->Unmap(buffer, 0);
 }
 
-inline void DxHelp::CreateVS(ID3D11Device* device, std::wstring& shaderPath, ID3D11VertexShader** shader, std::vector<D3D11_INPUT_ELEMENT_DESC>* inputDesc, ID3D11InputLayout** inputLayout)
+inline void DxHelp::CreateVS(ID3D11Device* device, const char* shaderPath, ID3D11VertexShader** shader, std::vector<D3D11_INPUT_ELEMENT_DESC>* inputDesc, ID3D11InputLayout** inputLayout)
 {
+    std::string s(shaderPath);
+    std::wstring path(s.begin(), s.end());
     ID3DBlob* compiledShader = nullptr;
     ID3DBlob* errorBlob = nullptr;
     HRESULT hr = D3DCompileFromFile(
-        shaderPath.c_str(),
+        path.c_str(),
         nullptr,
         nullptr,
         "main",	
@@ -239,12 +241,14 @@ inline void DxHelp::CreateVS(ID3D11Device* device, std::wstring& shaderPath, ID3
     compiledShader->Release();
 }
 
-inline void DxHelp::CreateGS(ID3D11Device* device, std::wstring& shaderPath, ID3D11GeometryShader** shader)
+inline void DxHelp::CreateGS(ID3D11Device* device, const char* shaderPath, ID3D11GeometryShader** shader)
 {
+    std::string s(shaderPath);
+    std::wstring path(s.begin(), s.end());
     ID3DBlob* compiledShader = nullptr;
     ID3DBlob* errorBlob = nullptr;
     HRESULT hr = D3DCompileFromFile(
-        shaderPath.c_str(),
+        path.c_str(),
         nullptr,
         nullptr,
         "main",
@@ -270,12 +274,14 @@ inline void DxHelp::CreateGS(ID3D11Device* device, std::wstring& shaderPath, ID3
 }
 
 
-inline void DxHelp::CreatePS(ID3D11Device* device, std::wstring& shaderPath, ID3D11PixelShader** shader)
+inline void DxHelp::CreatePS(ID3D11Device* device, const char* shaderPath, ID3D11PixelShader** shader)
 {
+    std::string s(shaderPath);
+    std::wstring path(s.begin(), s.end());
     ID3DBlob* compiledShader = nullptr;
     ID3DBlob* errorBlob = nullptr;
     HRESULT hr = D3DCompileFromFile(
-        shaderPath.c_str(),
+        path.c_str(),
         nullptr,
         nullptr,
         "main",

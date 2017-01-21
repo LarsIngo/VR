@@ -1,9 +1,7 @@
 #pragma once
 
 #pragma comment(lib, "d3d11.lib")
-#pragma comment(lib, "d3dcompiler.lib")
 #include <d3d11.h>
-#include <d3dcompiler.inl>
 #include <glm/glm.hpp>
 #include <string>
 #include <vector>
@@ -35,7 +33,7 @@ class Material
         ~Material();
 
         // Intialise.
-        void Init(std::vector<D3D11_INPUT_ELEMENT_DESC>& inputDesc, std::wstring& VSPath, std::wstring& GSPath, std::wstring& PSPath);
+        void Init(std::vector<D3D11_INPUT_ELEMENT_DESC>& inputDesc, const char* VSPath, const char* GSPath, const char* PSPath);
 
         // D3D11 input layout.
         ID3D11InputLayout* mInputLayout;

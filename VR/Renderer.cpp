@@ -3,6 +3,7 @@
 #include "DxHelp.hpp"
 #include "Material.hpp"
 #include "Mesh.hpp"
+#include "Skybox.hpp"
 #include "Texture2D.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -21,10 +22,8 @@ Renderer::Renderer(unsigned int winWidth, unsigned int winHeight)
     InitialiseD3D();
 
     // Init shader
-    std::wstring VS = L"resources/shaders/ScreenQuad_VS.hlsl";
-    DxHelp::CreateVS(mDevice, VS, &mScreenQuadVS);
-    std::wstring PS = L"resources/shaders/CompanionWindow_PS.hlsl";
-    DxHelp::CreatePS(mDevice, PS, &mCompanionWindowPS);
+    DxHelp::CreateVS(mDevice, "resources/shaders/ScreenQuad_VS.hlsl", &mScreenQuadVS);
+    DxHelp::CreatePS(mDevice, "resources/shaders/CompanionWindow_PS.hlsl", &mCompanionWindowPS);
 }
 
 Renderer::~Renderer() 
@@ -79,25 +78,38 @@ void Renderer::Close()
 
 void Renderer::Render(Scene& scene, Camera& camera)
 {
-    // Render from camera.
+    // Skybox.
+    scene.mpSkybox->Render(camera.mProjectionMatrix, camera.mViewMatrix, mWinFrameBuffer);
+
+    // Scene.
     Material* material = scene.mStandardMaterial;
-    material->mGSMeta.mvpMatrix = glm::perspectiveFovLH(45.f, (float)mWinWidth, (float)mWinHeight, 0.01f, 200.f) * camera.mViewMatrix * glm::translate(glm::mat4(), -camera.mPosition);
-    RenderFrameBuffer(scene, material, mWinFrameBuffer);
+    material->mGSMeta.mvpMatrix = camera.mProjectionMatrix * camera.mViewMatrix * glm::translate(glm::mat4(), -camera.mPosition);
+    RenderScene(scene, material, mWinFrameBuffer);
 }
 
 void Renderer::Render(Scene& scene, VRDevice& hmd)
 {
     {   // Render left eye.
         hmd.mLeftEyeFB->Clear(0.2f, 0.2f, 0.2f, 0.f);
+
+        // Skybox.
+        scene.mpSkybox->Render(hmd.mProjectionLeft, hmd.mEyePosLeft, hmd.mLeftEyeFB);
+
+        // Scene.
         Material* material = scene.mStandardMaterial;
         material->mGSMeta.mvpMatrix = hmd.mMVPLeft;
-        RenderFrameBuffer(scene, material, hmd.mLeftEyeFB);
+        RenderScene(scene, material, hmd.mLeftEyeFB);
     }
     {   // Render right eye.
         hmd.mRightEyeFB->Clear(0.2f, 0.2f, 0.2f, 0.f);
+
+        // Skybox.
+        scene.mpSkybox->Render(hmd.mProjectionRight, hmd.mEyePosRight, hmd.mRightEyeFB);
+
+        // Scene.
         Material* material = scene.mStandardMaterial;
         material->mGSMeta.mvpMatrix = hmd.mMVPRight;
-        RenderFrameBuffer(scene, material, hmd.mRightEyeFB);
+        RenderScene(scene, material, hmd.mRightEyeFB);
     }
 }
 
@@ -126,7 +138,7 @@ void Renderer::HMDPresent(VRDevice& hmd)
     }
 }
 
-void Renderer::RenderFrameBuffer(Scene& scene, Material* material, FrameBuffer* fb)
+void Renderer::RenderScene(Scene& scene, Material* material, FrameBuffer* fb)
 {
     // +++ Render +++ //
     glm::mat4 vpMatix = material->mGSMeta.mvpMatrix;
@@ -145,10 +157,14 @@ void Renderer::RenderFrameBuffer(Scene& scene, Material* material, FrameBuffer* 
 	vp.TopLeftX = 0;
 	vp.TopLeftY = 0;
 	mDeviceContext->RSSetViewports(1, &vp);
+
+    // Skybox.
+    assert(scene.mpSkybox != nullptr);
+    mDeviceContext->PSSetShaderResources(8, 1, &scene.mpSkybox->mCubeMapSRV);
+
     unsigned int stride;
     unsigned int offset;
     glm::mat4 modelMatix;
-
     for (std::size_t i = 0; i < scene.mEntityList.size(); ++i)
     {
         Entity& entity = scene.mEntityList[i];

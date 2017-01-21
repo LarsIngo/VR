@@ -1,9 +1,7 @@
 #pragma once
 
 #pragma comment(lib, "d3d11.lib")
-#pragma comment(lib, "d3dcompiler.lib")
 #include <d3d11.h>
-#include <d3dcompiler.inl>
 #include <string>
 
 class Texture2D
@@ -23,11 +21,14 @@ class Texture2D
 
         // Path to texture
         std::string mTexPath;
-
         // Texture width in pixels.
-        int mWidth;
-        //Texture height in pixels.
-        int mHeight;
+        unsigned int mWidth;
+        // Texture height in pixels.
+        unsigned int mHeight;
+        // Texture format.
+        DXGI_FORMAT mFormat;
+        // Number of miplevels.
+        unsigned int mMipLevels;
 
         // Texture.
         ID3D11Texture2D* mTex;

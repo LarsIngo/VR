@@ -58,11 +58,11 @@ class Renderer
         // Submit rendered result to HMD.
         void HMDPresent(VRDevice& hmd);
 
-        // Render to render target view.
+        // Render scene.
         // scene Scene to render.
         // material Material to use.
         // fb Frame buffer to render.
-        void RenderFrameBuffer(Scene& scene, Material* material, FrameBuffer* fb);
+        void RenderScene(Scene& scene, Material* material, FrameBuffer* fb);
 
         // Render companion window.
         void RenderCompanionWindow(FrameBuffer* leftEyeFb, FrameBuffer* rightEyeFb, FrameBuffer* windowFb);

@@ -21,7 +21,7 @@ Material::~Material()
     if (mGSMetaBuff != nullptr) mGSMetaBuff->Release();
 }
 
-void Material::Init(std::vector<D3D11_INPUT_ELEMENT_DESC>& inputDesc, std::wstring& VSPath, std::wstring& GSPath, std::wstring& PSPath)
+void Material::Init(std::vector<D3D11_INPUT_ELEMENT_DESC>& inputDesc, const char* VSPath, const char* GSPath, const char* PSPath)
 {
     DxHelp::CreateVS(mpDevice, VSPath, &mVS, &inputDesc, &mInputLayout);
     DxHelp::CreateGS(mpDevice, GSPath, &mGS);

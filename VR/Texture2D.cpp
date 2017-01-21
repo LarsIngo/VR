@@ -23,6 +23,8 @@ Texture2D::~Texture2D()
 
 void Texture2D::Load(const char* texPath)
 {
+    assert(mTex == nullptr && mSRV == nullptr && mWidth == 0 && mHeight == 0 && mTexPath == "");
+
     mTexPath = std::string(texPath);
     std::wstring wTexPath(mTexPath.begin(), mTexPath.end());
     D3D11_TEXTURE2D_DESC texDesc;
@@ -37,6 +39,8 @@ void Texture2D::Load(const char* texPath)
     res->Release();
     D3D11_TEXTURE2D_DESC desc;
     mTex->GetDesc(&desc);
+    mMipLevels = desc.MipLevels;
+    mFormat = desc.Format;
     mWidth = desc.Width;
     mHeight = desc.Height;
 }

@@ -1,14 +1,13 @@
 #pragma once
 
 #pragma comment(lib, "d3d11.lib")
-#pragma comment(lib, "d3dcompiler.lib")
 #include <d3d11.h>
-#include <d3dcompiler.inl>
 #include <vector>
 
 #include "Entity.hpp"
 
 class Material;
+class Skybox;
 
 class Scene
 {
@@ -29,6 +28,9 @@ class Scene
 
         // List of entities in scene.
         std::vector<Entity> mEntityList;
+
+        // Skybox.
+        Skybox* mpSkybox;
 
     private:
         ID3D11Device* mpDevice;

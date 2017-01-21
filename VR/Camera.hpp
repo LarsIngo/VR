@@ -9,7 +9,9 @@ class Camera
 {
     public:
         // Constructor.
-        Camera();
+        // width Width of screen to render in pixels.
+        // height Height of screen to render in pixels.
+        Camera(unsigned int width, unsigned int height);
 
         // Destructor.
         ~Camera();
@@ -52,6 +54,9 @@ class Camera
 
         // View matrix.
         glm::mat4 mViewMatrix;
+
+        // Projection matrix.
+        glm::mat4 mProjectionMatrix;
 
     private:
         // Old mouse left button pressed status.

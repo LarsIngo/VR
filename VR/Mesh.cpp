@@ -7,11 +7,11 @@
 
 Assimp::Importer Mesh::aImporter = Assimp::Importer();
 
-Mesh::Mesh(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext, Material* material)
+Mesh::Mesh(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext)
 {
     mpDevice = pDevice;
     mpDeviceContext = pDeviceContext;
-    mMaterial = material;
+    mpMaterial = nullptr;
     mVertexBuffer = nullptr;
     mIndexBuffer = nullptr;
     mNumVertices = 0;
