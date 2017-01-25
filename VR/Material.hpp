@@ -28,6 +28,12 @@ class Material
             glm::mat4 mvpMatrix;
         } mGSMeta;
 
+        struct PSMeta
+        {
+            glm::vec3 cameraPostion;
+            float pad;
+        } mPSMeta;
+
         // Constructor.
         // pDevice Pointer to D3D11 device.
         // pDeviceContext Pointer to D3D11 device context.
@@ -41,10 +47,11 @@ class Material
 
         // Render scene.
         // scene Scene to render.
+		// cameraPosition Position of the camera in world space.
         // viewMatrix Camera view matrix.
         // projectionMatrix Camera projection matrix.
         // targetFb Frame buffer to render.
-        void Render(Scene& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, FrameBuffer* targetFb);
+        void Render(Scene& scene, const glm::vec3& cameraPosition, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, FrameBuffer* targetFb);
 
         // D3D11 input layout.
         ID3D11InputLayout* mInputLayout;
@@ -56,6 +63,8 @@ class Material
         ID3D11PixelShader* mPS;
         // GS Meta buffer.
         ID3D11ShaderResourceView* mGSMetaBuff;
+        // PS Meta buffer.
+        ID3D11ShaderResourceView* mPSMetaBuff;
 
     private:
         ID3D11Device* mpDevice;

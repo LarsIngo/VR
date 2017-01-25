@@ -16,6 +16,7 @@ Material::Material(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext)
     mGS = nullptr;
     mPS = nullptr;
     mGSMetaBuff = nullptr;
+    mPSMetaBuff = nullptr;
 }
 
 Material::~Material()
@@ -25,6 +26,7 @@ Material::~Material()
     if (mGS != nullptr) mGS->Release();
     if (mPS != nullptr) mPS->Release();
     if (mGSMetaBuff != nullptr) mGSMetaBuff->Release();
+    if (mPSMetaBuff != nullptr) mPSMetaBuff->Release();
 }
 
 void Material::Init(std::vector<D3D11_INPUT_ELEMENT_DESC>& inputDesc, const char* VSPath, const char* GSPath, const char* PSPath)
@@ -33,9 +35,10 @@ void Material::Init(std::vector<D3D11_INPUT_ELEMENT_DESC>& inputDesc, const char
     DxHelp::CreateGS(mpDevice, GSPath, &mGS);
     DxHelp::CreatePS(mpDevice, PSPath, &mPS);
     DxHelp::CreateCPUwriteGPUreadStructuredBuffer<GSMeta>(mpDevice, 1, &mGSMetaBuff);
+    DxHelp::CreateCPUwriteGPUreadStructuredBuffer<PSMeta>(mpDevice, 1, &mPSMetaBuff);
 }
 
-void Material::Render(Scene& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, FrameBuffer* targetFb)
+void Material::Render(Scene& scene, const glm::vec3& cameraPosition, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, FrameBuffer* targetFb)
 {
     glm::mat4 vpMatix = projectionMatrix * viewMatrix;
     mpDeviceContext->OMSetRenderTargets(1, &targetFb->mColRTV, targetFb->mDepthDSV);
@@ -53,6 +56,11 @@ void Material::Render(Scene& scene, const glm::mat4& viewMatrix, const glm::mat4
     vp.TopLeftX = 0;
     vp.TopLeftY = 0;
     mpDeviceContext->RSSetViewports(1, &vp);
+
+    // PS meta.
+	mPSMeta.cameraPostion = cameraPosition;
+    DxHelp::WriteStructuredBuffer<PSMeta>(mpDeviceContext, &mPSMeta, 1, mPSMetaBuff);
+    mpDeviceContext->PSSetShaderResources(2, 1, &mPSMetaBuff);
 
     // Skybox.
     assert(scene.mpSkybox != nullptr);

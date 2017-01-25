@@ -74,7 +74,8 @@ int main()
         up.Load("resources/assets/DeepSpaceBlue/upImage.png");
         skybox.Load(&bk, &dn, &fr, &lf, &rt, &up);
     }
-    Camera camera(winWidth, winHeight, renderer.mWinFrameBuffer); camera.mPosition.z = 1;
+    Camera camera(winWidth, winHeight, renderer.mWinFrameBuffer);
+	camera.mPosition = glm::vec3(2,2,2);
     RenderSystem renderSystem(renderer.mDevice, renderer.mDeviceContext);
     Mesh mesh(renderer.mDevice, renderer.mDeviceContext);
     Texture2D diffuse(renderer.mDevice, renderer.mDeviceContext);
@@ -91,7 +92,7 @@ int main()
         entity.mpDiffuseTex = &diffuse;
         entity.mpNormalTex = &normal;
         {
-            int r = 2;
+            int r = 1;
             for (int z = -r; z <= r; ++z)
                 for (int y = -r; y <= r; ++y)
                     for (int x = -r; x <= r; ++x)
