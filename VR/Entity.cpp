@@ -6,6 +6,7 @@ Entity::Entity()
     mpMesh = nullptr;
     mpDiffuseTex = nullptr;
     mpNormalTex = nullptr;
+	mpGlossTex = nullptr;
 }
 
 Entity::~Entity()

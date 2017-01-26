@@ -31,7 +31,7 @@ class Material
         struct PSMeta
         {
             glm::vec3 cameraPostion;
-            float pad;
+			unsigned int skyboxMipLevels;
         } mPSMeta;
 
         // Constructor.

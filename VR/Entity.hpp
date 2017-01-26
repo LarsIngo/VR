@@ -25,4 +25,7 @@ class Entity
 
         // Normal.
         Texture2D* mpNormalTex;
+
+		// Gloss.
+		Texture2D* mpGlossTex;
 };

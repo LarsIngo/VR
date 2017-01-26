@@ -75,29 +75,38 @@ int main()
         skybox.Load(&bk, &dn, &fr, &lf, &rt, &up);
     }
     Camera camera(winWidth, winHeight, renderer.mWinFrameBuffer);
-	camera.mPosition = glm::vec3(2,2,2);
+	//camera.mPosition = glm::vec3(2,2,2);
     RenderSystem renderSystem(renderer.mDevice, renderer.mDeviceContext);
     Mesh mesh(renderer.mDevice, renderer.mDeviceContext);
     Texture2D diffuse(renderer.mDevice, renderer.mDeviceContext);
     Texture2D normal(renderer.mDevice, renderer.mDeviceContext);
+	Texture2D yesGloss(renderer.mDevice, renderer.mDeviceContext);
+	Texture2D noGloss(renderer.mDevice, renderer.mDeviceContext);
     Scene scene(renderer.mDevice, renderer.mDeviceContext);
     {
         scene.mpSkybox = &skybox;
         mesh.Load("resources/assets/skull/skull.obj");
+		//mesh.Load("resources/assets/OBJBox.obj");
         diffuse.Load("resources/assets/skull/skull_diffuse1.jpg");
-        normal.Load("resources/assets/skull/skull_normal.jpg");
+		//diffuse.Load("resources/assets/DefaultDiffuse.png");
+		normal.Load("resources/assets/skull/skull_normal.jpg");
+		//normal.Load("resources/assets/DefaultNormal.png");
+		yesGloss.Load("resources/assets/White.png");
+		noGloss.Load("resources/assets/Black.png");
 
         Entity entity;
         entity.mpMesh = &mesh;
         entity.mpDiffuseTex = &diffuse;
         entity.mpNormalTex = &normal;
         {
-            int r = 1;
-            for (int z = -r; z <= r; ++z)
-                for (int y = -r; y <= r; ++y)
-                    for (int x = -r; x <= r; ++x)
+            int r = 2;
+            for (int z = 0; z < r; ++z)
+                for (int y = 0; y < r; ++y)
+                    for (int x = 0; x < r; ++x)
                     {
                         entity.mPosition = glm::vec3(x, y, z) * 5.f;
+						if (x % 2) entity.mpGlossTex = &yesGloss;
+						else entity.mpGlossTex = &noGloss;
                         scene.mEntityList.push_back(entity);
                     }
         }

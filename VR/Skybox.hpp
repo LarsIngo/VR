@@ -42,6 +42,9 @@ class Skybox
         // Cube map.
         ID3D11ShaderResourceView* mCubeMapSRV;
 
+		// Mip levels.
+		unsigned int mMipLevels;
+
         // PS Meta buffer.
         struct PSMeta
         {

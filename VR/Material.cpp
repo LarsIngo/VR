@@ -57,14 +57,15 @@ void Material::Render(Scene& scene, const glm::vec3& cameraPosition, const glm::
     vp.TopLeftY = 0;
     mpDeviceContext->RSSetViewports(1, &vp);
 
+	// Skybox.
+	assert(scene.mpSkybox != nullptr);
+	mpDeviceContext->PSSetShaderResources(8, 1, &scene.mpSkybox->mCubeMapSRV);
+
     // PS meta.
 	mPSMeta.cameraPostion = cameraPosition;
+	mPSMeta.skyboxMipLevels = scene.mpSkybox->mMipLevels;
     DxHelp::WriteStructuredBuffer<PSMeta>(mpDeviceContext, &mPSMeta, 1, mPSMetaBuff);
-    mpDeviceContext->PSSetShaderResources(2, 1, &mPSMetaBuff);
-
-    // Skybox.
-    assert(scene.mpSkybox != nullptr);
-    mpDeviceContext->PSSetShaderResources(8, 1, &scene.mpSkybox->mCubeMapSRV);
+    mpDeviceContext->PSSetShaderResources(7, 1, &mPSMetaBuff);
 
     unsigned int stride;
     unsigned int offset;
@@ -79,6 +80,7 @@ void Material::Render(Scene& scene, const glm::vec3& cameraPosition, const glm::
 
         mpDeviceContext->PSSetShaderResources(0, 1, &entity.mpDiffuseTex->mSRV);
         mpDeviceContext->PSSetShaderResources(1, 1, &entity.mpNormalTex->mSRV);
+		mpDeviceContext->PSSetShaderResources(2, 1, &entity.mpGlossTex->mSRV);
         Mesh* mesh = entity.mpMesh;
         stride = sizeof(Material::Vertex);
         offset = 0;
@@ -93,6 +95,9 @@ void Material::Render(Scene& scene, const glm::vec3& cameraPosition, const glm::
     mpDeviceContext->GSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);
     mpDeviceContext->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);
     mpDeviceContext->PSSetShaderResources(1, 1, (ID3D11ShaderResourceView**)p);
+	mpDeviceContext->PSSetShaderResources(2, 1, (ID3D11ShaderResourceView**)p);
+	mpDeviceContext->PSSetShaderResources(7, 1, (ID3D11ShaderResourceView**)p);
+	mpDeviceContext->PSSetShaderResources(8, 1, (ID3D11ShaderResourceView**)p);
     mpDeviceContext->VSSetShader(NULL, nullptr, 0);
     mpDeviceContext->GSSetShader(NULL, nullptr, 0);
     mpDeviceContext->PSSetShader(NULL, nullptr, 0);

@@ -8,13 +8,14 @@ struct Input
 
 Texture2D txDiffuse : register(t0);
 Texture2D txNormal : register(t1);
+Texture2D txGloss : register(t2);
 
 struct Meta
 {
     float3 cameraPosition;
-    float pad;
+	uint skyboxMipLevels;
 };
-StructuredBuffer<Meta> g_Meta : register(t2);
+StructuredBuffer<Meta> g_Meta : register(t7);
 
 TextureCube txSkybox : register(t8);
 
@@ -33,33 +34,41 @@ float4 main(Input input) : SV_TARGET0
 
 	float3 cameraVec = normalize(cameraPosition - worldPosition);
 	float3 reflectVec = reflect(-cameraVec, normal);
+
+	float gloss = txGloss.Sample(samp, uv).x;
 	
 	float3 reflectionDiffuse;
 	{
-		float3 skybox = txSkybox.Sample(samp, reflectVec).rgb;
+		float3 skybox = txSkybox.SampleLevel(samp, reflectVec, meta.skyboxMipLevels * (1.f - gloss)).rgb;
 		float r = saturate(dot(cameraVec, normal));
-		float f = 0.32f;
+		float f = 0.42f;
 		float fresnel = f + (1.f - f) * pow(1.f - r, 5);
 		reflectionDiffuse = skybox * fresnel;
 	}
 
+	// TMP POINTLIGHT
+	float3 power = 5.f;
+	float3 lPosition = float3(5, 5, -5);
+	float3 lDiffuse = 1.f;
+	float3 lightVec = lPosition - worldPosition;
+	float len = length(lightVec);
+	lightVec = normalize(lightVec);
+
 	float3 lightDiffuse;
+	float3 specular;
 	{
-		float3 power = 5.f;
-		float3 lPosition = 0.f;
-		float3 lDiffuse = 1.f;
-		float3 lightVec = lPosition - worldPosition;
-		float len = length(lightVec);
-		lightVec = normalize(lightVec);
 		float diffuseFactor = saturate(dot(lightVec, normal));
 		float k = len + 1;
-		float distanceFactor = power / (k * k);
+		float distanceFactor = 1;//power / (k * k);
 		lightDiffuse = diffuseFactor * distanceFactor * diffuse;
+		float r = saturate(dot(reflectVec, lightVec));
+		r = pow(r, 5.f + 5.f * gloss);
+		specular = (1.f - diffuseFactor) * lDiffuse * r;
 	}
 
 	float3 ambiantDiffuse = 0.2f * diffuse;
 
-	float3 finalColor = lightDiffuse + reflectionDiffuse + ambiantDiffuse;
+	float3 finalColor = specular + lightDiffuse + reflectionDiffuse + ambiantDiffuse;
 
 	// Tone mapping
 	finalColor = finalColor / (finalColor + 1);

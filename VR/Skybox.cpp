@@ -8,6 +8,7 @@ Skybox::Skybox(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext)
     mpDevice = pDevice;
     mpDeviceContext = pDeviceContext;
     mCubeMapSRV = nullptr;
+	mMipLevels = 0;
 
     DxHelp::CreateVS(mpDevice, "resources/shaders/ScreenQuad_VS.hlsl", &mScreenQuadVS);
     DxHelp::CreatePS(mpDevice, "resources/shaders/Skybox_PS.hlsl", &mSkyboxPS);
@@ -31,7 +32,7 @@ void Skybox::Load(Texture2D* mpBK, Texture2D* mpDN, Texture2D* mpFR, Texture2D* 
     // Assert every texture are the same.
     unsigned int width = mpBK->mWidth;
     unsigned int height = mpBK->mHeight; 
-    unsigned int mipLevels = mpBK->mMipLevels;
+    mMipLevels = mpBK->mMipLevels;
     DXGI_FORMAT format = mpBK->mFormat;
 
     ID3D11Texture2D* textureArr;
@@ -43,7 +44,7 @@ void Skybox::Load(Texture2D* mpBK, Texture2D* mpDN, Texture2D* mpFR, Texture2D* 
         texDesc.ArraySize = 6;
         texDesc.SampleDesc.Count = 1;
         texDesc.SampleDesc.Quality = 0;
-        texDesc.MipLevels = mipLevels;
+        texDesc.MipLevels = mMipLevels;
         texDesc.Format = format;
         texDesc.CPUAccessFlags = 0;
         texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
@@ -56,7 +57,7 @@ void Skybox::Load(Texture2D* mpBK, Texture2D* mpDN, Texture2D* mpFR, Texture2D* 
     D3D11_BOX sourceRegion;
     for (int i = 0; i < 6; ++i)
     {
-        for (unsigned int mipLevel = 0; mipLevel < mipLevels; ++mipLevel)
+        for (unsigned int mipLevel = 0; mipLevel < mMipLevels; ++mipLevel)
         {
             sourceRegion.left = 0;
             sourceRegion.right = (width >> mipLevel);
@@ -69,14 +70,14 @@ void Skybox::Load(Texture2D* mpBK, Texture2D* mpDN, Texture2D* mpFR, Texture2D* 
             if (sourceRegion.bottom == 0 || sourceRegion.right == 0)
                 break;
 
-            mpDeviceContext->CopySubresourceRegion(textureArr, D3D11CalcSubresource(mipLevel, i, mipLevels), 0, 0, 0, srcTex[i], mipLevel, &sourceRegion);
+            mpDeviceContext->CopySubresourceRegion(textureArr, D3D11CalcSubresource(mipLevel, i, mMipLevels), 0, 0, 0, srcTex[i], mipLevel, &sourceRegion);
         }
     }
     
     D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
     ZeroMemory(&srvDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
     srvDesc.Format = format;
-    srvDesc.TextureCube.MipLevels = mipLevels;
+    srvDesc.TextureCube.MipLevels = mMipLevels;
     srvDesc.TextureCube.MostDetailedMip = 0;
     srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
 
