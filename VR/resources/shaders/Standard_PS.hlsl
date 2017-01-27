@@ -37,15 +37,6 @@ float4 main(Input input) : SV_TARGET0
 
 	float gloss = txGloss.Sample(samp, uv).x;
 	
-	float3 reflectionDiffuse;
-	{
-		float3 skybox = txSkybox.SampleLevel(samp, reflectVec, meta.skyboxMipLevels * (1.f - gloss)).rgb;
-		float r = saturate(dot(cameraVec, normal));
-		float f = 0.42f;
-		float fresnel = f + (1.f - f) * pow(1.f - r, 5);
-		reflectionDiffuse = skybox * fresnel;
-	}
-
 	// TMP POINTLIGHT
 	float3 power = 5.f;
 	float3 lPosition = float3(5, 5, -5);
@@ -56,6 +47,7 @@ float4 main(Input input) : SV_TARGET0
 
 	float3 lightDiffuse;
 	float3 specular;
+	float specularFactor;
 	{
 		float diffuseFactor = saturate(dot(lightVec, normal));
 		float k = len + 1;
@@ -64,6 +56,16 @@ float4 main(Input input) : SV_TARGET0
 		float r = saturate(dot(reflectVec, lightVec));
 		r = pow(r, 5.f + 5.f * gloss);
 		specular = (1.f - diffuseFactor) * lDiffuse * r;
+		specularFactor = r;
+	}
+
+	float3 reflectionDiffuse;
+	{
+		float3 skybox = txSkybox.SampleLevel(samp, reflectVec, meta.skyboxMipLevels * (1.f - gloss)).rgb;
+		float r = saturate(dot(cameraVec, normal));
+		float f = 0.42f;
+		float fresnel = f + (1.f - f) * pow(1.f - r, 5);
+		reflectionDiffuse = skybox * fresnel * (1.f - specularFactor);
 	}
 
 	float3 ambiantDiffuse = 0.2f * diffuse;
