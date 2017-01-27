@@ -78,25 +78,25 @@ int main()
 	//camera.mPosition = glm::vec3(2,2,2);
     RenderSystem renderSystem(renderer.mDevice, renderer.mDeviceContext);
     Mesh mesh(renderer.mDevice, renderer.mDeviceContext);
-    Texture2D diffuse(renderer.mDevice, renderer.mDeviceContext);
+    Texture2D albedo(renderer.mDevice, renderer.mDeviceContext);
     Texture2D normal(renderer.mDevice, renderer.mDeviceContext);
-	Texture2D yesGloss(renderer.mDevice, renderer.mDeviceContext);
-	Texture2D noGloss(renderer.mDevice, renderer.mDeviceContext);
+	Texture2D white(renderer.mDevice, renderer.mDeviceContext);
+	Texture2D black(renderer.mDevice, renderer.mDeviceContext);
     Scene scene(renderer.mDevice, renderer.mDeviceContext);
     {
         scene.mpSkybox = &skybox;
         mesh.Load("resources/assets/skull/skull.obj");
 		//mesh.Load("resources/assets/OBJBox.obj");
-        diffuse.Load("resources/assets/skull/skull_diffuse1.jpg");
+		albedo.Load("resources/assets/skull/skull_diffuse1.jpg");
 		//diffuse.Load("resources/assets/DefaultDiffuse.png");
 		normal.Load("resources/assets/skull/skull_normal.jpg");
 		//normal.Load("resources/assets/DefaultNormal.png");
-		yesGloss.Load("resources/assets/White.png");
-		noGloss.Load("resources/assets/Black.png");
+		white.Load("resources/assets/White.png");
+		black.Load("resources/assets/Black.png");
 
         Entity entity;
         entity.mpMesh = &mesh;
-        entity.mpDiffuseTex = &diffuse;
+        entity.mpAlbedoTex = &albedo;
         entity.mpNormalTex = &normal;
         {
             int r = 2;
@@ -105,8 +105,10 @@ int main()
                     for (int x = 0; x < r; ++x)
                     {
                         entity.mPosition = glm::vec3(x, y, z) * 5.f;
-						if (x % 2) entity.mpGlossTex = &yesGloss;
-						else entity.mpGlossTex = &noGloss;
+						if (x % 2) entity.mpMetalTex = &white;
+						else entity.mpMetalTex = &black;
+						if (y % 2) entity.mpGlossTex = &white;
+						else entity.mpGlossTex = &black;
                         scene.mEntityList.push_back(entity);
                     }
         }

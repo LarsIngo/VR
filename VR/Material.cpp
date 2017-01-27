@@ -78,9 +78,10 @@ void Material::Render(Scene& scene, const glm::vec3& cameraPosition, const glm::
         mGSMeta.mvpMatrix = glm::transpose(vpMatix * modelMatix);
         DxHelp::WriteStructuredBuffer<Material::GSMeta>(mpDeviceContext, &mGSMeta, 1, mGSMetaBuff);
 
-        mpDeviceContext->PSSetShaderResources(0, 1, &entity.mpDiffuseTex->mSRV);
+        mpDeviceContext->PSSetShaderResources(0, 1, &entity.mpAlbedoTex->mSRV);
         mpDeviceContext->PSSetShaderResources(1, 1, &entity.mpNormalTex->mSRV);
 		mpDeviceContext->PSSetShaderResources(2, 1, &entity.mpGlossTex->mSRV);
+		mpDeviceContext->PSSetShaderResources(3, 1, &entity.mpMetalTex->mSRV);
         Mesh* mesh = entity.mpMesh;
         stride = sizeof(Material::Vertex);
         offset = 0;
@@ -96,6 +97,7 @@ void Material::Render(Scene& scene, const glm::vec3& cameraPosition, const glm::
     mpDeviceContext->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);
     mpDeviceContext->PSSetShaderResources(1, 1, (ID3D11ShaderResourceView**)p);
 	mpDeviceContext->PSSetShaderResources(2, 1, (ID3D11ShaderResourceView**)p);
+	mpDeviceContext->PSSetShaderResources(3, 1, (ID3D11ShaderResourceView**)p);
 	mpDeviceContext->PSSetShaderResources(7, 1, (ID3D11ShaderResourceView**)p);
 	mpDeviceContext->PSSetShaderResources(8, 1, (ID3D11ShaderResourceView**)p);
     mpDeviceContext->VSSetShader(NULL, nullptr, 0);

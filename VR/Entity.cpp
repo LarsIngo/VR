@@ -4,9 +4,10 @@ Entity::Entity()
 {
     mPosition = glm::vec3(0.f, 0.f, 0.f);
     mpMesh = nullptr;
-    mpDiffuseTex = nullptr;
+    mpAlbedoTex = nullptr;
     mpNormalTex = nullptr;
 	mpGlossTex = nullptr;
+	mpMetalTex = nullptr;
 }
 
 Entity::~Entity()

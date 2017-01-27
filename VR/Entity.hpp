@@ -20,12 +20,15 @@ class Entity
         // Mesh.
         Mesh* mpMesh;
 
-        // Diffuse.
-        Texture2D* mpDiffuseTex;
+        // Albedo(Color).
+        Texture2D* mpAlbedoTex;
 
         // Normal.
         Texture2D* mpNormalTex;
 
 		// Gloss.
 		Texture2D* mpGlossTex;
+
+		// Metal.
+		Texture2D* mpMetalTex;
 };

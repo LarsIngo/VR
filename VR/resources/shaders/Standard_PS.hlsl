@@ -6,9 +6,10 @@ struct Input
     float3x3 tbn : TBN;
 };
 
-Texture2D txDiffuse : register(t0);
+Texture2D txAlbedo : register(t0);
 Texture2D txNormal : register(t1);
 Texture2D txGloss : register(t2);
+Texture2D txMetal : register(t3);
 
 struct Meta
 {
@@ -29,48 +30,49 @@ float4 main(Input input) : SV_TARGET0
     float3 worldPosition = input.worldPosition;
     float2 uv = input.uv;
 
-    float3 diffuse = txDiffuse.Sample(samp, uv).rgb;
+    float3 color = txAlbedo.Sample(samp, uv).rgb;
     float3 normal = mul(normalize(2.f * txNormal.Sample(samp, uv).rgb - 1.f), input.tbn);
+	float gloss = txGloss.Sample(samp, uv).x;
+	bool metal = txMetal.Sample(samp, uv).x > 0.5f;
 
 	float3 cameraVec = normalize(cameraPosition - worldPosition);
 	float3 reflectVec = reflect(-cameraVec, normal);
 
-	float gloss = txGloss.Sample(samp, uv).x;
 	
 	// TMP POINTLIGHT
 	float3 power = 5.f;
 	float3 lPosition = float3(5, 5, -5);
-	float3 lDiffuse = 1.f;
+	float3 lColor = 1.f;
 	float3 lightVec = lPosition - worldPosition;
 	float len = length(lightVec);
 	lightVec = normalize(lightVec);
 
-	float3 lightDiffuse;
+	float3 lightColor;
 	float3 specular;
 	float specularFactor;
 	{
-		float diffuseFactor = saturate(dot(lightVec, normal));
+		float colorFactor = saturate(dot(lightVec, normal));
 		float k = len + 1;
 		float distanceFactor = 1;//power / (k * k);
-		lightDiffuse = diffuseFactor * distanceFactor * diffuse;
+		lightColor = colorFactor * distanceFactor * color;
 		float r = saturate(dot(reflectVec, lightVec));
 		r = pow(r, 5.f + 5.f * gloss);
-		specular = (1.f - diffuseFactor) * lDiffuse * r;
+		specular = (1.f - colorFactor) * lColor * r;
 		specularFactor = r;
 	}
 
-	float3 reflectionDiffuse;
+	float3 reflectionColor;
 	{
 		float3 skybox = txSkybox.SampleLevel(samp, reflectVec, meta.skyboxMipLevels * (1.f - gloss)).rgb;
 		float r = saturate(dot(cameraVec, normal));
-		float f = 0.42f;
+		float f;
+		if (metal) f = 0.92f;
+		else f = 0.22f;
 		float fresnel = f + (1.f - f) * pow(1.f - r, 5);
-		reflectionDiffuse = skybox * fresnel * (1.f - specularFactor);
+		reflectionColor = skybox * fresnel * (1.f - specularFactor);
 	}
 
-	float3 ambiantDiffuse = 0.2f * diffuse;
-
-	float3 finalColor = specular + lightDiffuse + reflectionDiffuse + ambiantDiffuse;
+	float3 finalColor = specular + lightColor * !metal + reflectionColor;
 
 	// Tone mapping
 	finalColor = finalColor / (finalColor + 1);
