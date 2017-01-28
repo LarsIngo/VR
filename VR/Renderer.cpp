@@ -81,8 +81,10 @@ void Renderer::WinClear()
     mWinFrameBuffer->Clear(0.2f, 0.2f, 0.2f, 0.f);
 }
 
-void Renderer::WinPresent()
+void Renderer::WinPresent(FrameBuffer* fb)
 {
+	if (fb != mWinFrameBuffer)
+		mWinFrameBuffer->Copy(fb);
     // Present to window.
     mSwapChain->Present(0, 0);
 }
@@ -217,7 +219,7 @@ void Renderer::InitialiseD3D()
     // Window frame buffer.
     ID3D11Texture2D* backBufferTex;
     DxAssert(mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBufferTex)), S_OK);
-    mWinFrameBuffer = new FrameBuffer(mDevice, mDeviceContext, mWinWidth, mWinHeight, D3D11_BIND_RENDER_TARGET, backBufferTex);
+    mWinFrameBuffer = new FrameBuffer(mDevice, mDeviceContext, mWinWidth, mWinHeight, D3D11_BIND_RENDER_TARGET, 0, backBufferTex);
 
     // Sample state.
     D3D11_SAMPLER_DESC sampDesc;

@@ -45,7 +45,7 @@ class Renderer
         // Clear backbuffer.
         void WinClear();
         // Present rendered result to window.
-        void WinPresent();
+        void WinPresent(FrameBuffer* fb);
 
         // Render companion window.
         void RenderCompanionWindow(FrameBuffer* leftEyeFb, FrameBuffer* rightEyeFb, FrameBuffer* windowFb);

@@ -67,8 +67,7 @@ void Skybox::Load(Texture2D* mpBK, Texture2D* mpDN, Texture2D* mpFR, Texture2D* 
             sourceRegion.back = 1;
 
             //test for overflow
-            if (sourceRegion.bottom == 0 || sourceRegion.right == 0)
-                break;
+			assert(sourceRegion.bottom != 0 || sourceRegion.right != 0);
 
             mpDeviceContext->CopySubresourceRegion(textureArr, D3D11CalcSubresource(mipLevel, i, mMipLevels), 0, 0, 0, srcTex[i], mipLevel, &sourceRegion);
         }

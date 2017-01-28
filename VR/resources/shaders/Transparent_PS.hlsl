@@ -10,12 +10,13 @@ Texture2D txAlbedo : register(t0);
 Texture2D txNormal : register(t1);
 Texture2D txGloss : register(t2);
 Texture2D txScreen : register(t3);
+//Texture2D txScreenDepth : register(t4);
 
 struct Meta
 {
     float3 cameraPosition;
 	uint skyboxMipLevels;
-	float4x4 vpMatrix;
+	float4x4 projMatrix;
 	uint screenWidth;
 	uint screenHeight;
 	float2 pad;
@@ -67,24 +68,22 @@ float4 main(Input input) : SV_TARGET0
 
 	float3 reflectionColor;
 	{
-		float3 skybox = txSkybox.SampleLevel(samp, reflectVec, pow(1.f - gloss, 2) * meta.skyboxMipLevels).rgb;
+		float3 skybox = txSkybox.Sample(samp, reflectVec).rgb;
 		float r = saturate(dot(cameraVec, normal));
 		float f = 0.22f;
 		float fresnel = f + (1.f - f) * pow(1.f - r, 5);
 		reflectionColor = skybox * fresnel * (1.f - specularFactor);
 	}
 
+	float3 refractVec = refract(-cameraVec, normal, 0.14f) * 0.1f;
 	float3 refractColor;
 	{
-		float3 refractVec = refract(-cameraVec, normal, 0.3f);
-		//float2 refractOffset = mul(float4(worldPosition + refractVec * 0.2f, 1.f), meta.vpMatrix).xyz / 2.f + 1.f;
-		float2 uvOffset = 0.1f * refractVec;
-		float3 screenColor = txScreen.Sample(samp, screenUV + uvOffset).rgb;
-		//float3 skybox = txSkybox.SampleLevel(samp, refractVec, pow(1.f - gloss, 2) * meta.skyboxMipLevels).rgb;
-		refractColor = screenColor;
+		float2 offsetUV = mul(float4(refractVec, 1.f), meta.projMatrix).xy;
+		float2 sampleUV = saturate(screenUV + offsetUV);
+		refractColor = txScreen.Sample(samp, sampleUV).rgb;
 	}
 
-	float3 finalColor = refractColor;
+	float3 finalColor = specular + reflectionColor + refractColor;
 
 	// Tone mapping
 	//finalColor = finalColor / (finalColor + 1);

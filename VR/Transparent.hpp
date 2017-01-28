@@ -32,7 +32,7 @@ public:
 	{
 		glm::vec3 cameraPostion;
 		unsigned int skyboxMipLevels;
-		glm::mat4 vpMatrix;
+		glm::mat4 projMatrix;
 		unsigned int screenWidth;
 		unsigned int screenHeight;
 		float pad[2];

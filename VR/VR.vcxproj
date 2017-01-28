@@ -167,6 +167,7 @@ echo d | xcopy "$(SolutionDir)externals\assimp\bin\win64\Release" "$(OutputPath)
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="DoubleFrameBuffer.cpp" />
     <ClCompile Include="Entity.cpp" />
     <ClCompile Include="FrameBuffer.cpp" />
     <ClCompile Include="main.cpp" />
@@ -183,6 +184,7 @@ echo d | xcopy "$(SolutionDir)externals\assimp\bin\win64\Release" "$(OutputPath)
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.hpp" />
+    <ClInclude Include="DoubleFrameBuffer.hpp" />
     <ClInclude Include="DxAssert.hpp" />
     <ClInclude Include="DxHelp.hpp" />
     <ClInclude Include="Entity.hpp" />

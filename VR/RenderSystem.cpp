@@ -1,4 +1,4 @@
-#include "FrameBuffer.hpp"
+#include "DoubleFrameBuffer.hpp"
 #include "Material.hpp"
 #include "RenderSystem.hpp"
 #include "Skybox.hpp"
@@ -31,22 +31,16 @@ RenderSystem::~RenderSystem()
 
 void RenderSystem::Render(Scene& scene, Camera& camera)
 {
-	FrameBuffer frameBuffer(mpDevice, mpDeviceContext, camera.mScreenWidth, camera.mScreenHeight);
-	frameBuffer.Clear(1, 0, 0, 1);
-
     // Skybox.
-    scene.mpSkybox->Render(camera.mOrientationMatrix, camera.mProjectionMatrix, &frameBuffer);
+    scene.mpSkybox->Render(camera.mOrientationMatrix, camera.mProjectionMatrix, camera.mpFrameBuffer->GetFrameBuffer());
 
     // Standard.
-    mStandardMaterial->Render(scene, camera.mPosition, camera.mViewMatrix, camera.mProjectionMatrix, &frameBuffer);
+    mStandardMaterial->Render(scene, camera.mPosition, camera.mViewMatrix, camera.mProjectionMatrix, camera.mpFrameBuffer->GetFrameBuffer());
 
 	// Transparent.
-	D3D11_BOX sourceRegion;
-	sourceRegion.left = 0; sourceRegion.right = camera.mScreenWidth;
-	sourceRegion.top = 0; sourceRegion.bottom = camera.mScreenHeight;
-	sourceRegion.front = 0; sourceRegion.back = 1;
-	mpDeviceContext->CopySubresourceRegion(camera.mpFrameBuffer->mColTex, 0, 0, 0, 0, frameBuffer.mColTex, 0, &sourceRegion);
-	mTransparentMaterial->Render(scene, camera.mPosition, camera.mViewMatrix, camera.mProjectionMatrix, camera.mScreenWidth, camera.mScreenHeight, &frameBuffer, camera.mpFrameBuffer);
+	FrameBuffer* sourceFrameBuffer = camera.mpFrameBuffer->GetFrameBuffer();
+	camera.mpFrameBuffer->Swap();
+	mTransparentMaterial->Render(scene, camera.mPosition, camera.mViewMatrix, camera.mProjectionMatrix, camera.mScreenWidth, camera.mScreenHeight, sourceFrameBuffer, camera.mpFrameBuffer->GetFrameBuffer());
 }
 
 void RenderSystem::Render(Scene& scene, VRDevice& hmd)

@@ -1,7 +1,7 @@
 #pragma once
 
 #define CAMERA_CONTROLL 0
-//#define FRAME_LATENCY
+#define FRAME_LATENCY
 //#define D3D_REPORT_LIVE_OBJ
 #define _CRTDBG_MAP_ALLOC
 
@@ -10,6 +10,7 @@
 #include <glm/glm.hpp>
 
 #include "Camera.hpp"
+#include "DoubleFrameBuffer.hpp"
 #include "DxAssert.hpp"
 #include "Mesh.hpp"
 #include "Profiler.hpp"
@@ -49,7 +50,7 @@ int main()
     DxAssert(pDXGIDevice->SetMaximumFrameLatency(1), S_OK);
     pDXGIDevice->Release();
 #endif
-	FrameBuffer cameraFrameBuffer(renderer.mDevice, renderer.mDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
+	DoubleFrameBuffer cameraFrameBuffer(renderer.mDevice, renderer.mDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
 	FrameBuffer hmdLeftFrameBuffer(renderer.mDevice, renderer.mDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
     FrameBuffer hmdRightFrameBuffer(renderer.mDevice, renderer.mDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
     if (VR)
@@ -154,22 +155,13 @@ int main()
             }
             else
             {
+				camera.mpFrameBuffer->Clear(0.f, 1.f, 0.f, 1.f);
                 renderSystem.Render(scene, camera);
             }
             // --- RENDER --- //
 
-            // COPY//
-			if (!VR || CAMERA_CONTROLL && camera.mpFrameBuffer != renderer.mWinFrameBuffer)
-			{
-				D3D11_BOX sourceRegion;
-				sourceRegion.left = 0; sourceRegion.right = winWidth;
-				sourceRegion.top = 0; sourceRegion.bottom = winHeight;
-				sourceRegion.front = 0; sourceRegion.back = 1;
-				renderer.mDeviceContext->CopySubresourceRegion(renderer.mWinFrameBuffer->mColTex, 0, 0, 0, 0, camera.mpFrameBuffer->mColTex, 0, &sourceRegion);
-				camera.mpFrameBuffer->Clear(0.f, 1.f, 0.f, 0.f);
-			}
 			// +++ PRESENET +++ //
-            renderer.WinPresent();
+            renderer.WinPresent(camera.mpFrameBuffer->GetFrameBuffer());
             if (VR)
             {
                 hmd.Submit();

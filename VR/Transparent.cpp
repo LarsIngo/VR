@@ -64,7 +64,7 @@ void Transparent::Render(Scene& scene, const glm::vec3& cameraPosition, const gl
 	// PS meta.
 	mPSMeta.cameraPostion = cameraPosition;
 	mPSMeta.skyboxMipLevels = scene.mpSkybox->mMipLevels;
-	mPSMeta.vpMatrix = glm::transpose(vpMatix);
+	mPSMeta.projMatrix = glm::transpose(projectionMatrix);
 	mPSMeta.screenWidth = screenWidth;
 	mPSMeta.screenHeight = screenHeight;
 	DxHelp::WriteStructuredBuffer<PSMeta>(mpDeviceContext, &mPSMeta, 1, mPSMetaBuff);
