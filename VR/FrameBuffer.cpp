@@ -59,8 +59,3 @@ void FrameBuffer::Clear(float r, float g, float b, float a)
     if (mColRTV != nullptr) mpDeviceContext->ClearRenderTargetView(mColRTV, clrColor);
     if (mDepthDSV != nullptr) mpDeviceContext->ClearDepthStencilView(mDepthDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
 }
-
-void FrameBuffer::Init()
-{
-
-}

@@ -16,6 +16,9 @@ class Entity
         ~Entity();
 
         glm::vec3 mPosition;
+		
+		// Transparent.
+		bool mTransparent;
 
         // Mesh.
         Mesh* mpMesh;

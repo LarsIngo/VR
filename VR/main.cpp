@@ -49,7 +49,8 @@ int main()
     DxAssert(pDXGIDevice->SetMaximumFrameLatency(1), S_OK);
     pDXGIDevice->Release();
 #endif
-    FrameBuffer hmdLeftFrameBuffer(renderer.mDevice, renderer.mDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
+	FrameBuffer cameraFrameBuffer(renderer.mDevice, renderer.mDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
+	FrameBuffer hmdLeftFrameBuffer(renderer.mDevice, renderer.mDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
     FrameBuffer hmdRightFrameBuffer(renderer.mDevice, renderer.mDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
     if (VR)
     {
@@ -74,7 +75,7 @@ int main()
         up.Load("resources/assets/DeepSpaceBlue/upImage.png");
         skybox.Load(&bk, &dn, &fr, &lf, &rt, &up);
     }
-    Camera camera(winWidth, winHeight, renderer.mWinFrameBuffer);
+    Camera camera(winWidth, winHeight, &cameraFrameBuffer);
 	//camera.mPosition = glm::vec3(2,2,2);
     RenderSystem renderSystem(renderer.mDevice, renderer.mDeviceContext);
     Mesh mesh(renderer.mDevice, renderer.mDeviceContext);
@@ -82,6 +83,7 @@ int main()
     Texture2D normal(renderer.mDevice, renderer.mDeviceContext);
 	Texture2D white(renderer.mDevice, renderer.mDeviceContext);
 	Texture2D black(renderer.mDevice, renderer.mDeviceContext);
+	Texture2D whiteBlack(renderer.mDevice, renderer.mDeviceContext);
     Scene scene(renderer.mDevice, renderer.mDeviceContext);
     {
         scene.mpSkybox = &skybox;
@@ -93,6 +95,7 @@ int main()
 		//normal.Load("resources/assets/DefaultNormal.png");
 		white.Load("resources/assets/White.png");
 		black.Load("resources/assets/Black.png");
+		whiteBlack.Load("resources/assets/WhiteBlack.jpg");
 
         Entity entity;
         entity.mpMesh = &mesh;
@@ -109,6 +112,8 @@ int main()
 						else entity.mpMetalTex = &black;
 						if (y % 2) entity.mpGlossTex = &white;
 						else entity.mpGlossTex = &black;
+						if (z % 2) entity.mTransparent = true;
+						else entity.mTransparent = false;
                         scene.mEntityList.push_back(entity);
                     }
         }
@@ -153,7 +158,17 @@ int main()
             }
             // --- RENDER --- //
 
-            // +++ PRESENET +++ //
+            // COPY//
+			if (!VR || CAMERA_CONTROLL && camera.mpFrameBuffer != renderer.mWinFrameBuffer)
+			{
+				D3D11_BOX sourceRegion;
+				sourceRegion.left = 0; sourceRegion.right = winWidth;
+				sourceRegion.top = 0; sourceRegion.bottom = winHeight;
+				sourceRegion.front = 0; sourceRegion.back = 1;
+				renderer.mDeviceContext->CopySubresourceRegion(renderer.mWinFrameBuffer->mColTex, 0, 0, 0, 0, camera.mpFrameBuffer->mColTex, 0, &sourceRegion);
+				camera.mpFrameBuffer->Clear(0.f, 1.f, 0.f, 0.f);
+			}
+			// +++ PRESENET +++ //
             renderer.WinPresent();
             if (VR)
             {

@@ -60,6 +60,12 @@ class Camera
         // Projection matrix.
         glm::mat4 mProjectionMatrix;
 
+		// Screen width.
+		unsigned int mScreenWidth;
+
+		//Screeb height.
+		unsigned int mScreenHeight;
+
         // Frame buffer.
         FrameBuffer* mpFrameBuffer;
 

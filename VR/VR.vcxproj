@@ -178,6 +178,7 @@ echo d | xcopy "$(SolutionDir)externals\assimp\bin\win64\Release" "$(OutputPath)
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="Skybox.cpp" />
     <ClCompile Include="Texture2D.cpp" />
+    <ClCompile Include="Transparent.cpp" />
     <ClCompile Include="VRDevice.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -194,6 +195,7 @@ echo d | xcopy "$(SolutionDir)externals\assimp\bin\win64\Release" "$(OutputPath)
     <ClInclude Include="Scene.hpp" />
     <ClInclude Include="Skybox.hpp" />
     <ClInclude Include="Texture2D.hpp" />
+    <ClInclude Include="Transparent.hpp" />
     <ClInclude Include="VRDevice.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -220,6 +222,11 @@ echo d | xcopy "$(SolutionDir)externals\assimp\bin\win64\Release" "$(OutputPath)
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\shaders\Skybox_PS.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\shaders\Transparent_PS.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

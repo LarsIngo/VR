@@ -39,6 +39,4 @@ class FrameBuffer
     private:
         ID3D11Device* mpDevice;
         ID3D11DeviceContext* mpDeviceContext;
-
-        void Init();
 };

@@ -31,9 +31,9 @@ Material::~Material()
 
 void Material::Init(std::vector<D3D11_INPUT_ELEMENT_DESC>& inputDesc, const char* VSPath, const char* GSPath, const char* PSPath)
 {
-    DxHelp::CreateVS(mpDevice, VSPath, &mVS, &inputDesc, &mInputLayout);
-    DxHelp::CreateGS(mpDevice, GSPath, &mGS);
-    DxHelp::CreatePS(mpDevice, PSPath, &mPS);
+    DxHelp::CreateVS(mpDevice, VSPath, "main", &mVS, &inputDesc, &mInputLayout);
+    DxHelp::CreateGS(mpDevice, GSPath, "main", &mGS);
+    DxHelp::CreatePS(mpDevice, PSPath, "main", &mPS);
     DxHelp::CreateCPUwriteGPUreadStructuredBuffer<GSMeta>(mpDevice, 1, &mGSMetaBuff);
     DxHelp::CreateCPUwriteGPUreadStructuredBuffer<PSMeta>(mpDevice, 1, &mPSMetaBuff);
 }
@@ -73,21 +73,24 @@ void Material::Render(Scene& scene, const glm::vec3& cameraPosition, const glm::
     for (std::size_t i = 0; i < scene.mEntityList.size(); ++i)
     {
         Entity& entity = scene.mEntityList[i];
-        modelMatix = glm::translate(glm::mat4(), entity.mPosition);
-        mGSMeta.modelMatrix = glm::transpose(modelMatix);
-        mGSMeta.mvpMatrix = glm::transpose(vpMatix * modelMatix);
-        DxHelp::WriteStructuredBuffer<Material::GSMeta>(mpDeviceContext, &mGSMeta, 1, mGSMetaBuff);
+		if (!entity.mTransparent)
+		{
+			modelMatix = glm::translate(glm::mat4(), entity.mPosition);
+			mGSMeta.modelMatrix = glm::transpose(modelMatix);
+			mGSMeta.mvpMatrix = glm::transpose(vpMatix * modelMatix);
+			DxHelp::WriteStructuredBuffer<Material::GSMeta>(mpDeviceContext, &mGSMeta, 1, mGSMetaBuff);
 
-        mpDeviceContext->PSSetShaderResources(0, 1, &entity.mpAlbedoTex->mSRV);
-        mpDeviceContext->PSSetShaderResources(1, 1, &entity.mpNormalTex->mSRV);
-		mpDeviceContext->PSSetShaderResources(2, 1, &entity.mpGlossTex->mSRV);
-		mpDeviceContext->PSSetShaderResources(3, 1, &entity.mpMetalTex->mSRV);
-        Mesh* mesh = entity.mpMesh;
-        stride = sizeof(Material::Vertex);
-        offset = 0;
-        mpDeviceContext->IASetVertexBuffers(0, 1, &mesh->mVertexBuffer, &stride, &offset);
-        mpDeviceContext->IASetIndexBuffer(mesh->mIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-        mpDeviceContext->DrawIndexed(mesh->mNumIndices, 0, 0);
+			mpDeviceContext->PSSetShaderResources(0, 1, &entity.mpAlbedoTex->mSRV);
+			mpDeviceContext->PSSetShaderResources(1, 1, &entity.mpNormalTex->mSRV);
+			mpDeviceContext->PSSetShaderResources(2, 1, &entity.mpGlossTex->mSRV);
+			mpDeviceContext->PSSetShaderResources(3, 1, &entity.mpMetalTex->mSRV);
+			Mesh* mesh = entity.mpMesh;
+			stride = sizeof(Material::Vertex);
+			offset = 0;
+			mpDeviceContext->IASetVertexBuffers(0, 1, &mesh->mVertexBuffer, &stride, &offset);
+			mpDeviceContext->IASetIndexBuffer(mesh->mIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+			mpDeviceContext->DrawIndexed(mesh->mNumIndices, 0, 0);
+		}
     }
 
     void* p[1] = { NULL };
