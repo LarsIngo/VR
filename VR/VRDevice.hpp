@@ -6,7 +6,7 @@
 #include <openvr.h>
 #include <string>
 
-class FrameBuffer;
+class DoubleFrameBuffer;
 
 class VRDevice
 {
@@ -25,7 +25,7 @@ class VRDevice
         // pDeviceContext Pointer to D3D11 device context.
         // leftFrameBuffer Frame buffer to render.
         // rightFrameBuffer Frame buffer to render.
-        void InitD3D(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext, FrameBuffer* leftFrameBuffer, FrameBuffer* rightFrameBuffer);
+        void InitD3D(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext, DoubleFrameBuffer* leftFrameBuffer, DoubleFrameBuffer* rightFrameBuffer);
 
         // IsActive.
         bool IsActive();
@@ -43,11 +43,11 @@ class VRDevice
         void ClearFrameBuffers();
 
         // Get render size.
-        std::uint32_t GetRenderWidth();
-        std::uint32_t GetRenderHeight();
+        std::uint32_t GetWidth();
+        std::uint32_t GetHeight();
 
-        FrameBuffer* mpLeftFrameBuffer;
-        FrameBuffer* mpRightFrameBuffer;
+        DoubleFrameBuffer* mpLeftFrameBuffer;
+        DoubleFrameBuffer* mpRightFrameBuffer;
 
         glm::vec3 mPosition;
 		glm::vec3 mRightDirection;
@@ -57,17 +57,14 @@ class VRDevice
 
         glm::mat4 mHMDTransform;
 
-        glm::mat4 mLeftPos;
-        glm::mat4 mRightPos;
-
-        glm::mat4 mLeftProjection;
-        glm::mat4 mRightProjection;
+        glm::mat4 mLeftTransform;
+        glm::mat4 mRightTransform;
 
         glm::mat4 mLeftView;
         glm::mat4 mRightView;
 
-        glm::mat4 mLeftMVP;
-        glm::mat4 mRightMVP;
+        glm::mat4 mLeftProjection;
+        glm::mat4 mRightProjection;
 
     private:
         // Covert to glm matrix.
@@ -88,6 +85,6 @@ class VRDevice
         std::string m_strPoseClasses;                            // what classes we saw poses for this frame
         char mDeviceClassChar[vr::k_unMaxTrackedDeviceCount];   // for each device, a character representing its class
 
-        std::uint32_t mRenderWidth;
-        std::uint32_t mRenderHeight;
+        std::uint32_t mWidth;
+        std::uint32_t mHeight;
 };

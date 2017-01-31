@@ -1,5 +1,6 @@
 #include "VRDevice.hpp"
 #include "DxAssert.hpp"
+#include "DoubleFrameBuffer.hpp"
 #include "FrameBuffer.hpp"
 
 #include <assert.h>
@@ -47,7 +48,7 @@ bool VRDevice::Start()
     }
 
     // SetupStereoRenderTargets.
-    mpHMD->GetRecommendedRenderTargetSize(&mRenderWidth, &mRenderHeight);
+    mpHMD->GetRecommendedRenderTargetSize(&mWidth, &mHeight);
 
     // Get focus.
     vr::VRCompositor()->WaitGetPoses(NULL, 0, NULL, 0);
@@ -55,10 +56,10 @@ bool VRDevice::Start()
     return true;
 }
 
-void VRDevice::InitD3D(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext, FrameBuffer* leftFrameBuffer, FrameBuffer* rightFrameBuffer)
+void VRDevice::InitD3D(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext, DoubleFrameBuffer* leftFrameBuffer, DoubleFrameBuffer* rightFrameBuffer)
 {
     assert(mpHMD != nullptr);
-    assert(mRenderWidth != 0 && mRenderHeight != 0);
+    assert(mWidth != 0 && mHeight != 0);
 
     mpDevice = pDevice;
     mpDeviceContext = pDeviceContext;
@@ -119,10 +120,10 @@ void VRDevice::Sync()
    
     // GetHMDMatrixPoseEye.
     {
-        mLeftPos = ConvertMatrix(mpHMD->GetEyeToHeadTransform(vr::Hmd_Eye::Eye_Left));
-        mLeftPos = glm::inverse(mLeftPos);
-        mRightPos = ConvertMatrix(mpHMD->GetEyeToHeadTransform(vr::Hmd_Eye::Eye_Right));
-        mRightPos = glm::inverse(mRightPos);
+        mLeftTransform = ConvertMatrix(mpHMD->GetEyeToHeadTransform(vr::Hmd_Eye::Eye_Left));
+        mLeftTransform = glm::inverse(mLeftTransform);
+        mRightTransform = ConvertMatrix(mpHMD->GetEyeToHeadTransform(vr::Hmd_Eye::Eye_Right));
+        mRightTransform = glm::inverse(mRightTransform);
     }
     {
         float nearZ = 0.1f;
@@ -143,24 +144,24 @@ void VRDevice::Sync()
         glm::vec4(0.f, 0.f, 0.f, 1.f)
     ));
 
-    mLeftView = mLeftPos * mHMDTransform;
-    mRightView = mRightPos * mHMDTransform;
+    mLeftView = mOrientationMatrix * mLeftTransform * mHMDTransform * translation;
+    mRightView = mOrientationMatrix * mRightTransform * mHMDTransform * translation;
 
     // GetCurrentViewProjectionMatrix.
-    mLeftMVP = mLeftProjection * mLeftPos * mHMDTransform * translation;
-    mRightMVP = mRightProjection * mRightPos * mHMDTransform * translation;
+    //mLeftMVP = mLeftProjection * mLeftTransform * mHMDTransform * translation;
+    //mRightMVP = mRightProjection * mRightTransform * mHMDTransform * translation;
 }
 
 void VRDevice::Submit()
 {
     assert(mpLeftFrameBuffer != nullptr && mpRightFrameBuffer != nullptr);
     {   // Submit left eye.
-        vr::Texture_t leftEyeTexture = { mpLeftFrameBuffer->mColTex, vr::TextureType_DirectX, vr::ColorSpace_Auto };
+        vr::Texture_t leftEyeTexture = { mpLeftFrameBuffer->GetFrameBuffer()->mColTex, vr::TextureType_DirectX, vr::ColorSpace_Auto };
         vr::EVRCompositorError eError = vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
         if (eError != vr::VRCompositorError_None) std::cout << "HMD Error rendering left eye" << std::endl;
     }
     {   // Submit right eye.
-        vr::Texture_t rightEyeTexture = { mpRightFrameBuffer->mColTex, vr::TextureType_DirectX, vr::ColorSpace_Auto };
+        vr::Texture_t rightEyeTexture = { mpRightFrameBuffer->GetFrameBuffer()->mColTex, vr::TextureType_DirectX, vr::ColorSpace_Auto };
         vr::EVRCompositorError eError = vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
         if (eError != vr::VRCompositorError_None) std::cout << "HMD Error rendering right eye" << std::endl;
     }
@@ -195,16 +196,16 @@ glm::mat4 VRDevice::ConvertMatrix(const vr::HmdMatrix44_t& mat)
     return glmMat;
 }
 
-std::uint32_t VRDevice::GetRenderWidth()
+std::uint32_t VRDevice::GetWidth()
 {
-    if(mpHMD != nullptr) return mRenderWidth;
+    if(mpHMD != nullptr) return mWidth;
     std::cout << "HMD not initialised." << std::endl;
     return 0;
 }
 
-std::uint32_t VRDevice::GetRenderHeight()
+std::uint32_t VRDevice::GetHeight()
 {
-    if (mpHMD != nullptr) return mRenderHeight;
+    if (mpHMD != nullptr) return mHeight;
     std::cout << "HMD not initialised." << std::endl;
     return 0;
 }

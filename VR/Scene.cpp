@@ -51,5 +51,4 @@ void Scene::mQuickSort(Entity* arr, int left, int right, const glm::vec3& camera
 bool Scene::mCompare(const Entity& i, const Entity& j, const glm::vec3& cameraPosition, const glm::vec3& cameraFrontDirection)
 {
     return glm::dot(i.mPosition - cameraPosition, cameraFrontDirection) > glm::dot(j.mPosition - cameraPosition, cameraFrontDirection);
-    //return i.mPosition.x < j.mPosition.x;
 }

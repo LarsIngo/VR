@@ -33,8 +33,8 @@ int main()
     unsigned int winHeight;
     if (VR)
     {
-        winWidth = (hmd.GetRenderWidth());
-        winHeight = (hmd.GetRenderHeight()/2);
+        winWidth = (hmd.GetWidth());
+        winHeight = (hmd.GetHeight()/2);
     }
     else 
     {
@@ -51,8 +51,8 @@ int main()
     pDXGIDevice->Release();
 #endif
 	DoubleFrameBuffer cameraFrameBuffer(renderer.mDevice, renderer.mDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
-	FrameBuffer hmdLeftFrameBuffer(renderer.mDevice, renderer.mDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
-    FrameBuffer hmdRightFrameBuffer(renderer.mDevice, renderer.mDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
+    DoubleFrameBuffer hmdLeftFrameBuffer(renderer.mDevice, renderer.mDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
+    DoubleFrameBuffer hmdRightFrameBuffer(renderer.mDevice, renderer.mDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
     if (VR)
     {
         hmd.InitD3D(renderer.mDevice, renderer.mDeviceContext, &hmdLeftFrameBuffer, &hmdRightFrameBuffer);
@@ -147,14 +147,9 @@ int main()
                 hmd.ClearFrameBuffers();
                 renderSystem.Render(scene, hmd);
                 if (CAMERA_CONTROLL)
-                {
                     renderSystem.Render(scene, camera);
-                }
                 else
-                {
-                    renderer.RenderCompanionWindow(hmd.mpLeftFrameBuffer, hmd.mpRightFrameBuffer, renderer.mWinFrameBuffer); //TODO make own class.
-                }
-                    
+                    renderer.RenderCompanionWindow(hmd.mpLeftFrameBuffer->GetFrameBuffer(), hmd.mpRightFrameBuffer->GetFrameBuffer(), renderer.mWinFrameBuffer); //TODO make own class.
             }
             else
             {

@@ -43,22 +43,24 @@ void RenderSystem::Render(Scene& scene, Camera& camera)
 
 void RenderSystem::Render(Scene& scene, VRDevice& hmd)
 {
-    {   // Render left eye.
+    {   // Left eye.
         // Skybox.
-        scene.mpSkybox->Render(hmd.mOrientationMatrix, hmd.mLeftProjection, hmd.mpLeftFrameBuffer);
+        scene.mpSkybox->Render(hmd.mOrientationMatrix, hmd.mLeftProjection, hmd.mpLeftFrameBuffer->GetFrameBuffer());
 
-        // Scene.
-        //Material* material = scene.mStandardMaterial;
-        //material->mGSMeta.mvpMatrix = hmd.mMVPLeft;
-        //RenderScene(scene, material, hmd.mLeftEyeFB);
-		// TODO fix for each eye hmd.mPosition
-        mStandardMaterial->Render(scene, hmd.mPosition, hmd.mLeftView, hmd.mLeftProjection, hmd.mpLeftFrameBuffer);
+        // Standard.
+        mStandardMaterial->Render(scene, hmd.mPosition, hmd.mLeftView, hmd.mLeftProjection, hmd.mpLeftFrameBuffer->GetFrameBuffer());
+
+        // Transparent.
+        mTransparentMaterial->Render(scene, hmd.mPosition, hmd.mLeftView, hmd.mLeftProjection, hmd.GetWidth(), hmd.GetHeight(), hmd.mpLeftFrameBuffer);
     }
-    {   // Render right eye.
+    {   // Right eye.
         // Skybox.
-        scene.mpSkybox->Render(hmd.mRightView, hmd.mRightProjection, hmd.mpRightFrameBuffer);
+        scene.mpSkybox->Render(hmd.mOrientationMatrix, hmd.mRightProjection, hmd.mpRightFrameBuffer->GetFrameBuffer());
 
-        // Scene.
-        mStandardMaterial->Render(scene, hmd.mPosition, hmd.mOrientationMatrix, hmd.mRightProjection, hmd.mpRightFrameBuffer);
+        // Standard.
+        mStandardMaterial->Render(scene, hmd.mPosition, hmd.mRightView, hmd.mRightProjection, hmd.mpRightFrameBuffer->GetFrameBuffer());
+
+        // Transparent.
+        mTransparentMaterial->Render(scene, hmd.mPosition, hmd.mRightView, hmd.mRightProjection, hmd.GetWidth(), hmd.GetHeight(), hmd.mpRightFrameBuffer);
     }
 }
