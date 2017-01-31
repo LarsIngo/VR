@@ -16,6 +16,7 @@ Material::Material(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext)
     mGS = nullptr;
     mPS = nullptr;
     mGSMetaBuff = nullptr;
+    mPSMetaBuff = nullptr;
 }
 
 Material::~Material()
@@ -25,17 +26,19 @@ Material::~Material()
     if (mGS != nullptr) mGS->Release();
     if (mPS != nullptr) mPS->Release();
     if (mGSMetaBuff != nullptr) mGSMetaBuff->Release();
+    if (mPSMetaBuff != nullptr) mPSMetaBuff->Release();
 }
 
 void Material::Init(std::vector<D3D11_INPUT_ELEMENT_DESC>& inputDesc, const char* VSPath, const char* GSPath, const char* PSPath)
 {
-    DxHelp::CreateVS(mpDevice, VSPath, &mVS, &inputDesc, &mInputLayout);
-    DxHelp::CreateGS(mpDevice, GSPath, &mGS);
-    DxHelp::CreatePS(mpDevice, PSPath, &mPS);
+    DxHelp::CreateVS(mpDevice, VSPath, "main", &mVS, &inputDesc, &mInputLayout);
+    DxHelp::CreateGS(mpDevice, GSPath, "main", &mGS);
+    DxHelp::CreatePS(mpDevice, PSPath, "main", &mPS);
     DxHelp::CreateCPUwriteGPUreadStructuredBuffer<GSMeta>(mpDevice, 1, &mGSMetaBuff);
+    DxHelp::CreateCPUwriteGPUreadStructuredBuffer<PSMeta>(mpDevice, 1, &mPSMetaBuff);
 }
 
-void Material::Render(Scene& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, FrameBuffer* targetFb)
+void Material::Render(Scene& scene, const glm::vec3& cameraPosition, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, FrameBuffer* targetFb)
 {
     glm::mat4 vpMatix = projectionMatrix * viewMatrix;
     mpDeviceContext->OMSetRenderTargets(1, &targetFb->mColRTV, targetFb->mDepthDSV);
@@ -54,9 +57,15 @@ void Material::Render(Scene& scene, const glm::mat4& viewMatrix, const glm::mat4
     vp.TopLeftY = 0;
     mpDeviceContext->RSSetViewports(1, &vp);
 
-    // Skybox.
-    assert(scene.mpSkybox != nullptr);
-    mpDeviceContext->PSSetShaderResources(8, 1, &scene.mpSkybox->mCubeMapSRV);
+	// Skybox.
+	assert(scene.mpSkybox != nullptr);
+	mpDeviceContext->PSSetShaderResources(8, 1, &scene.mpSkybox->mCubeMapSRV);
+
+    // PS meta.
+	mPSMeta.cameraPostion = cameraPosition;
+	mPSMeta.skyboxMipLevels = scene.mpSkybox->mMipLevels;
+    DxHelp::WriteStructuredBuffer<PSMeta>(mpDeviceContext, &mPSMeta, 1, mPSMetaBuff);
+    mpDeviceContext->PSSetShaderResources(7, 1, &mPSMetaBuff);
 
     unsigned int stride;
     unsigned int offset;
@@ -64,19 +73,24 @@ void Material::Render(Scene& scene, const glm::mat4& viewMatrix, const glm::mat4
     for (std::size_t i = 0; i < scene.mEntityList.size(); ++i)
     {
         Entity& entity = scene.mEntityList[i];
-        modelMatix = glm::translate(glm::mat4(), entity.mPosition);
-        mGSMeta.modelMatrix = glm::transpose(modelMatix);
-        mGSMeta.mvpMatrix = glm::transpose(vpMatix * modelMatix);
-        DxHelp::WriteStructuredBuffer<Material::GSMeta>(mpDeviceContext, &mGSMeta, 1, mGSMetaBuff);
+		if (!entity.mTransparent)
+		{
+			modelMatix = glm::translate(glm::mat4(), entity.mPosition);
+			mGSMeta.modelMatrix = glm::transpose(modelMatix);
+			mGSMeta.mvpMatrix = glm::transpose(vpMatix * modelMatix);
+			DxHelp::WriteStructuredBuffer<Material::GSMeta>(mpDeviceContext, &mGSMeta, 1, mGSMetaBuff);
 
-        mpDeviceContext->PSSetShaderResources(0, 1, &entity.mpDiffuseTex->mSRV);
-        mpDeviceContext->PSSetShaderResources(1, 1, &entity.mpNormalTex->mSRV);
-        Mesh* mesh = entity.mpMesh;
-        stride = sizeof(Material::Vertex);
-        offset = 0;
-        mpDeviceContext->IASetVertexBuffers(0, 1, &mesh->mVertexBuffer, &stride, &offset);
-        mpDeviceContext->IASetIndexBuffer(mesh->mIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-        mpDeviceContext->DrawIndexed(mesh->mNumIndices, 0, 0);
+			mpDeviceContext->PSSetShaderResources(0, 1, &entity.mpAlbedoTex->mSRV);
+			mpDeviceContext->PSSetShaderResources(1, 1, &entity.mpNormalTex->mSRV);
+			mpDeviceContext->PSSetShaderResources(2, 1, &entity.mpGlossTex->mSRV);
+			mpDeviceContext->PSSetShaderResources(3, 1, &entity.mpMetalTex->mSRV);
+			Mesh* mesh = entity.mpMesh;
+			stride = sizeof(Material::Vertex);
+			offset = 0;
+			mpDeviceContext->IASetVertexBuffers(0, 1, &mesh->mVertexBuffer, &stride, &offset);
+			mpDeviceContext->IASetIndexBuffer(mesh->mIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+			mpDeviceContext->DrawIndexed(mesh->mNumIndices, 0, 0);
+		}
     }
 
     void* p[1] = { NULL };
@@ -85,6 +99,10 @@ void Material::Render(Scene& scene, const glm::mat4& viewMatrix, const glm::mat4
     mpDeviceContext->GSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);
     mpDeviceContext->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);
     mpDeviceContext->PSSetShaderResources(1, 1, (ID3D11ShaderResourceView**)p);
+	mpDeviceContext->PSSetShaderResources(2, 1, (ID3D11ShaderResourceView**)p);
+	mpDeviceContext->PSSetShaderResources(3, 1, (ID3D11ShaderResourceView**)p);
+	mpDeviceContext->PSSetShaderResources(7, 1, (ID3D11ShaderResourceView**)p);
+	mpDeviceContext->PSSetShaderResources(8, 1, (ID3D11ShaderResourceView**)p);
     mpDeviceContext->VSSetShader(NULL, nullptr, 0);
     mpDeviceContext->GSSetShader(NULL, nullptr, 0);
     mpDeviceContext->PSSetShader(NULL, nullptr, 0);

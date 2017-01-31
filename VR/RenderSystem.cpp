@@ -1,12 +1,15 @@
+#include "DoubleFrameBuffer.hpp"
 #include "Material.hpp"
 #include "RenderSystem.hpp"
 #include "Skybox.hpp"
+#include "Transparent.hpp"
 
 RenderSystem::RenderSystem(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext)
 {
     mpDevice = pDevice;
     mpDeviceContext = pDeviceContext;
     mStandardMaterial = new Material(mpDevice, mpDeviceContext);
+	mTransparentMaterial = new Transparent(mpDevice, mpDeviceContext);
     {
         std::vector<D3D11_INPUT_ELEMENT_DESC> inputDesc =
         {
@@ -16,21 +19,28 @@ RenderSystem::RenderSystem(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceCo
             { "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0 },
         };
         mStandardMaterial->Init(inputDesc, "resources/shaders/Standard_VS.hlsl", "resources/shaders/Standard_GS.hlsl", "resources/shaders/Standard_PS.hlsl");
-    }
+		mTransparentMaterial->Init(inputDesc, "resources/shaders/Standard_VS.hlsl", "resources/shaders/Standard_GS.hlsl", "resources/shaders/Transparent_PS.hlsl");
+	}
 }
 
 RenderSystem::~RenderSystem()
 {
     delete mStandardMaterial;
+	delete mTransparentMaterial;
 }
 
 void RenderSystem::Render(Scene& scene, Camera& camera)
 {
     // Skybox.
-    scene.mpSkybox->Render(camera.mOrientationMatrix, camera.mProjectionMatrix, camera.mpFrameBuffer);
+    scene.mpSkybox->Render(camera.mOrientationMatrix, camera.mProjectionMatrix, camera.mpFrameBuffer->GetFrameBuffer());
 
-    // Scene
-    mStandardMaterial->Render(scene, camera.mViewMatrix, camera.mProjectionMatrix, camera.mpFrameBuffer);
+    // Standard.
+    mStandardMaterial->Render(scene, camera.mPosition, camera.mViewMatrix, camera.mProjectionMatrix, camera.mpFrameBuffer->GetFrameBuffer());
+
+	// Transparent.
+	FrameBuffer* sourceFrameBuffer = camera.mpFrameBuffer->GetFrameBuffer();
+	camera.mpFrameBuffer->Swap();
+	mTransparentMaterial->Render(scene, camera.mPosition, camera.mViewMatrix, camera.mProjectionMatrix, camera.mScreenWidth, camera.mScreenHeight, sourceFrameBuffer, camera.mpFrameBuffer->GetFrameBuffer());
 }
 
 void RenderSystem::Render(Scene& scene, VRDevice& hmd)
@@ -43,13 +53,14 @@ void RenderSystem::Render(Scene& scene, VRDevice& hmd)
         //Material* material = scene.mStandardMaterial;
         //material->mGSMeta.mvpMatrix = hmd.mMVPLeft;
         //RenderScene(scene, material, hmd.mLeftEyeFB);
-        mStandardMaterial->Render(scene, hmd.mLeftView, hmd.mLeftProjection, hmd.mpLeftFrameBuffer);
+		// TODO fix for each eye hmd.mPosition
+        mStandardMaterial->Render(scene, hmd.mPosition, hmd.mLeftView, hmd.mLeftProjection, hmd.mpLeftFrameBuffer);
     }
     {   // Render right eye.
         // Skybox.
         scene.mpSkybox->Render(hmd.mRightView, hmd.mRightProjection, hmd.mpRightFrameBuffer);
 
         // Scene.
-        mStandardMaterial->Render(scene, hmd.mOrientationMatrix, hmd.mRightProjection, hmd.mpRightFrameBuffer);
+        mStandardMaterial->Render(scene, hmd.mPosition, hmd.mOrientationMatrix, hmd.mRightProjection, hmd.mpRightFrameBuffer);
     }
 }

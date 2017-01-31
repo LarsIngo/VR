@@ -16,13 +16,22 @@ class Entity
         ~Entity();
 
         glm::vec3 mPosition;
+		
+		// Transparent.
+		bool mTransparent;
 
         // Mesh.
         Mesh* mpMesh;
 
-        // Diffuse.
-        Texture2D* mpDiffuseTex;
+        // Albedo(Color).
+        Texture2D* mpAlbedoTex;
 
         // Normal.
         Texture2D* mpNormalTex;
+
+		// Gloss.
+		Texture2D* mpGlossTex;
+
+		// Metal.
+		Texture2D* mpMetalTex;
 };

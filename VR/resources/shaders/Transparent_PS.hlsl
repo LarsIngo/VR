@@ -9,12 +9,17 @@ struct Input
 Texture2D txAlbedo : register(t0);
 Texture2D txNormal : register(t1);
 Texture2D txGloss : register(t2);
-Texture2D txMetal : register(t3);
+Texture2D txScreen : register(t3);
+//Texture2D txScreenDepth : register(t4);
 
 struct Meta
 {
     float3 cameraPosition;
 	uint skyboxMipLevels;
+	float4x4 projMatrix;
+	uint screenWidth;
+	uint screenHeight;
+	float2 pad;
 };
 StructuredBuffer<Meta> g_Meta : register(t7);
 
@@ -33,7 +38,7 @@ float4 main(Input input) : SV_TARGET0
     float3 color = txAlbedo.Sample(samp, uv).rgb;
     float3 normal = mul(normalize(2.f * txNormal.Sample(samp, uv).rgb - 1.f), input.tbn);
 	float gloss = txGloss.Sample(samp, uv).x;
-	bool metal = txMetal.Sample(samp, uv).x > 0.5f;
+	float2 screenUV = float2((input.position.x / 2.f + 1.f) / meta.screenWidth * 2.f, (input.position.y / 2.f + 1.f) / meta.screenHeight * 2.f);
 
 	float3 cameraVec = normalize(cameraPosition - worldPosition);
 	float3 reflectVec = reflect(-cameraVec, normal);
@@ -63,16 +68,22 @@ float4 main(Input input) : SV_TARGET0
 
 	float3 reflectionColor;
 	{
-		float3 skybox = txSkybox.SampleLevel(samp, reflectVec, pow(1.f - gloss, 2) * meta.skyboxMipLevels).rgb;
+		float3 skybox = txSkybox.Sample(samp, reflectVec).rgb;
 		float r = saturate(dot(cameraVec, normal));
-		float f;
-		if (metal) f = 0.92f;
-		else f = 0.22f;
+		float f = 0.22f;
 		float fresnel = f + (1.f - f) * pow(1.f - r, 5);
 		reflectionColor = skybox * fresnel * (1.f - specularFactor);
 	}
 
-	float3 finalColor = specular + lightColor * !metal + reflectionColor;
+	float3 refractVec = refract(-cameraVec, normal, 0.14f) * 0.1f;
+	float3 refractColor;
+	{
+		float2 offsetUV = mul(float4(refractVec, 1.f), meta.projMatrix).xy;
+		float2 sampleUV = saturate(screenUV + offsetUV);
+		refractColor = txScreen.Sample(samp, sampleUV).rgb;
+	}
+
+	float3 finalColor = specular + reflectionColor + refractColor;
 
 	// Tone mapping
 	//finalColor = finalColor / (finalColor + 1);

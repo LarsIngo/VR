@@ -1,7 +1,7 @@
 #pragma once
 
 #define CAMERA_CONTROLL 0
-//#define FRAME_LATENCY
+#define FRAME_LATENCY
 //#define D3D_REPORT_LIVE_OBJ
 #define _CRTDBG_MAP_ALLOC
 
@@ -10,6 +10,7 @@
 #include <glm/glm.hpp>
 
 #include "Camera.hpp"
+#include "DoubleFrameBuffer.hpp"
 #include "DxAssert.hpp"
 #include "Mesh.hpp"
 #include "Profiler.hpp"
@@ -49,7 +50,8 @@ int main()
     DxAssert(pDXGIDevice->SetMaximumFrameLatency(1), S_OK);
     pDXGIDevice->Release();
 #endif
-    FrameBuffer hmdLeftFrameBuffer(renderer.mDevice, renderer.mDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
+	DoubleFrameBuffer cameraFrameBuffer(renderer.mDevice, renderer.mDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
+	FrameBuffer hmdLeftFrameBuffer(renderer.mDevice, renderer.mDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
     FrameBuffer hmdRightFrameBuffer(renderer.mDevice, renderer.mDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
     if (VR)
     {
@@ -74,29 +76,45 @@ int main()
         up.Load("resources/assets/DeepSpaceBlue/upImage.png");
         skybox.Load(&bk, &dn, &fr, &lf, &rt, &up);
     }
-    Camera camera(winWidth, winHeight, renderer.mWinFrameBuffer); camera.mPosition.z = 1;
+    Camera camera(winWidth, winHeight, &cameraFrameBuffer);
+	//camera.mPosition = glm::vec3(2,2,2);
     RenderSystem renderSystem(renderer.mDevice, renderer.mDeviceContext);
     Mesh mesh(renderer.mDevice, renderer.mDeviceContext);
-    Texture2D diffuse(renderer.mDevice, renderer.mDeviceContext);
+    Texture2D albedo(renderer.mDevice, renderer.mDeviceContext);
     Texture2D normal(renderer.mDevice, renderer.mDeviceContext);
+	Texture2D white(renderer.mDevice, renderer.mDeviceContext);
+	Texture2D black(renderer.mDevice, renderer.mDeviceContext);
+	Texture2D whiteBlack(renderer.mDevice, renderer.mDeviceContext);
     Scene scene(renderer.mDevice, renderer.mDeviceContext);
     {
         scene.mpSkybox = &skybox;
         mesh.Load("resources/assets/skull/skull.obj");
-        diffuse.Load("resources/assets/skull/skull_diffuse1.jpg");
-        normal.Load("resources/assets/skull/skull_normal.jpg");
+		//mesh.Load("resources/assets/OBJBox.obj");
+		albedo.Load("resources/assets/skull/skull_diffuse1.jpg");
+		//diffuse.Load("resources/assets/DefaultDiffuse.png");
+		normal.Load("resources/assets/skull/skull_normal.jpg");
+		//normal.Load("resources/assets/DefaultNormal.png");
+		white.Load("resources/assets/White.png");
+		black.Load("resources/assets/Black.png");
+		whiteBlack.Load("resources/assets/WhiteBlack.jpg");
 
         Entity entity;
         entity.mpMesh = &mesh;
-        entity.mpDiffuseTex = &diffuse;
+        entity.mpAlbedoTex = &albedo;
         entity.mpNormalTex = &normal;
         {
             int r = 2;
-            for (int z = -r; z <= r; ++z)
-                for (int y = -r; y <= r; ++y)
-                    for (int x = -r; x <= r; ++x)
+            for (int z = 0; z < r; ++z)
+                for (int y = 0; y < r; ++y)
+                    for (int x = 0; x < r; ++x)
                     {
                         entity.mPosition = glm::vec3(x, y, z) * 5.f;
+						if (x % 2) entity.mpMetalTex = &white;
+						else entity.mpMetalTex = &black;
+						if (y % 2) entity.mpGlossTex = &white;
+						else entity.mpGlossTex = &black;
+						if (z % 2) entity.mTransparent = true;
+						else entity.mTransparent = false;
                         scene.mEntityList.push_back(entity);
                     }
         }
@@ -137,12 +155,13 @@ int main()
             }
             else
             {
+				camera.mpFrameBuffer->Clear(0.f, 1.f, 0.f, 1.f);
                 renderSystem.Render(scene, camera);
             }
             // --- RENDER --- //
 
-            // +++ PRESENET +++ //
-            renderer.WinPresent();
+			// +++ PRESENET +++ //
+            renderer.WinPresent(camera.mpFrameBuffer->GetFrameBuffer());
             if (VR)
             {
                 hmd.Submit();

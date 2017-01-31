@@ -8,6 +8,7 @@
 #include "VRDevice.hpp"
 
 class Material;
+class Transparent;
 
 class RenderSystem
 {
@@ -26,6 +27,9 @@ class RenderSystem
 
         // Material
         Material* mStandardMaterial;
+
+		// Material
+		Transparent* mTransparentMaterial;
 
     private:
         ID3D11Device* mpDevice;
