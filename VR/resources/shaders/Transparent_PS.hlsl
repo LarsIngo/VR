@@ -79,8 +79,13 @@ float4 main(Input input) : SV_TARGET0
 	float3 refractColor;
 	{
 		float2 offsetUV = mul(float4(refractVec, 1.f), meta.projMatrix).xy;
-		float2 sampleUV = saturate(screenUV + offsetUV);
-		refractColor = txScreen.Sample(samp, sampleUV).rgb;
+        float2 sampleUV = screenUV + offsetUV;
+        //if (sampleUV.x > 1.f || sampleUV.y > 1.f || sampleUV.x < 0.f || sampleUV.y < 0.f)
+        //    refractColor = float3(0.f,0.f,0.f);
+        //else
+        //    refractColor = txScreen.Sample(samp, sampleUV).rgb;
+        sampleUV = saturate(sampleUV);
+        refractColor = txScreen.Sample(samp, sampleUV).rgb;
 	}
 
 	float3 finalColor = specular + reflectionColor + refractColor;

@@ -135,6 +135,9 @@ int main()
             if (VR)
                 hmd.mPosition += hmd.mFrontDirection * dt * 10.f;
             camera.Update(20.f, dt, &renderer);
+
+            if (VR) scene.SortBackToFront(hmd.mPosition, hmd.mFrontDirection);
+            else scene.SortBackToFront(camera.mPosition, camera.mFrontDirection);
             // --- UPDATE --- //
 
             // +++ RENDER +++ //

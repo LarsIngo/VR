@@ -38,9 +38,7 @@ void RenderSystem::Render(Scene& scene, Camera& camera)
     mStandardMaterial->Render(scene, camera.mPosition, camera.mViewMatrix, camera.mProjectionMatrix, camera.mpFrameBuffer->GetFrameBuffer());
 
 	// Transparent.
-	FrameBuffer* sourceFrameBuffer = camera.mpFrameBuffer->GetFrameBuffer();
-	camera.mpFrameBuffer->Swap();
-	mTransparentMaterial->Render(scene, camera.mPosition, camera.mViewMatrix, camera.mProjectionMatrix, camera.mScreenWidth, camera.mScreenHeight, sourceFrameBuffer, camera.mpFrameBuffer->GetFrameBuffer());
+	mTransparentMaterial->Render(scene, camera.mPosition, camera.mViewMatrix, camera.mProjectionMatrix, camera.mScreenWidth, camera.mScreenHeight, camera.mpFrameBuffer);
 }
 
 void RenderSystem::Render(Scene& scene, VRDevice& hmd)

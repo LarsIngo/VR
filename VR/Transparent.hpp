@@ -8,7 +8,7 @@
 
 #include "Scene.hpp"
 
-class FrameBuffer;
+class DoubleFrameBuffer;
 
 class Transparent
 {
@@ -56,9 +56,8 @@ public:
 	// projectionMatrix Camera projection matrix.
 	// screenWidth Width of screen.
 	// screenHeight Height of screen.
-	// sourceFb Frame buffer of rendered non-transparent geometry.
-	// targetFb Frame buffer to render.
-	void Render(Scene& scene, const glm::vec3& cameraPosition, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, unsigned int screenWidth, unsigned int screenHeight, FrameBuffer* sourceFb, FrameBuffer* targetFb);
+	// fb Double frame buffer to render.
+	void Render(Scene& scene, const glm::vec3& cameraPosition, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, unsigned int screenWidth, unsigned int screenHeight, DoubleFrameBuffer* fb);
 
 	// D3D11 input layout.
 	ID3D11InputLayout* mInputLayout;

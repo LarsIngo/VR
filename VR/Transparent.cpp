@@ -1,4 +1,5 @@
 #include "Transparent.hpp"
+#include "DoubleFrameBuffer.hpp"
 #include "DxHelp.hpp"
 #include "FrameBuffer.hpp"
 #include "Mesh.hpp"
@@ -38,19 +39,18 @@ void Transparent::Init(std::vector<D3D11_INPUT_ELEMENT_DESC>& inputDesc, const c
 	DxHelp::CreateCPUwriteGPUreadStructuredBuffer<PSMeta>(mpDevice, 1, &mPSMetaBuff);
 }
 
-void Transparent::Render(Scene& scene, const glm::vec3& cameraPosition, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, unsigned int screenWidth, unsigned int screenHeight, FrameBuffer* sourceFb, FrameBuffer* targetFb)
+void Transparent::Render(Scene& scene, const glm::vec3& cameraPosition, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, unsigned int screenWidth, unsigned int screenHeight, DoubleFrameBuffer* fb)
 {
-	glm::mat4 vpMatix = projectionMatrix * viewMatrix;
-	mpDeviceContext->OMSetRenderTargets(1, &targetFb->mColRTV, sourceFb->mDepthDSV);
-	mpDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    glm::mat4 vpMatix = projectionMatrix * viewMatrix;
+    mpDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	mpDeviceContext->GSSetShaderResources(0, 1, &mGSMetaBuff);
 	mpDeviceContext->IASetInputLayout(mInputLayout);
 	mpDeviceContext->VSSetShader(mVS, nullptr, 0);
 	mpDeviceContext->GSSetShader(mGS, nullptr, 0);
 	mpDeviceContext->PSSetShader(mPS, nullptr, 0);
 	D3D11_VIEWPORT vp;
-	vp.Width = (float)targetFb->mWidth;
-	vp.Height = (float)targetFb->mHeight;
+	vp.Width = (float)screenWidth;
+	vp.Height = (float)screenHeight;
 	vp.MinDepth = 0.0f;
 	vp.MaxDepth = 1.0f;
 	vp.TopLeftX = 0;
@@ -73,11 +73,19 @@ void Transparent::Render(Scene& scene, const glm::vec3& cameraPosition, const gl
 	unsigned int stride;
 	unsigned int offset;
 	glm::mat4 modelMatix;
+
+    FrameBuffer* sourceFb = fb->GetFrameBuffer();
+    fb->Swap();
+    FrameBuffer* targetFb = fb->GetFrameBuffer();
+    targetFb->Copy(sourceFb);
+
 	for (std::size_t i = 0; i < scene.mEntityList.size(); ++i)
 	{
 		Entity& entity = scene.mEntityList[i];
 		if (entity.mTransparent)
 		{
+            mpDeviceContext->OMSetRenderTargets(1, &targetFb->mColRTV, sourceFb->mDepthDSV);
+
 			modelMatix = glm::translate(glm::mat4(), entity.mPosition);
 			mGSMeta.modelMatrix = glm::transpose(modelMatix);
 			mGSMeta.mvpMatrix = glm::transpose(vpMatix * modelMatix);
@@ -93,6 +101,12 @@ void Transparent::Render(Scene& scene, const glm::vec3& cameraPosition, const gl
 			mpDeviceContext->IASetVertexBuffers(0, 1, &mesh->mVertexBuffer, &stride, &offset);
 			mpDeviceContext->IASetIndexBuffer(mesh->mIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 			mpDeviceContext->DrawIndexed(mesh->mNumIndices, 0, 0);
+
+            void* p[1] = { NULL };
+            mpDeviceContext->OMSetRenderTargets(1, (ID3D11RenderTargetView**)p, nullptr);
+            mpDeviceContext->PSSetShaderResources(3, 1, (ID3D11ShaderResourceView**)p);
+
+            sourceFb->Copy(targetFb);
 		}
 	}
 

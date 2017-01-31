@@ -71,8 +71,11 @@ void FrameBuffer::Clear(float r, float g, float b, float a)
 
 void FrameBuffer::Copy(FrameBuffer* fb)
 {
+    assert(fb != this);
 	assert(mWidth == fb->mWidth && mHeight == fb->mHeight);
 	D3D11_BOX sourceRegion;
+
+    // Color texture.
 	for (unsigned int mipLevel = 0; mipLevel < mMipLevels; ++mipLevel)
 	{
 		sourceRegion.left = 0;
@@ -85,8 +88,14 @@ void FrameBuffer::Copy(FrameBuffer* fb)
 
 		mpDeviceContext->CopySubresourceRegion(mColTex, D3D11CalcSubresource(mipLevel, 0, mMipLevels), 0, 0, 0, fb->mColTex, mipLevel, &sourceRegion);
 	}
-	//sourceRegion.left = 0; sourceRegion.right = mWidth;
-	//sourceRegion.top = 0; sourceRegion.bottom = mHeight;
-	//sourceRegion.front = 0; sourceRegion.back = 1;
-	//mpDeviceContext->CopySubresourceRegion(this->mColTex, 0, 0, 0, 0, fb->mColTex, 0, &sourceRegion);
+
+    // Depth texture.
+    sourceRegion.left = 0;
+    sourceRegion.right = mWidth;
+    sourceRegion.top = 0;
+    sourceRegion.bottom = mHeight;
+    sourceRegion.front = 0;
+    sourceRegion.back = 1;
+    mpDeviceContext->CopySubresourceRegion(mDepthTex, 0, 0, 0, 0, fb->mDepthTex, 0, &sourceRegion);
+
 }
