@@ -11,59 +11,6 @@
 
 #define PaErrCheck(paError) if (paError != paNoError) { const char* strError = Pa_GetErrorText(paError); std::cout << strError << std::endl; assert(0 && strError); }
 
-//typedef float SAMPLE;
-//
-//float CubicAmplifier(float input)
-//{
-//    float output, temp;
-//    if (input < 0.0)
-//    {
-//        temp = input + 1.0f;
-//        output = (temp * temp * temp) - 1.0f;
-//    }
-//    else 
-//    {
-//        temp = input - 1.0f;
-//        output = (temp * temp * temp) + 1.0f;
-//    }
-//    return output;
-//}
-//
-//#define FUZZ(x) CubicAmplifier(CubicAmplifier(CubicAmplifier(CubicAmplifier(x))))
-//
-//static int gNumNoInputs = 0;
-//
-//static int fuzzCallback(const void *inputBuffer,
-//    void *outputBuffer,
-//    unsigned long framesPerBuffer,
-//    const PaStreamCallbackTimeInfo* timeInfo,
-//    PaStreamCallbackFlags statusFlags,
-//    void *userData)
-//    {
-//    SAMPLE *out = (SAMPLE*)outputBuffer;
-//    const SAMPLE *in = (const SAMPLE*)inputBuffer;
-//    unsigned int i;
-//    
-//     if (inputBuffer == NULL) 
-//     {
-//     for (i = 0; i<framesPerBuffer; i++)
-//         {
-//            *out++ = 0;   /* left  - silent */
-//            *out++ = 0;   /* right - silent */
-//         }
-//        gNumNoInputs += 1;
-//    }
-//    else 
-//    {
-//        for (i = 0; i<framesPerBuffer; i++)
-//        {
-//                * out++ = FUZZ(*in++);   /* left  - distorted */
-//                * out++ = *in++;         /* right - clean */
-//        }
-//    }
-//    return paContinue;
-//}
-
 AudioSystem::AudioSystem()
 {
     mThread = new std::thread(&AudioSystem::mUpdate, this);
@@ -80,18 +27,17 @@ void AudioSystem::mUpdate()
 {
     while (!mShutdown)
     {
-        const std::string soundFile = "resources/assets/Audio/COHORT.WAV"; //COHORT.WAV // WinAssignment
+        const char* soundFile = "resources/assets/Audio/WinAssignment.WAV"; //COHORT.WAV // WinAssignment
 
-        PaErrCheck(Pa_Initialize());
-        SF_INFO sfInfo; std::memset(&sfInfo, 0, sizeof(sfInfo));
+        SF_INFO sfInfo;
+        SNDFILE* sndFile = sf_open(soundFile, SFM_READ, &sfInfo);
 
-        SNDFILE* sndFile = nullptr;
-        sndFile = sf_open(soundFile.c_str(), SFM_READ, &sfInfo);
-        if (!sf_format_check(&sfInfo))
-            assert(0 && "sf_format_check");
         if (!sndFile)
             assert(0 && "sf_open");
+        if (!sf_format_check(&sfInfo))
+            assert(0 && "sf_format_check");
 
+        PaErrCheck(Pa_Initialize());
         const PaDeviceIndex deviceIn = Pa_GetDefaultInputDevice();
         const PaDeviceIndex deviceOut = Pa_GetDefaultOutputDevice();
         const PaDeviceInfo* deviceInInfo = Pa_GetDeviceInfo(deviceIn);
@@ -163,17 +109,22 @@ void AudioSystem::mUpdate()
 
         PaErrCheck(Pa_StartStream(stream));
         sf_count_t readCount = 0;
-        while (readCount = sf_read_float(sndFile, sampleBlock, FRAMES_PER_BUFFER))
+        while (readCount = sf_readf_float(sndFile, sampleBlock, FRAMES_PER_BUFFER))
         {
+            //for (int f = 0; f < readCount * sfInfo.channels; ++f)
+            //    if (f % 2 == 0) sampleBlock[f] = 0.f;
             PaErrCheck(Pa_WriteStream(stream, sampleBlock, FRAMES_PER_BUFFER));
             std::memset(sampleBlock, SAMPLE_SILENCE, numBytes);
         }
-        
+
+        //PaErrCheck(Pa_AbortStream(stream));
         PaErrCheck(Pa_StopStream(stream));
+        PaErrCheck(Pa_CloseStream(stream));
         std::free(sampleBlock);
 
-        PaErrCheck(Pa_CloseStream(stream));
         PaErrCheck(Pa_Terminate());
         sf_close(sndFile);
+
+        break;
     }
 }
