@@ -22,7 +22,7 @@ struct Meta
 {
     float3 cameraPosition;
 	uint skyboxMipLevels;
-	float4x4 invVPMatrix;
+	float4x4 vpMatrix;
 	uint screenWidth;
 	uint screenHeight;
 	float2 pad;
@@ -48,7 +48,6 @@ Output main(Input input) : SV_TARGET
 
 	float3 cameraVec = normalize(cameraPosition - worldPosition);
 	float3 reflectVec = reflect(-cameraVec, normal);
-
 	
 	// TMP POINTLIGHT
 	float3 power = 5.f;
@@ -81,12 +80,12 @@ Output main(Input input) : SV_TARGET
         reflectColor = skybox * fresnel * (1.f - specularFactor);
 	}
 
-    float refractDepth = dot(cameraVec, normal) * 0.35f;
-	float3 refractVec = refract(-cameraVec, normal, 0.14f) * refractDepth;
 	float3 refractColor;
     float2 refractUV;
 	{
-		float2 offsetUV = mul(float4(refractVec, 1.f), meta.invVPMatrix).xy;
+        float refractDepth = dot(cameraVec, normal) * 0.35f;
+        float3 refractVec = refract(-cameraVec, normal, 0.14f) * refractDepth;
+		float2 offsetUV = mul(float4(refractVec, 1.f), meta.vpMatrix).xy;
         refractUV = screenUV + offsetUV;
         refractUV = saturate(refractUV);
         refractColor = txScreen.Sample(samp, refractUV).rgb;
@@ -98,6 +97,9 @@ Output main(Input input) : SV_TARGET
         //else
         //    refractColor = txSkybox.Sample(samp, -cameraVec + refractVec).rgb;
 	}
+
+
+
 
     float3 finalColor = specular + refractColor + reflectColor;
 
