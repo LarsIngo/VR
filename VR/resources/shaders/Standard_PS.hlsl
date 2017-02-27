@@ -6,6 +6,13 @@ struct Input
     float3x3 tbn : TBN;
 };
 
+struct Output
+{
+    float4 color : SV_TARGET0;
+    float depth : SV_TARGET1;
+};
+
+
 Texture2D txAlbedo : register(t0);
 Texture2D txNormal : register(t1);
 Texture2D txGloss : register(t2);
@@ -22,7 +29,7 @@ TextureCube txSkybox : register(t8);
 
 SamplerState samp : register(s0);
 
-float4 main(Input input) : SV_TARGET0
+Output main(Input input) : SV_TARGET
 {
     Meta meta = g_Meta[0];
 	float3 cameraPosition = meta.cameraPosition;
@@ -77,5 +84,8 @@ float4 main(Input input) : SV_TARGET0
 	// Tone mapping
 	//finalColor = finalColor / (finalColor + 1);
 
-    return float4(finalColor, 1.f);
+    Output output;
+    output.color = float4(finalColor, 1.f);
+    output.depth = input.position.z / input.position.w;
+    return output;
 }

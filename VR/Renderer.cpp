@@ -78,7 +78,7 @@ void Renderer::Close()
 
 void Renderer::WinClear()
 {
-    mWinFrameBuffer->Clear(0.2f, 0.2f, 0.2f, 0.f);
+    mWinFrameBuffer->ClearAll();
 }
 
 void Renderer::WinPresent(FrameBuffer* fb)
@@ -255,7 +255,9 @@ void Renderer::InitialiseD3D()
 
 void Renderer::RenderCompanionWindow(FrameBuffer* leftEyeFb, FrameBuffer* rightEyeFb, FrameBuffer* windowFb)
 {
-    mDeviceContext->OMSetRenderTargets(1, &windowFb->mColRTV, nullptr);
+    void* p[1] = { NULL };
+
+    mDeviceContext->OMSetRenderTargets(1, &windowFb->mColRTV, *(ID3D11DepthStencilView**)p);
     mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
     mDeviceContext->VSSetShader(mScreenQuadVS, nullptr, 0);
     mDeviceContext->PSSetShader(mCompanionWindowPS, nullptr, 0);
@@ -272,8 +274,7 @@ void Renderer::RenderCompanionWindow(FrameBuffer* leftEyeFb, FrameBuffer* rightE
 
     mDeviceContext->Draw(4, 0);
 
-    void* p[1] = { NULL };
-    mDeviceContext->OMSetRenderTargets(1, (ID3D11RenderTargetView**)p, nullptr);
+    mDeviceContext->OMSetRenderTargets(1, (ID3D11RenderTargetView**)p, *(ID3D11DepthStencilView**)p);
     mDeviceContext->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);
     mDeviceContext->PSSetShaderResources(1, 1, (ID3D11ShaderResourceView**)p);
     mDeviceContext->VSSetShader(NULL, nullptr, 0);

@@ -19,8 +19,13 @@ class FrameBuffer
         // Destructor.
         ~FrameBuffer();
 
+        void ClearAll(float r = 0.f, float g = 0.f, float b = 0.f, float a = 0.f, float depth = 1.f);
+
         // Clear color.
-        void Clear(float r, float g, float b, float a);
+        void ClearColor(float r, float g, float b, float a);
+
+        // Clear depth.
+        void ClearDepth(float depth);
 
 		// Copy other frame buffer.
 		void Copy(FrameBuffer* fb);
@@ -38,9 +43,15 @@ class FrameBuffer
         ID3D11RenderTargetView* mColRTV;
         ID3D11UnorderedAccessView* mColUAV;
 
-        // Depth.
-        ID3D11Texture2D* mDepthTex;
-        ID3D11DepthStencilView* mDepthDSV;
+        // Depth color.
+        ID3D11Texture2D* mDepthColTex;
+        ID3D11ShaderResourceView* mDepthColSRV;
+        ID3D11RenderTargetView* mDepthColRTV;
+        ID3D11UnorderedAccessView* mDepthColUAV;
+
+        // Depth stencil.
+        ID3D11Texture2D* mDepthStencilTex;
+        ID3D11DepthStencilView* mDepthStencilDSV;
 
     private:
         ID3D11Device* mpDevice;

@@ -32,7 +32,7 @@ public:
 	{
 		glm::vec3 cameraPostion;
 		unsigned int skyboxMipLevels;
-		glm::mat4 projMatrix;
+		glm::mat4 vpMatrix;
 		unsigned int screenWidth;
 		unsigned int screenHeight;
 		float pad[2];
@@ -52,12 +52,11 @@ public:
 	// Render scene.
 	// scene Scene to render.
 	// cameraPosition Position of the camera in world space.
-	// viewMatrix Camera view matrix.
-	// projectionMatrix Camera projection matrix.
+    // vpMatrix Camera view projection matrix.
 	// screenWidth Width of screen.
 	// screenHeight Height of screen.
 	// fb Double frame buffer to render.
-	void Render(Scene& scene, const glm::vec3& cameraPosition, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, unsigned int screenWidth, unsigned int screenHeight, DoubleFrameBuffer* fb);
+	void Render(Scene& scene, const glm::vec3& cameraPosition, const glm::mat4& orientationMatix, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, unsigned int screenWidth, unsigned int screenHeight, DoubleFrameBuffer* fb);
 
 	// D3D11 input layout.
 	ID3D11InputLayout* mInputLayout;
@@ -71,7 +70,6 @@ public:
 	ID3D11ShaderResourceView* mGSMetaBuff;
 	// PS Meta buffer.
 	ID3D11ShaderResourceView* mPSMetaBuff;
-
 private:
 	ID3D11Device* mpDevice;
 	ID3D11DeviceContext* mpDeviceContext;

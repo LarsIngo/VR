@@ -38,10 +38,11 @@ void Material::Init(std::vector<D3D11_INPUT_ELEMENT_DESC>& inputDesc, const char
     DxHelp::CreateCPUwriteGPUreadStructuredBuffer<PSMeta>(mpDevice, 1, &mPSMetaBuff);
 }
 
-void Material::Render(Scene& scene, const glm::vec3& cameraPosition, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, FrameBuffer* targetFb)
+void Material::Render(Scene& scene, const glm::vec3& cameraPosition, const glm::mat4& vpMatrix, FrameBuffer* targetFb)
 {
-    glm::mat4 vpMatix = projectionMatrix * viewMatrix;
-    mpDeviceContext->OMSetRenderTargets(1, &targetFb->mColRTV, targetFb->mDepthDSV);
+    ID3D11RenderTargetView* rtvList[2] = { targetFb->mColRTV, targetFb->mDepthColRTV };
+    mpDeviceContext->OMSetRenderTargets(2, rtvList, targetFb->mDepthStencilDSV);
+
     mpDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     mpDeviceContext->GSSetShaderResources(0, 1, &mGSMetaBuff);
     mpDeviceContext->IASetInputLayout(mInputLayout);
@@ -69,15 +70,15 @@ void Material::Render(Scene& scene, const glm::vec3& cameraPosition, const glm::
 
     unsigned int stride;
     unsigned int offset;
-    glm::mat4 modelMatix;
+    glm::mat4 modelMatrix;
     for (std::size_t i = 0; i < scene.mEntityList.size(); ++i)
     {
         Entity& entity = scene.mEntityList[i];
 		if (!entity.mTransparent)
 		{
-			modelMatix = glm::translate(glm::mat4(), entity.mPosition);
-			mGSMeta.modelMatrix = glm::transpose(modelMatix);
-			mGSMeta.mvpMatrix = glm::transpose(vpMatix * modelMatix);
+            modelMatrix = glm::translate(glm::mat4(), entity.mPosition);
+			mGSMeta.modelMatrix = glm::transpose(modelMatrix);
+			mGSMeta.mvpMatrix = glm::transpose(vpMatrix * modelMatrix);
 			DxHelp::WriteStructuredBuffer<Material::GSMeta>(mpDeviceContext, &mGSMeta, 1, mGSMetaBuff);
 
 			mpDeviceContext->PSSetShaderResources(0, 1, &entity.mpAlbedoTex->mSRV);
@@ -93,8 +94,8 @@ void Material::Render(Scene& scene, const glm::vec3& cameraPosition, const glm::
 		}
     }
 
-    void* p[1] = { NULL };
-    mpDeviceContext->OMSetRenderTargets(1, (ID3D11RenderTargetView**)p, nullptr);
+    void* p[2] = { NULL, NULL };
+    mpDeviceContext->OMSetRenderTargets(2, (ID3D11RenderTargetView**)p, *(ID3D11DepthStencilView**)p);
     mpDeviceContext->IASetVertexBuffers(0, 1, (ID3D11Buffer**)p, &stride, &offset);
     mpDeviceContext->GSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);
     mpDeviceContext->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);

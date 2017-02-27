@@ -48,10 +48,9 @@ class Material
         // Render scene.
         // scene Scene to render.
 		// cameraPosition Position of the camera in world space.
-        // viewMatrix Camera view matrix.
-        // projectionMatrix Camera projection matrix.
+        // vpMatrix Camera view projection matrix.
         // targetFb Frame buffer to render.
-        void Render(Scene& scene, const glm::vec3& cameraPosition, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, FrameBuffer* targetFb);
+        void Render(Scene& scene, const glm::vec3& cameraPosition, const glm::mat4& vpMatrix, FrameBuffer* targetFb);
 
         // D3D11 input layout.
         ID3D11InputLayout* mInputLayout;

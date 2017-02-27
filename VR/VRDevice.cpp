@@ -170,8 +170,8 @@ void VRDevice::Submit()
 void VRDevice::ClearFrameBuffers()
 {
     assert(mpLeftFrameBuffer != nullptr && mpRightFrameBuffer != nullptr);
-    mpLeftFrameBuffer->Clear(0.2f, 0.2f, 0.2f, 0.f);
-    mpRightFrameBuffer->Clear(0.2f, 0.2f, 0.2f, 0.f);
+    mpLeftFrameBuffer->Clear(0.2f, 0.2f, 0.2f, 0.f, 1.f);
+    mpRightFrameBuffer->Clear(0.2f, 0.2f, 0.2f, 0.f, 1.f);
 }
 
 glm::mat4 VRDevice::ConvertMatrix(const vr::HmdMatrix34_t& mat)

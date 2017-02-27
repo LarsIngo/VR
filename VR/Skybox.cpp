@@ -86,7 +86,9 @@ void Skybox::Load(Texture2D* mpBK, Texture2D* mpDN, Texture2D* mpFR, Texture2D* 
 
 void Skybox::Render(const glm::mat4& orientationMatix, const glm::mat4& projectionMatrix, FrameBuffer* targetFb)
 {
-    mpDeviceContext->OMSetRenderTargets(1, &targetFb->mColRTV, nullptr);
+    void* p[1] = { NULL };
+
+    mpDeviceContext->OMSetRenderTargets(1, &targetFb->mColRTV, *(ID3D11DepthStencilView**)p);
     mpDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
     mpDeviceContext->VSSetShader(mScreenQuadVS, nullptr, 0);
     mpDeviceContext->PSSetShader(mSkyboxPS, nullptr, 0);
@@ -105,8 +107,7 @@ void Skybox::Render(const glm::mat4& orientationMatix, const glm::mat4& projecti
 
     mpDeviceContext->Draw(4, 0);
 
-    void* p[1] = { NULL };
-    mpDeviceContext->OMSetRenderTargets(1, (ID3D11RenderTargetView**)p, nullptr);
+    mpDeviceContext->OMSetRenderTargets(1, (ID3D11RenderTargetView**)p, *(ID3D11DepthStencilView**)p);
     mpDeviceContext->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);
     mpDeviceContext->VSSetShader(NULL, nullptr, 0);
     mpDeviceContext->PSSetShader(NULL, nullptr, 0);

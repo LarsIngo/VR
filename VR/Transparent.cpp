@@ -39,9 +39,9 @@ void Transparent::Init(std::vector<D3D11_INPUT_ELEMENT_DESC>& inputDesc, const c
 	DxHelp::CreateCPUwriteGPUreadStructuredBuffer<PSMeta>(mpDevice, 1, &mPSMetaBuff);
 }
 
-void Transparent::Render(Scene& scene, const glm::vec3& cameraPosition, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, unsigned int screenWidth, unsigned int screenHeight, DoubleFrameBuffer* fb)
+void Transparent::Render(Scene& scene, const glm::vec3& cameraPosition, const glm::mat4& orientationMatix, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, unsigned int screenWidth, unsigned int screenHeight, DoubleFrameBuffer* fb)
 {
-    glm::mat4 vpMatix = projectionMatrix * viewMatrix;
+    glm::mat4 vpMatrix = projectionMatrix * viewMatrix;
     mpDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	mpDeviceContext->GSSetShaderResources(0, 1, &mGSMetaBuff);
 	mpDeviceContext->IASetInputLayout(mInputLayout);
@@ -56,6 +56,8 @@ void Transparent::Render(Scene& scene, const glm::vec3& cameraPosition, const gl
 	vp.TopLeftX = 0;
 	vp.TopLeftY = 0;
 	mpDeviceContext->RSSetViewports(1, &vp);
+    FLOAT blendFactor[] = { 1.f, 1.f, 1.f, 1.f };
+    //mpDeviceContext->OMSetBlendState(mBlendState, blendFactor, 0xffffffff);
 
 	// Skybox.
 	assert(scene.mpSkybox != nullptr);
@@ -64,7 +66,7 @@ void Transparent::Render(Scene& scene, const glm::vec3& cameraPosition, const gl
 	// PS meta.
 	mPSMeta.cameraPostion = cameraPosition;
 	mPSMeta.skyboxMipLevels = scene.mpSkybox->mMipLevels;
-	mPSMeta.projMatrix = glm::transpose(projectionMatrix);
+    mPSMeta.vpMatrix = glm::inverse(vpMatrix); // TODO NOT WORKING 
 	mPSMeta.screenWidth = screenWidth;
 	mPSMeta.screenHeight = screenHeight;
 	DxHelp::WriteStructuredBuffer<PSMeta>(mpDeviceContext, &mPSMeta, 1, mPSMetaBuff);
@@ -72,7 +74,7 @@ void Transparent::Render(Scene& scene, const glm::vec3& cameraPosition, const gl
 
 	unsigned int stride;
 	unsigned int offset;
-	glm::mat4 modelMatix;
+	glm::mat4 modelMatrix;
 
     FrameBuffer* sourceFb = fb->GetFrameBuffer();
     fb->Swap();
@@ -84,17 +86,19 @@ void Transparent::Render(Scene& scene, const glm::vec3& cameraPosition, const gl
 		Entity& entity = scene.mEntityList[i];
 		if (entity.mTransparent)
 		{
-            mpDeviceContext->OMSetRenderTargets(1, &targetFb->mColRTV, sourceFb->mDepthDSV);
+            ID3D11RenderTargetView* rtvList[2] = { targetFb->mColRTV, targetFb->mDepthColRTV };
+            mpDeviceContext->OMSetRenderTargets(2, rtvList, targetFb->mDepthStencilDSV);
 
-			modelMatix = glm::translate(glm::mat4(), entity.mPosition);
-			mGSMeta.modelMatrix = glm::transpose(modelMatix);
-			mGSMeta.mvpMatrix = glm::transpose(vpMatix * modelMatix);
+            modelMatrix = glm::translate(glm::mat4(), entity.mPosition);
+			mGSMeta.modelMatrix = glm::transpose(modelMatrix);
+			mGSMeta.mvpMatrix = glm::transpose(vpMatrix * modelMatrix);
 			DxHelp::WriteStructuredBuffer<Transparent::GSMeta>(mpDeviceContext, &mGSMeta, 1, mGSMetaBuff);
 
 			mpDeviceContext->PSSetShaderResources(0, 1, &entity.mpAlbedoTex->mSRV);
 			mpDeviceContext->PSSetShaderResources(1, 1, &entity.mpNormalTex->mSRV);
 			mpDeviceContext->PSSetShaderResources(2, 1, &entity.mpGlossTex->mSRV);
 			mpDeviceContext->PSSetShaderResources(3, 1, &sourceFb->mColSRV);
+            mpDeviceContext->PSSetShaderResources(4, 1, &sourceFb->mDepthColSRV);
 			Mesh* mesh = entity.mpMesh;
 			stride = sizeof(Transparent::Vertex);
 			offset = 0;
@@ -102,22 +106,24 @@ void Transparent::Render(Scene& scene, const glm::vec3& cameraPosition, const gl
 			mpDeviceContext->IASetIndexBuffer(mesh->mIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 			mpDeviceContext->DrawIndexed(mesh->mNumIndices, 0, 0);
 
-            void* p[1] = { NULL };
-            mpDeviceContext->OMSetRenderTargets(1, (ID3D11RenderTargetView**)p, nullptr);
+            void* p[2] = { NULL, NULL };
+            mpDeviceContext->OMSetRenderTargets(2, (ID3D11RenderTargetView**)p, *(ID3D11DepthStencilView**)p);
             mpDeviceContext->PSSetShaderResources(3, 1, (ID3D11ShaderResourceView**)p);
+            mpDeviceContext->PSSetShaderResources(4, 1, (ID3D11ShaderResourceView**)p);
 
             sourceFb->Copy(targetFb);
 		}
 	}
 
-	void* p[1] = { NULL };
-	mpDeviceContext->OMSetRenderTargets(1, (ID3D11RenderTargetView**)p, nullptr);
+	void* p[2] = { NULL, NULL };
+	mpDeviceContext->OMSetRenderTargets(2, (ID3D11RenderTargetView**)p, *(ID3D11DepthStencilView**)p);
 	mpDeviceContext->IASetVertexBuffers(0, 1, (ID3D11Buffer**)p, &stride, &offset);
 	mpDeviceContext->GSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);
 	mpDeviceContext->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);
 	mpDeviceContext->PSSetShaderResources(1, 1, (ID3D11ShaderResourceView**)p);
 	mpDeviceContext->PSSetShaderResources(2, 1, (ID3D11ShaderResourceView**)p);
 	mpDeviceContext->PSSetShaderResources(3, 1, (ID3D11ShaderResourceView**)p);
+    mpDeviceContext->PSSetShaderResources(4, 1, (ID3D11ShaderResourceView**)p);
 	mpDeviceContext->PSSetShaderResources(7, 1, (ID3D11ShaderResourceView**)p);
 	mpDeviceContext->PSSetShaderResources(8, 1, (ID3D11ShaderResourceView**)p);
 	mpDeviceContext->VSSetShader(NULL, nullptr, 0);

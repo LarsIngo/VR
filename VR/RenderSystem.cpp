@@ -35,32 +35,32 @@ void RenderSystem::Render(Scene& scene, Camera& camera)
     scene.mpSkybox->Render(camera.mOrientationMatrix, camera.mProjectionMatrix, camera.mpFrameBuffer->GetFrameBuffer());
 
     // Standard.
-    mStandardMaterial->Render(scene, camera.mPosition, camera.mViewMatrix, camera.mProjectionMatrix, camera.mpFrameBuffer->GetFrameBuffer());
+    mStandardMaterial->Render(scene, camera.mPosition, camera.mProjectionMatrix * camera.mViewMatrix, camera.mpFrameBuffer->GetFrameBuffer());
 
 	// Transparent.
-	mTransparentMaterial->Render(scene, camera.mPosition, camera.mViewMatrix, camera.mProjectionMatrix, camera.mScreenWidth, camera.mScreenHeight, camera.mpFrameBuffer);
+	mTransparentMaterial->Render(scene, camera.mPosition, camera.mOrientationMatrix, camera.mViewMatrix, camera.mProjectionMatrix, camera.mScreenWidth, camera.mScreenHeight, camera.mpFrameBuffer);
 }
 
 void RenderSystem::Render(Scene& scene, VRDevice& hmd)
 {
-    {   // Left eye.
-        // Skybox.
-        scene.mpSkybox->Render(hmd.mOrientationMatrix, hmd.mLeftProjection, hmd.mpLeftFrameBuffer->GetFrameBuffer());
+    //{   // Left eye.
+    //    // Skybox.
+    //    scene.mpSkybox->Render(hmd.mOrientationMatrix, hmd.mLeftProjection, hmd.mpLeftFrameBuffer->GetFrameBuffer());
 
-        // Standard.
-        mStandardMaterial->Render(scene, hmd.mPosition, hmd.mLeftView, hmd.mLeftProjection, hmd.mpLeftFrameBuffer->GetFrameBuffer());
+    //    // Standard.
+    //    mStandardMaterial->Render(scene, hmd.mPosition, hmd.mLeftView, hmd.mLeftProjection, hmd.mpLeftFrameBuffer->GetFrameBuffer());
 
-        // Transparent.
-        mTransparentMaterial->Render(scene, hmd.mPosition, hmd.mLeftView, hmd.mLeftProjection, hmd.GetWidth(), hmd.GetHeight(), hmd.mpLeftFrameBuffer);
-    }
-    {   // Right eye.
-        // Skybox.
-        scene.mpSkybox->Render(hmd.mOrientationMatrix, hmd.mRightProjection, hmd.mpRightFrameBuffer->GetFrameBuffer());
+    //    // Transparent.
+    //    mTransparentMaterial->Render(scene, hmd.mPosition, hmd.mLeftView, hmd.mLeftProjection, hmd.GetWidth(), hmd.GetHeight(), hmd.mpLeftFrameBuffer);
+    //}
+    //{   // Right eye.
+    //    // Skybox.
+    //    scene.mpSkybox->Render(hmd.mOrientationMatrix, hmd.mRightProjection, hmd.mpRightFrameBuffer->GetFrameBuffer());
 
-        // Standard.
-        mStandardMaterial->Render(scene, hmd.mPosition, hmd.mRightView, hmd.mRightProjection, hmd.mpRightFrameBuffer->GetFrameBuffer());
+    //    // Standard.
+    //    mStandardMaterial->Render(scene, hmd.mPosition, hmd.mRightView, hmd.mRightProjection, hmd.mpRightFrameBuffer->GetFrameBuffer());
 
-        // Transparent.
-        mTransparentMaterial->Render(scene, hmd.mPosition, hmd.mRightView, hmd.mRightProjection, hmd.GetWidth(), hmd.GetHeight(), hmd.mpRightFrameBuffer);
-    }
+    //    // Transparent.
+    //    mTransparentMaterial->Render(scene, hmd.mPosition, hmd.mRightView, hmd.mRightProjection, hmd.GetWidth(), hmd.GetHeight(), hmd.mpRightFrameBuffer);
+    //}
 }

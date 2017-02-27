@@ -20,9 +20,10 @@ DoubleFrameBuffer::~DoubleFrameBuffer()
 		delete mFrameBuffers[i];
 }
 
-void DoubleFrameBuffer::Clear(float r, float g, float b, float a)
+void DoubleFrameBuffer::Clear(float r, float g, float b, float a, float depth)
 {
-	mFrameBuffers[mIndex]->Clear(r, g, b, a);
+    for (unsigned int i = 0; i < mNumBuff; ++i)
+        mFrameBuffers[mIndex]->ClearAll(r, g, b, a, depth);
 }
 
 void DoubleFrameBuffer::Swap()

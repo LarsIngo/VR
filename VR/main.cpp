@@ -153,7 +153,7 @@ int main()
             }
             else
             {
-				camera.mpFrameBuffer->Clear(0.f, 1.f, 0.f, 1.f);
+				camera.mpFrameBuffer->Clear(0.f, 1.f, 0.f, 1.f, 1.f);
                 renderSystem.Render(scene, camera);
             }
             // --- RENDER --- //

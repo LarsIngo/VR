@@ -6,17 +6,23 @@ struct Input
     float3x3 tbn : TBN;
 };
 
+struct Output
+{
+    float4 color : SV_TARGET0;
+    float depth : SV_TARGET1;
+};
+
 Texture2D txAlbedo : register(t0);
 Texture2D txNormal : register(t1);
 Texture2D txGloss : register(t2);
 Texture2D txScreen : register(t3);
-//Texture2D txScreenDepth : register(t4);
+Texture2D txScreenDepth : register(t4);
 
 struct Meta
 {
     float3 cameraPosition;
 	uint skyboxMipLevels;
-	float4x4 projMatrix;
+	float4x4 invVPMatrix;
 	uint screenWidth;
 	uint screenHeight;
 	float2 pad;
@@ -27,7 +33,7 @@ TextureCube txSkybox : register(t8);
 
 SamplerState samp : register(s0);
 
-float4 main(Input input) : SV_TARGET0
+Output main(Input input) : SV_TARGET
 {
     Meta meta = g_Meta[0];
 	float3 cameraPosition = meta.cameraPosition;
@@ -66,32 +72,40 @@ float4 main(Input input) : SV_TARGET0
 		specularFactor = r;
 	}
 
-	float3 reflectionColor;
+	float3 reflectColor;
 	{
 		float3 skybox = txSkybox.Sample(samp, reflectVec).rgb;
 		float r = saturate(dot(cameraVec, normal));
 		float f = 0.22f;
 		float fresnel = f + (1.f - f) * pow(1.f - r, 5);
-		reflectionColor = skybox * fresnel * (1.f - specularFactor);
+        reflectColor = skybox * fresnel * (1.f - specularFactor);
 	}
 
-	float3 refractVec = refract(-cameraVec, normal, 0.14f) * 0.1f;
+    float refractDepth = dot(cameraVec, normal) * 0.35f;
+	float3 refractVec = refract(-cameraVec, normal, 0.14f) * refractDepth;
 	float3 refractColor;
+    float2 refractUV;
 	{
-		float2 offsetUV = mul(float4(refractVec, 1.f), meta.projMatrix).xy;
-        float2 sampleUV = screenUV + offsetUV;
-        //if (sampleUV.x > 1.f || sampleUV.y > 1.f || sampleUV.x < 0.f || sampleUV.y < 0.f)
-        //    refractColor = float3(0.f,0.f,0.f);
+		float2 offsetUV = mul(float4(refractVec, 1.f), meta.invVPMatrix).xy;
+        refractUV = screenUV + offsetUV;
+        refractUV = saturate(refractUV);
+        refractColor = txScreen.Sample(samp, refractUV).rgb;
+
+        //float refractDepth = txScreenDepth.Sample(samp, refractUV).x;
+        //float pxDepth = input.position.z / input.position.w;
+        //if (pxDepth > refractDepth)
+        //    refractColor = txScreen.Sample(samp, refractUV).rgb;
         //else
-        //    refractColor = txScreen.Sample(samp, sampleUV).rgb;
-        sampleUV = saturate(sampleUV);
-        refractColor = txScreen.Sample(samp, sampleUV).rgb;
+        //    refractColor = txSkybox.Sample(samp, -cameraVec + refractVec).rgb;
 	}
 
-	float3 finalColor = specular + reflectionColor + refractColor;
+    float3 finalColor = specular + refractColor + reflectColor;
 
 	// Tone mapping
 	//finalColor = finalColor / (finalColor + 1);
 
-    return float4(finalColor, 1.f);
+    Output output;
+    output.color = float4(finalColor, 1.f);
+    output.depth = input.position.z / input.position.w;
+    return output;
 }

@@ -22,7 +22,7 @@ class DoubleFrameBuffer
 		~DoubleFrameBuffer();
 
 		// Clear color.
-		void Clear(float r, float g, float b, float a);
+		void Clear(float r, float g, float b, float a, float depth);
 
 		// Swap current frame buffer.
 		void Swap();
