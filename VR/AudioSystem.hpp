@@ -20,6 +20,8 @@ class AudioSystem
 
         bool mShutdown = false;
 
+
+
         // Update audio system.
         void mUpdate();
 };

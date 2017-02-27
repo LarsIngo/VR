@@ -1,4 +1,68 @@
 #include "AudioSystem.hpp"
+#include <assert.h>
+#include <iostream>
+
+#define SAMPLE_RATE 44100
+#define PA_SAMPLE_TYPE paFloat32
+#define SAMPLE_SIZE 4
+#define FRAMES_PER_BUFFER 512
+#define SAMPLE_SILENCE 0.0f
+#define NUM_SECONDS 10
+
+#define PaErrCheck(paError) if (paError != paNoError) { const char* strError = Pa_GetErrorText(paError); std::cout << strError << std::endl; assert(0 && strError); }
+
+//typedef float SAMPLE;
+//
+//float CubicAmplifier(float input)
+//{
+//    float output, temp;
+//    if (input < 0.0)
+//    {
+//        temp = input + 1.0f;
+//        output = (temp * temp * temp) - 1.0f;
+//    }
+//    else 
+//    {
+//        temp = input - 1.0f;
+//        output = (temp * temp * temp) + 1.0f;
+//    }
+//    return output;
+//}
+//
+//#define FUZZ(x) CubicAmplifier(CubicAmplifier(CubicAmplifier(CubicAmplifier(x))))
+//
+//static int gNumNoInputs = 0;
+//
+//static int fuzzCallback(const void *inputBuffer,
+//    void *outputBuffer,
+//    unsigned long framesPerBuffer,
+//    const PaStreamCallbackTimeInfo* timeInfo,
+//    PaStreamCallbackFlags statusFlags,
+//    void *userData)
+//    {
+//    SAMPLE *out = (SAMPLE*)outputBuffer;
+//    const SAMPLE *in = (const SAMPLE*)inputBuffer;
+//    unsigned int i;
+//    
+//     if (inputBuffer == NULL) 
+//     {
+//     for (i = 0; i<framesPerBuffer; i++)
+//         {
+//            *out++ = 0;   /* left  - silent */
+//            *out++ = 0;   /* right - silent */
+//         }
+//        gNumNoInputs += 1;
+//    }
+//    else 
+//    {
+//        for (i = 0; i<framesPerBuffer; i++)
+//        {
+//                * out++ = FUZZ(*in++);   /* left  - distorted */
+//                * out++ = *in++;         /* right - clean */
+//        }
+//    }
+//    return paContinue;
+//}
 
 AudioSystem::AudioSystem()
 {
@@ -16,106 +80,100 @@ void AudioSystem::mUpdate()
 {
     while (!mShutdown)
     {
-        const std::string soundFile = "resources/assets/Audio/WinAssignment.wav"; //COHORT.WAV
-        const int MAX_CHANNELS = 1;
-        const size_t BUFFER_LEN = 4096;
+        const std::string soundFile = "resources/assets/Audio/COHORT.WAV"; //COHORT.WAV // WinAssignment
 
-        PaError paError = Pa_Initialize();
-        if (paError != paNoError)
-        {
-            //message = str(format(playSoundStrings[error_pa_initialize_failed]) % Pa_GetErrorText(paError));
-            //SoundWarning(message);
-            //return false;
-        }
+        PaErrCheck(Pa_Initialize());
+        SF_INFO sfInfo; std::memset(&sfInfo, 0, sizeof(sfInfo));
+
         SNDFILE* sndFile = nullptr;
-        SF_INFO sfInfo;
-        ::memset(&sfInfo, 0, sizeof(sfInfo));
         sndFile = sf_open(soundFile.c_str(), SFM_READ, &sfInfo);
+        if (!sf_format_check(&sfInfo))
+            assert(0 && "sf_format_check");
         if (!sndFile)
-        {
-            //message = str(format(playSoundStrings[error_sf_open_failed]) % soundFile.c_str() % sf_strerror(nullptr));
-            //SoundWarning(message);
-            //Pa_Terminate();
-            //return false;
-        }
-        if (sfInfo.channels > MAX_CHANNELS)
-        {
-            //message = str(format(playSoundStrings[error_too_many_channels]) % sfInfo.channels % MAX_CHANNELS);
-            //SoundWarning(message);
-            //Pa_Terminate();
-            //return false;
-        }
+            assert(0 && "sf_open");
+
+        const PaDeviceIndex deviceIn = Pa_GetDefaultInputDevice();
+        const PaDeviceIndex deviceOut = Pa_GetDefaultOutputDevice();
+        const PaDeviceInfo* deviceInInfo = Pa_GetDeviceInfo(deviceIn);
+        const PaDeviceInfo* deviceOutInfo = Pa_GetDeviceInfo(deviceOut);
         PaStream* stream = nullptr;
-        PaStreamParameters paStreamParameters;
-        paStreamParameters.device = Pa_GetDefaultOutputDevice();
-        paStreamParameters.channelCount = sfInfo.channels;
-        paStreamParameters.sampleFormat = paFloat32;
-        paStreamParameters.suggestedLatency = Pa_GetDeviceInfo(paStreamParameters.device)->defaultLowOutputLatency;
-        paStreamParameters.hostApiSpecificStreamInfo = nullptr;
-        paError = Pa_OpenStream(
-            &stream, nullptr, &paStreamParameters,
-            sfInfo.samplerate, paFramesPerBufferUnspecified, paClipOff,
-            nullptr, nullptr);
-        if (paError != paNoError || !stream)
-        {
-            //message = str(format(playSoundStrings[error_pa_open_stream_failed]) % Pa_GetErrorText(paError));
-            //SoundWarning(message);
-            //Pa_Terminate();
-            //return false;
-        }
-        paError = Pa_StartStream(stream);
-        if (paError != paNoError)
-        {
-            //message = str(format(playSoundStrings[error_pa_start_stream_failed]) % Pa_GetErrorText(paError));
-            //SoundWarning(message);
-            //Pa_Terminate();
-            //return false;
-        }
-        int subFormat = sfInfo.format & SF_FORMAT_SUBMASK;
-        double scale = 1.0;
-        if (subFormat == SF_FORMAT_FLOAT || subFormat == SF_FORMAT_DOUBLE)
-        {
-            sf_command(sndFile, SFC_CALC_SIGNAL_MAX, &scale, sizeof(scale));
-            if (scale < 1e-10)
-            {
-                scale = 1.0;
-            }
-            else
-            {
-                scale = 32700.0 / scale;
-            }
-        }
+
+        //PaStreamParameters paStreamIn;
+        //paStreamIn.device = deviceIn;
+        //paStreamIn.channelCount = sfInfo.channels;
+        //paStreamIn.sampleFormat = PA_SAMPLE_TYPE;
+        //paStreamIn.suggestedLatency = deviceInInfo->defaultLowInputLatency; // defaultHighInputLatency
+        //paStreamIn.hostApiSpecificStreamInfo = NULL;
+
+        PaStreamParameters paStreamOut;
+        paStreamOut.device = deviceOut;
+        paStreamOut.channelCount = sfInfo.channels;
+        paStreamOut.sampleFormat = PA_SAMPLE_TYPE;
+        paStreamOut.suggestedLatency = deviceOutInfo->defaultLowOutputLatency; // defaultHighOutputLatency
+        paStreamOut.hostApiSpecificStreamInfo = NULL;
+
+        assert(sfInfo.channels <= deviceOutInfo->maxOutputChannels);
+
+        PaErrCheck(Pa_OpenStream(
+            &stream,
+            NULL,
+            &paStreamOut,
+            sfInfo.samplerate,
+            FRAMES_PER_BUFFER,
+            paClipOff,
+            NULL,
+            NULL));
+
+        // +++ RECORD LIVE MIC +++ //
+        //int numBytes = FRAMES_PER_BUFFER * sfInfo.channels * SAMPLE_SIZE;
+        //char* sampleBlock = (char*)std::malloc(numBytes);
+        //assert(sampleBlock != NULL);
+        //std::memset(sampleBlock, SAMPLE_SILENCE, numBytes);
+
+        //paError = Pa_StartStream(stream);
+        //if (paError != paNoError)
+        //{
+        //    const char* err = Pa_GetErrorText(paError);
+        //    assert(0 && err);
+        //}
+
+        //for (int i = 0; i< (NUM_SECONDS * SAMPLE_RATE) / FRAMES_PER_BUFFER; ++i)
+        //{
+        //    // You may get underruns or overruns if the output is not primed by PortAudio.
+        //    paError = Pa_WriteStream(stream, sampleBlock, FRAMES_PER_BUFFER);
+        //    if (paError != paNoError)
+        //    {
+        //        const char* err = Pa_GetErrorText(paError);
+        //        assert(0 && err);
+        //    }
+
+        //    paError = Pa_ReadStream(stream, sampleBlock, FRAMES_PER_BUFFER);
+        //    if (paError != paNoError)
+        //    {
+        //        const char* err = Pa_GetErrorText(paError);
+        //        assert(0 && err);
+        //    }
+        //}
+        //std::free(sampleBlock);
+
+        int numBytes = FRAMES_PER_BUFFER * sfInfo.channels * SAMPLE_SIZE;
+        float* sampleBlock = (float*)std::malloc(numBytes);
+        assert(sampleBlock != NULL);
+        std::memset(sampleBlock, SAMPLE_SILENCE, numBytes);
+
+        PaErrCheck(Pa_StartStream(stream));
         sf_count_t readCount = 0;
-        float data[BUFFER_LEN];
-        ::memset(data, 0, sizeof(data));
-        while ((readCount = sf_read_float(sndFile, data, BUFFER_LEN)))
+        while (readCount = sf_read_float(sndFile, sampleBlock, FRAMES_PER_BUFFER))
         {
-            if (subFormat == SF_FORMAT_FLOAT || subFormat == SF_FORMAT_DOUBLE)
-            {
-                int m = 0;
-                for (m = 0; m < readCount; ++m)
-                {
-                    data[m] *= scale;
-                }
-            }
-            paError = Pa_WriteStream(stream, data, BUFFER_LEN);
-            if (paError != paNoError)
-            {
-                //message = str(format(playSoundStrings[error_pa_write_stream_failed]) % Pa_GetErrorText(paError));
-                //SoundWarning(message);
-                break;
-            }
-            ::memset(data, 0, sizeof(data));
+            PaErrCheck(Pa_WriteStream(stream, sampleBlock, FRAMES_PER_BUFFER));
+            std::memset(sampleBlock, SAMPLE_SILENCE, numBytes);
         }
-        paError = Pa_CloseStream(stream);
-        if (paError != paNoError)
-        {
-            //message = str(format(playSoundStrings[error_pa_close_stream_failed]) % Pa_GetErrorText(paError));
-            //SoundWarning(message);
-            //Pa_Terminate();
-            //return false;
-        }
-        Pa_Terminate();
+        
+        PaErrCheck(Pa_StopStream(stream));
+        std::free(sampleBlock);
+
+        PaErrCheck(Pa_CloseStream(stream));
+        PaErrCheck(Pa_Terminate());
         sf_close(sndFile);
     }
 }
