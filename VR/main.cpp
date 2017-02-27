@@ -9,6 +9,7 @@
 #include <crtdbg.h>
 #include <glm/glm.hpp>
 
+#include "AudioSystem.hpp"
 #include "Camera.hpp"
 #include "DoubleFrameBuffer.hpp"
 #include "DxAssert.hpp"
@@ -60,6 +61,7 @@ int main()
     // --- INIT DEVICES --- //
 
     // +++ INIT SCENE +++ //
+    AudioSystem audioSystem;
     Skybox skybox(renderer.mDevice, renderer.mDeviceContext);
     {
         Texture2D bk(renderer.mDevice, renderer.mDeviceContext);
