@@ -62,6 +62,11 @@ int main()
 
     // +++ INIT SCENE +++ //
     AudioSystem audioSystem;
+    AudioFile* winAssignmentAudioFile = audioSystem.Load("resources/assets/Audio/WinAssignment.wav");
+    winAssignmentAudioFile->Play();
+    AudioFile* cohortAudioFile = audioSystem.Load("resources/assets/Audio/COHORT.WAV");
+    cohortAudioFile->Play(true);
+
     Skybox skybox(renderer.mDevice, renderer.mDeviceContext);
     {
         Texture2D bk(renderer.mDevice, renderer.mDeviceContext);
