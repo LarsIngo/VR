@@ -20,36 +20,83 @@ void AudioFile::Load(SNDFILE* sndFile, SF_INFO& info, AudioSystem* audioSystem)
     mDuration = mInfo.frames / mInfo.samplerate;
 }
 
-void AudioFile::Play(bool loop, float phase, float volume)
+void AudioFile::Play(bool loop, float phase, float volumeLeft, float volumeRight)
 {
     assert(mSndFile != nullptr && mAudioSystem != nullptr);
+    std::unique_lock<std::mutex> lock(mAudioSystem->mMutex, std::defer_lock);
+    lock.lock();
+
     mPlay = true;
     mLoop = loop;
-    mVolume = volume;
+    mVolumeLeft = volumeLeft;
+    mVolumeRight = volumeRight;
     mSfCount = mInfo.samplerate * phase;
+
+    lock.unlock();
 }
 
 void AudioFile::Stop()
 {
     assert(mSndFile != nullptr && mAudioSystem != nullptr);
+    std::unique_lock<std::mutex> lock(mAudioSystem->mMutex, std::defer_lock);
+    lock.lock();
+
     mPlay = false;
+
+    lock.unlock();
 }
 
 void AudioFile::End()
 {
     assert(mSndFile != nullptr && mAudioSystem != nullptr);
+    std::unique_lock<std::mutex> lock(mAudioSystem->mMutex, std::defer_lock);
+    lock.lock();
+
     mLoop = false;
+
+    lock.unlock();
 }
 
-void AudioFile::SetVolume(float volume)
+void AudioFile::SetVolumeLeft(float volume)
 {
     assert(mSndFile != nullptr && mAudioSystem != nullptr);
-    mVolume = volume;
+    std::unique_lock<std::mutex> lock(mAudioSystem->mMutex, std::defer_lock);
+    lock.lock();
+
+    mVolumeLeft = volume;
+
+    lock.unlock();
+}
+
+void AudioFile::SetVolumeRight(float volume)
+{
+    assert(mSndFile != nullptr && mAudioSystem != nullptr);
+    std::unique_lock<std::mutex> lock(mAudioSystem->mMutex, std::defer_lock);
+    lock.lock();
+
+    mVolumeRight = volume;
+
+    lock.unlock();
 }
 
 void AudioFile::SetPhase(float phase)
 {
     assert(mSndFile != nullptr && mAudioSystem != nullptr);
+    std::unique_lock<std::mutex> lock(mAudioSystem->mMutex, std::defer_lock);
+    lock.lock();
+
     mSfCount = mInfo.samplerate * phase;
+
+    lock.unlock();
 }
 
+void AudioFile::SetLoop(bool loop)
+{
+    assert(mSndFile != nullptr && mAudioSystem != nullptr);
+    std::unique_lock<std::mutex> lock(mAudioSystem->mMutex, std::defer_lock);
+    lock.lock();
+
+    mLoop = loop;
+
+    lock.unlock();
+}

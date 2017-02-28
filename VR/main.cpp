@@ -63,9 +63,7 @@ int main()
     // +++ INIT SCENE +++ //
     AudioSystem audioSystem;
     AudioFile* winAssignmentAudioFile = audioSystem.Load("resources/assets/Audio/WinAssignment.wav");
-    winAssignmentAudioFile->Play();
-    AudioFile* cohortAudioFile = audioSystem.Load("resources/assets/Audio/COHORT.WAV");
-    cohortAudioFile->Play(true);
+    winAssignmentAudioFile->Play(true, 58);
 
     Skybox skybox(renderer.mDevice, renderer.mDeviceContext);
     {
@@ -115,7 +113,7 @@ int main()
                 for (int y = 0; y < r; ++y)
                     for (int x = 0; x < r; ++x)
                     {
-                        entity.mPosition = glm::vec3(x, y, z) * 5.f;
+                        entity.mPosition = glm::vec3(x, y, z) * 15.f;
 						if (x % 2) entity.mpMetalTex = &white;
 						else entity.mpMetalTex = &black;
 						if (y % 2) entity.mpGlossTex = &white;
@@ -124,6 +122,17 @@ int main()
 						else entity.mTransparent = false;
                         scene.mEntityList.push_back(entity);
                     }
+        }
+
+        AudioSource audioSource;
+        for (Entity& entity : scene.mEntityList)
+        {
+            std::string filePath("resources/assets/Audio/COHORT" + std::to_string(scene.mAudioSourceList.size() % 4 + 1) + ".WAV");
+            AudioFile* audioFile = audioSystem.Load(filePath.c_str());
+            audioFile->Play(true);
+            audioSource.mpAudioFile = audioFile;
+            audioSource.mPosition = entity.mPosition;
+            scene.mAudioSourceList.push_back(audioSource);
         }
     }
     // --- INIT SCENE --- //
@@ -140,11 +149,17 @@ int main()
 
             // +++ UPDATE +++ //
             if (VR)
+            {
                 hmd.mPosition += hmd.mFrontDirection * dt * 10.f;
-            camera.Update(20.f, dt, &renderer);
-
-            if (VR) scene.SortBackToFront(hmd.mPosition, hmd.mFrontDirection);
-            else scene.SortBackToFront(camera.mPosition, camera.mFrontDirection);
+                audioSystem.Update(scene, hmd.mPosition, hmd.mRightDirection, hmd.mUpDirection, hmd.mFrontDirection);
+                scene.SortBackToFront(hmd.mPosition, hmd.mFrontDirection);
+            }
+            else
+            {
+                camera.Update(20.f, dt, &renderer);
+                audioSystem.Update(scene, camera.mPosition, camera.mRightDirection, camera.mUpDirection, camera.mFrontDirection);
+                scene.SortBackToFront(camera.mPosition, camera.mFrontDirection);
+            }
             // --- UPDATE --- //
 
             // +++ RENDER +++ //

@@ -4,6 +4,7 @@
 #include <glm/vec3.hpp>
 #include <vector>
 #include "Entity.hpp"
+#include "AudioSource.hpp"
 
 class Material;
 class Skybox;
@@ -29,6 +30,9 @@ class Scene
 
         // Skybox.
         Skybox* mpSkybox;
+
+        // List of audio sources in scene.
+        std::vector<AudioSource> mAudioSourceList;
 
     private:
         void mQuickSort(Entity* arr, int left, int right, const glm::vec3& cameraPosition, const glm::vec3& cameraFrontDirection);

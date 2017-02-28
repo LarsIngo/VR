@@ -21,16 +21,20 @@ class AudioFile
         void Load(SNDFILE* sndFile, SF_INFO& info, AudioSystem* audioSystem);
 
         // Play sound.
-        void Play(bool loop = false, float phase = 0, float volume = 1.f);
+        void Play(bool loop = false, float phase = 0, float volumeLeft = 1.f, float volumeRight = 1.f);
 
         // End sound.
         void End();
 
         // Set volume.
-        void SetVolume(float volume);
+        void SetVolumeLeft(float volume);
+        void SetVolumeRight(float volume);
 
         // Set phase.
         void SetPhase(float phase);
+
+        // Set loop.
+        void SetLoop(bool loop);
 
         // Stop sound.
         void Stop();
@@ -41,7 +45,8 @@ class AudioFile
         sf_count_t mSfCount = 0;
         bool mLoop = false;
         bool mPlay = false;
-        float mVolume = 1.f;
+        float mVolumeLeft = 1.f;
+        float mVolumeRight = 1.f;
         AudioSystem* mAudioSystem = nullptr;
         float mDuration = 0;
 };

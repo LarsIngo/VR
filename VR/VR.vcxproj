@@ -176,6 +176,7 @@ echo d | xcopy "$(SolutionDir)externals\portaudio\bin\win64" "$(OutputPath)" /E 
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AudioFile.cpp" />
+    <ClCompile Include="AudioSource.cpp" />
     <ClCompile Include="AudioSystem.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="DoubleFrameBuffer.cpp" />
@@ -195,6 +196,7 @@ echo d | xcopy "$(SolutionDir)externals\portaudio\bin\win64" "$(OutputPath)" /E 
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AudioFile.hpp" />
+    <ClInclude Include="AudioSource.hpp" />
     <ClInclude Include="AudioSystem.hpp" />
     <ClInclude Include="Camera.hpp" />
     <ClInclude Include="DoubleFrameBuffer.hpp" />
