@@ -90,6 +90,7 @@ Output main(Input input) : SV_TARGET
         refractUV = saturate(refractUV);
         refractColor = txScreen.Sample(samp, refractUV).rgb;
 
+        //http://answers.playcanvas.com/questions/679/how-do-i-convert-world-space-coordinates-into-screen-space
         //float refractDepth = txScreenDepth.Sample(samp, refractUV).x;
         //float pxDepth = input.position.z / input.position.w;
         //if (pxDepth > refractDepth)

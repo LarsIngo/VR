@@ -39,14 +39,13 @@ AudioSystem::AudioSystem()
 
     PaErrCheck(Pa_StartStream(mStream));
 
-    mThread = new std::thread(&AudioSystem::mUpdate, this);
+    mThread = std::thread(&AudioSystem::mUpdate, this);
 }
 
 AudioSystem::~AudioSystem()
 {
     mShutdown = true;
-    mThread->join();
-    delete mThread;
+    mThread.join();
 
     for (auto& it : mSFDataMap)
     {
@@ -230,8 +229,8 @@ void AudioSystem::Update(Scene& scene, const glm::vec3& position, const glm::vec
 
         float volume = glm::clamp(1.f / audioDistance, 0.f, 1.f);
 
-        audioFile->mVolumeLeft = 5.f * volume * glm::clamp(glm::dot(-rightDirection, audioVector), 0.f, 1.f);
-        audioFile->mVolumeRight = 5.f * volume * glm::clamp(glm::dot(rightDirection, audioVector), 0.f, 1.f);
+        audioFile->mVolumeLeft = 15.f * volume * glm::clamp(glm::dot(-rightDirection, audioVector), 0.f, 1.f);
+        audioFile->mVolumeRight = 15.f * volume * glm::clamp(glm::dot(rightDirection, audioVector), 0.f, 1.f);
     }
     lock.unlock();
 }

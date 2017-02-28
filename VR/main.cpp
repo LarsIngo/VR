@@ -62,8 +62,7 @@ int main()
 
     // +++ INIT SCENE +++ //
     AudioSystem audioSystem;
-    AudioFile* winAssignmentAudioFile = audioSystem.Load("resources/assets/Audio/WinAssignment.wav");
-    winAssignmentAudioFile->Play(true, 58);
+    AudioFile* bgAudioFile = audioSystem.Load("resources/assets/Audio/WinAssignment.wav");
 
     Skybox skybox(renderer.mDevice, renderer.mDeviceContext);
     {
@@ -108,12 +107,12 @@ int main()
         entity.mpAlbedoTex = &albedo;
         entity.mpNormalTex = &normal;
         {
-            int r = 2;
+            int r = 3;
             for (int z = 0; z < r; ++z)
                 for (int y = 0; y < r; ++y)
                     for (int x = 0; x < r; ++x)
                     {
-                        entity.mPosition = glm::vec3(x, y, z) * 15.f;
+                        entity.mPosition = glm::vec3(x, y, z) * 5.f;
 						if (x % 2) entity.mpMetalTex = &white;
 						else entity.mpMetalTex = &black;
 						if (y % 2) entity.mpGlossTex = &white;
@@ -135,6 +134,7 @@ int main()
             scene.mAudioSourceList.push_back(audioSource);
         }
     }
+    bgAudioFile->Play(true, 58);
     // --- INIT SCENE --- //
 
     // +++ MAIN LOOP +++ //

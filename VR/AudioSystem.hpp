@@ -40,7 +40,7 @@ class AudioSystem
         void Update(Scene& scene, const glm::vec3& position, const glm::vec3& rightDirection, const glm::vec3& upDirection, glm::vec3& frontDirection);
 
     private:
-        std::thread* mThread;
+        std::thread mThread;
         std::mutex mMutex;
 
         bool mShutdown = false;
