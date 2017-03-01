@@ -14,15 +14,17 @@
 #include "Scene.hpp"
 #include <glm/glm.hpp>
 
-#define SAMPLE_RATE (44100/2)
 #define PA_SAMPLE_TYPE (paFloat32)
 #define SAMPLE_SIZE (4)
-#define FRAMES_PER_BUFFER (512)
 #define SAMPLE_SILENCE (0.0f)
-#define NUM_SECONDS (10)
 #define NUM_CHANNELS (2)
-#define BUFFER_NUM_FRAMES (FRAMES_PER_BUFFER * NUM_CHANNELS)
-#define BUFFER_SIZE (BUFFER_NUM_FRAMES * SAMPLE_SIZE)
+
+#define FRAMES_PER_CHANNEL (512)
+#define SAMPLE_RATE (44100/2)
+#define DURATION_PER_BUFFER ((float)FRAMES_PER_CHANNEL / SAMPLE_RATE)
+
+#define FRAMES_PER_BUFFER (FRAMES_PER_CHANNEL * NUM_CHANNELS)
+#define BUFFER_SIZE (FRAMES_PER_BUFFER * SAMPLE_SIZE)
 
 class AudioSystem
 {
@@ -60,12 +62,16 @@ class AudioSystem
         const PaDeviceInfo* mDeviceInfoOut;
         PaStream* mStream = nullptr;
         PaStreamParameters mPaStreamOut;
-        float mBufferIn[BUFFER_NUM_FRAMES];
-        float mBufferOut[BUFFER_NUM_FRAMES];
+        float mBufferIn[FRAMES_PER_BUFFER];
+        float mLastBufferIn[FRAMES_PER_BUFFER];
+        float mBufferOut[FRAMES_PER_BUFFER];
 
         // Update audio system.
         void mUpdate();
 
-        // Eco audio effect.
-        static void Eco(float* buffer, unsigned int numFrames);
+        // Mix buffers
+        static float mMixAudio(unsigned int frameIndexIn, float* bufferIn, float* lastBufferIn);
+
+        // Echo audio effect.
+        static float mEchoFilter(unsigned int frameIndexIn, float* bufferIn, float* lastBufferIn);
 };

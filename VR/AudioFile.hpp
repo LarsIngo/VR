@@ -45,9 +45,9 @@ class AudioFile
         sf_count_t mSfCount = 0;
         bool mLoop = false;
         bool mPlay = false;
-        float mVolumeLeft = 1.f;
-        float mVolumeRight = 1.f;
+        float mVolumeLeft = 0.f;
+        float mVolumeRight = 0.f;
         AudioSystem* mAudioSystem = nullptr;
-        float mDuration = 0;
+        float mDuration = 0.f;
 };
 

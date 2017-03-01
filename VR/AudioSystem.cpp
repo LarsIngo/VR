@@ -32,7 +32,7 @@ AudioSystem::AudioSystem()
         NULL,
         &mPaStreamOut,
         SAMPLE_RATE,
-        FRAMES_PER_BUFFER,
+        FRAMES_PER_CHANNEL,
         paClipOff,
         NULL,
         NULL));
@@ -92,33 +92,41 @@ void AudioSystem::mUpdate()
     while (!mShutdown)
     {
         std::unique_lock<std::mutex> lock(mMutex, std::defer_lock);
-        
+        lock.lock();
+
         std::memset(mBufferOut, SAMPLE_SILENCE, BUFFER_SIZE);
         unsigned int audioCount = 0;
-        float maxAmplitude = 0.f;
-        float amplitude;
 
-        lock.lock();
         for (AudioFile& audioFile : mAudioFileArray)
         {
             if (audioFile.mPlay)
             {
                 audioCount++;
-                sf_seek(audioFile.mSndFile, audioFile.mSfCount, SEEK_SET);
+                sf_count_t frameCount = audioFile.mInfo.channels * FRAMES_PER_CHANNEL;
+
+                std::memset(mLastBufferIn, SAMPLE_SILENCE, BUFFER_SIZE);
+                if (audioFile.mSfCount < frameCount)
+                {
+                    sf_seek(audioFile.mSndFile, 0, SEEK_SET);
+                    sf_read_float(audioFile.mSndFile, mLastBufferIn, audioFile.mSfCount);
+                }
+                else
+                {
+                    sf_count_t readPoint = audioFile.mSfCount - frameCount;
+                    sf_seek(audioFile.mSndFile, readPoint, SEEK_SET);
+                    sf_count_t readCount = sf_read_float(audioFile.mSndFile, mLastBufferIn, frameCount);
+                }
+
                 std::memset(mBufferIn, SAMPLE_SILENCE, BUFFER_SIZE);
-                sf_count_t readCount = sf_readf_float(audioFile.mSndFile, mBufferIn, FRAMES_PER_BUFFER);
+                sf_count_t readCount = sf_readf_float(audioFile.mSndFile, mBufferIn, FRAMES_PER_CHANNEL);
                 if (audioFile.mInfo.channels == 1)
                 {   // MONO -> STEREO
-                    for (int f = 0; f < readCount * 2; ++f)
+                    for (int f = 0; f < readCount; ++f)
                     {
                         // Left.
-                        amplitude = mBufferIn[f] * audioFile.mVolumeLeft;
-                        maxAmplitude = std::fmaxf(amplitude, maxAmplitude);
-                        mBufferOut[2 * f] += amplitude;
+                        mBufferOut[2 * f] += mMixAudio(f, mBufferIn, mLastBufferIn) * audioFile.mVolumeLeft;
                         // Right.
-                        amplitude = mBufferIn[f] * audioFile.mVolumeRight;
-                        maxAmplitude = std::fmaxf(amplitude, maxAmplitude);
-                        mBufferOut[2 * f + 1] += amplitude;
+                        mBufferOut[2 * f + 1] += mMixAudio(f, mBufferIn, mLastBufferIn) * audioFile.mVolumeRight;
                     }
                 }
                 else
@@ -126,13 +134,9 @@ void AudioSystem::mUpdate()
                     for (int f = 0; f < readCount * 2; f += 2)
                     {
                         // Left.
-                        amplitude = mBufferIn[f] * audioFile.mVolumeLeft;
-                        maxAmplitude = std::fmaxf(amplitude, maxAmplitude);
-                        mBufferOut[f] += amplitude;
+                        mBufferOut[f] += mMixAudio(f, mBufferIn, mLastBufferIn) * audioFile.mVolumeLeft;
                         // Right.
-                        amplitude = mBufferIn[f + 1] * audioFile.mVolumeRight;
-                        maxAmplitude = std::fmaxf(amplitude, maxAmplitude);
-                        mBufferOut[f + 1] += amplitude;
+                        mBufferOut[f + 1] += mMixAudio(f + 1, mBufferIn, mLastBufferIn) * audioFile.mVolumeRight;
                     }
                 }
 
@@ -150,12 +154,11 @@ void AudioSystem::mUpdate()
         {
             //for (int f = 0; f < readCount * sfInfo.channels; ++f)
             //    if (f % 2 == 0) sampleBlock[f] = 0.f;
-            for (int f = 0; f < FRAMES_PER_BUFFER * 2; ++f)
+            for (int f = 0; f < FRAMES_PER_BUFFER; ++f)
             {
                 mBufferOut[f] = mBufferOut[f] / audioCount;
             }
-            //Eco(mBufferOut, BUFFER_NUM_FRAMES);
-            PaErrCheck(Pa_WriteStream(mStream, mBufferOut, FRAMES_PER_BUFFER));
+            PaErrCheck(Pa_WriteStream(mStream, mBufferOut, FRAMES_PER_CHANNEL));
         }
     }
 
@@ -192,26 +195,58 @@ void AudioSystem::mUpdate()
     //std::free(sampleBlock);
 }
 
-void AudioSystem::Eco(float* buffer, unsigned int numFrames)
+float AudioSystem::mMixAudio(unsigned int frameIndexIn, float* bufferIn, float* lastBufferIn)
 {
-    unsigned int filterSize = 64;
-    for (unsigned int frameIT = 0; frameIT < numFrames; ++frameIT)
-    {
-        float frameValue = 0.f;
-        unsigned int frameCount = 0;
-        for (unsigned int filterIT = 0; filterIT < filterSize; ++filterIT)
-        {
-            float scale = (float)filterIT / filterSize;
-            unsigned int frameIndex = frameIT + filterIT;
-            if (frameIndex < numFrames)
-            {
-                frameValue += buffer[frameIndex] * (1.f - scale);
-                ++frameCount;
-            }
-        }
-        frameValue /= frameCount;
-        buffer[frameIT] = frameValue;
-    }
+    return bufferIn[frameIndexIn];
+}
+
+float AudioSystem::mEchoFilter(unsigned int frameIndexIn, float* bufferIn, float* lastBufferIn)
+{
+    return 0.f;
+    //int delayMilliseconds = 500; // half a second
+    //int delaySamples =
+    //    (int)((float)delayMilliseconds * 44.1f); // assumes 44100 Hz sample rate
+    //float decay = 0.5f;
+    //for (int i = 0; i < buffer.length - delaySamples; i++)
+    //{
+    //    // WARNING: overflow potential
+    //    buffer[i + delaySamples] += (short)((float)buffer[i] * decay);
+    //}
+
+    //unsigned int delayFrames = FRAMES_PER_CHANNEL / 2;
+    //float decay = 0.5f;
+    //for (unsigned int f = 0; f < FRAMES_PER_BUFFER - delayFrames; ++f)
+    //{
+    //    bufferOut[f + delayFrames] += (short)((float)bufferIn[f] * decay);
+    //}
+    
+    //float frameValue = 0.f;
+    //for (unsigned int f = 0; f < BUFFER_NUM_FRAMES; ++f)
+    //{
+    //    frameValue += lastBufferIn[(BUFFER_NUM_FRAMES - 1) - f];
+    //}
+    //return frameValue / BUFFER_NUM_FRAMES;
+
+    //unsigned int frameDelay = 32;
+    //return (bufferIn[frameIndexIn] + lastBufferIn[(BUFFER_NUM_FRAMES - 1) - frameDelay]) / 2.f;
+
+    //for (unsigned int frameIT = 0; frameIT < numFrames; ++frameIT)
+    //{
+    //    float frameValue = 0.f;
+    //    unsigned int frameCount = 0;
+    //    for (unsigned int filterIT = 0; filterIT < filterSize; ++filterIT)
+    //    {
+    //        float scale = (float)filterIT / filterSize;
+    //        unsigned int frameIndex = frameIT + filterIT;
+    //        if (frameIndex < numFrames)
+    //        {
+    //            frameValue += buffer[frameIndex] * (1.f - scale);
+    //            ++frameCount;
+    //        }
+    //    }
+    //    frameValue /= frameCount;
+    //    buffer[frameIT] = frameValue;
+    //}
 }
 
 void AudioSystem::Update(Scene& scene, const glm::vec3& position, const glm::vec3& rightDirection, const glm::vec3& upDirection, glm::vec3& frontDirection)
@@ -227,7 +262,7 @@ void AudioSystem::Update(Scene& scene, const glm::vec3& position, const glm::vec
         if (audioDistance < 0.001f) audioVector += glm::vec3(0.f, 0.1f, 0.f);
         audioVector = glm::normalize(audioVector);
 
-        float volumeScale = 15.f;
+        float volumeScale = 5.f;
         float volumeDistance = glm::clamp(1.f / audioDistance, 0.f, 1.f);
         float volumeFront = glm::clamp(glm::dot(frontDirection, audioVector), 0.f, 1.f);
         float volumeLeft = glm::clamp(glm::dot(-rightDirection, audioVector), 0.f, 1.f);

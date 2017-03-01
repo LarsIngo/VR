@@ -85,7 +85,7 @@ int main()
         skybox.Load(&bk, &dn, &fr, &lf, &rt, &up);
     }
     Camera camera(winWidth, winHeight, &cameraFrameBuffer);
-	//camera.mPosition = glm::vec3(2,2,2);
+	camera.mPosition = glm::vec3(0,0,-2.f);
     RenderSystem renderSystem(renderer.mDevice, renderer.mDeviceContext);
     Mesh mesh(renderer.mDevice, renderer.mDeviceContext);
     Texture2D albedo(renderer.mDevice, renderer.mDeviceContext);
@@ -111,7 +111,7 @@ int main()
         entity.mpAlbedoTex = &albedo;
         entity.mpNormalTex = &normal;
         {
-            int r = 3;
+            int r = 1;
             for (int z = 0; z < r; ++z)
                 for (int y = 0; y < r; ++y)
                     for (int x = 0; x < r; ++x)
@@ -138,7 +138,7 @@ int main()
             scene.mAudioSourceList.push_back(audioSource);
         }
     }
-    bgAudioFile->Play(true, 58);
+    bgAudioFile->Play(true, 27.f, 0.3f, 0.3f);
     // --- INIT SCENE --- //
 
     // +++ MAIN LOOP +++ //
