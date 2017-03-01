@@ -4,6 +4,7 @@
 #define FRAME_LATENCY
 //#define D3D_REPORT_LIVE_OBJ
 #define _CRTDBG_MAP_ALLOC
+//#define BUILD_VR
 
 #include <chrono>
 #include <crtdbg.h>
@@ -29,7 +30,10 @@ int main()
     // +++ INIT DEVICES +++ //
     // Create VRDevice.
     VRDevice hmd;
-    bool VR = hmd.Start();
+    bool VR = false;
+#ifdef BUILD_VR
+    VR = hmd.Start();
+#endif
     unsigned int winWidth;
     unsigned int winHeight;
     if (VR)
@@ -112,7 +116,7 @@ int main()
                 for (int y = 0; y < r; ++y)
                     for (int x = 0; x < r; ++x)
                     {
-                        entity.mPosition = glm::vec3(x, y, z) * 5.f;
+                        entity.mPosition = glm::vec3(x, y, z) * 10.f;
 						if (x % 2) entity.mpMetalTex = &white;
 						else entity.mpMetalTex = &black;
 						if (y % 2) entity.mpGlossTex = &white;
