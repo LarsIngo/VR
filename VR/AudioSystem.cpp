@@ -227,10 +227,14 @@ void AudioSystem::Update(Scene& scene, const glm::vec3& position, const glm::vec
         if (audioDistance < 0.001f) audioVector += glm::vec3(0.f, 0.1f, 0.f);
         audioVector = glm::normalize(audioVector);
 
-        float volume = glm::clamp(1.f / audioDistance, 0.f, 1.f);
+        float volumeScale = 15.f;
+        float volumeDistance = glm::clamp(1.f / audioDistance, 0.f, 1.f);
+        float volumeFront = glm::clamp(glm::dot(frontDirection, audioVector), 0.f, 1.f);
+        float volumeLeft = glm::clamp(glm::dot(-rightDirection, audioVector), 0.f, 1.f);
+        float volumeRight = glm::clamp(glm::dot(rightDirection, audioVector), 0.f, 1.f);
 
-        audioFile->mVolumeLeft = 15.f * volume * glm::clamp(glm::dot(-rightDirection, audioVector), 0.f, 1.f);
-        audioFile->mVolumeRight = 15.f * volume * glm::clamp(glm::dot(rightDirection, audioVector), 0.f, 1.f);
+        audioFile->mVolumeLeft = volumeScale * volumeDistance * (volumeFront + volumeLeft);
+        audioFile->mVolumeRight = volumeScale * volumeDistance * (volumeFront + volumeRight);
     }
     lock.unlock();
 }
