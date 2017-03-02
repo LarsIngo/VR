@@ -86,7 +86,7 @@ void Transparent::Render(Scene& scene, const glm::vec3& cameraPosition, const gl
 		Entity& entity = scene.mEntityList[i];
 		if (entity.mTransparent)
 		{
-            ID3D11RenderTargetView* rtvList[2] = { targetFb->mColRTV, targetFb->mDepthColRTV };
+            ID3D11RenderTargetView* rtvList[2] = { targetFb->mColRTV, targetFb->mDepthRTV };
             mpDeviceContext->OMSetRenderTargets(2, rtvList, targetFb->mDepthStencilDSV);
 
             modelMatrix = glm::translate(glm::mat4(), entity.mPosition);
@@ -98,7 +98,7 @@ void Transparent::Render(Scene& scene, const glm::vec3& cameraPosition, const gl
 			mpDeviceContext->PSSetShaderResources(1, 1, &entity.mpNormalTex->mSRV);
 			mpDeviceContext->PSSetShaderResources(2, 1, &entity.mpGlossTex->mSRV);
 			mpDeviceContext->PSSetShaderResources(3, 1, &sourceFb->mColSRV);
-            mpDeviceContext->PSSetShaderResources(4, 1, &sourceFb->mDepthColSRV);
+            mpDeviceContext->PSSetShaderResources(4, 1, &sourceFb->mDepthSRV);
 			Mesh* mesh = entity.mpMesh;
 			stride = sizeof(Transparent::Vertex);
 			offset = 0;

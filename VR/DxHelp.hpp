@@ -75,7 +75,16 @@ namespace DxHelp
     // device D3D11 device.
     // shaderPath Path to shader.
     // shader Created shader.
-    void CreatePS(ID3D11Device* device, const char* shaderPath, const char* entry,ID3D11PixelShader** shader);
+    void CreatePS(ID3D11Device* device, const char* shaderPath, const char* entry, ID3D11PixelShader** shader);
+
+    // Copy texture.
+    // deviceContext D3D11 device context.
+    // dst Texture to copy to.
+    // src Texture to read from.
+    // texWidth Texture width in pixels.
+    // texHeight Texture height in pixels.
+    // texMipLevels Texture mip levels.
+    void CopyTexture(ID3D11DeviceContext* deviceContext, ID3D11Texture2D* dst, ID3D11Texture2D* src, unsigned int texWidth, unsigned int texHeight, unsigned int texMipLevels);
 }
 
 template <typename T>
@@ -302,4 +311,23 @@ inline void DxHelp::CreatePS(ID3D11Device* device, const char* shaderPath, const
         shader
     ), S_OK);
     compiledShader->Release();
+}
+
+inline void DxHelp::CopyTexture(ID3D11DeviceContext* deviceContext, ID3D11Texture2D* dst, ID3D11Texture2D* src, unsigned int texWidth, unsigned int texHeight, unsigned int texMipLevels)
+{
+    assert(dst != src);
+    D3D11_BOX sourceRegion;
+
+    for (unsigned int mipLevel = 0; mipLevel < texMipLevels; ++mipLevel)
+    {
+        sourceRegion.left = 0;
+        sourceRegion.right = (texWidth >> mipLevel);
+        sourceRegion.top = 0;
+        sourceRegion.bottom = (texHeight >> mipLevel);
+        sourceRegion.front = 0;
+        sourceRegion.back = 1;
+        assert(sourceRegion.bottom != 0 || sourceRegion.right != 0);
+
+        deviceContext->CopySubresourceRegion(dst, D3D11CalcSubresource(mipLevel, 0, texMipLevels), 0, 0, 0, src, mipLevel, &sourceRegion);
+    }
 }

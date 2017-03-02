@@ -19,15 +19,20 @@ class FrameBuffer
         ~FrameBuffer();
 
         void ClearAll(float r = 0.f, float g = 0.f, float b = 0.f, float a = 0.f, float depth = 1.f);
-
         // Clear color.
         void ClearColor(float r, float g, float b, float a);
-
         // Clear depth.
         void ClearDepth(float depth);
 
 		// Copy other frame buffer.
 		void Copy(FrameBuffer* fb);
+
+        // Read world texture.
+        float*  ReadWorld();
+        // Read normal texture.
+        float*  ReadNormal();
+        // Read depth texture.
+        float*  ReadDepth();
 
         // Frame buffer width in pixels.
         unsigned int mWidth;
@@ -42,11 +47,23 @@ class FrameBuffer
         ID3D11RenderTargetView* mColRTV;
         ID3D11UnorderedAccessView* mColUAV;
 
-        // Depth color.
-        ID3D11Texture2D* mDepthColTex;
-        ID3D11ShaderResourceView* mDepthColSRV;
-        ID3D11RenderTargetView* mDepthColRTV;
-        ID3D11UnorderedAccessView* mDepthColUAV;
+        // World.
+        ID3D11Texture2D* mWorldTex;
+        ID3D11ShaderResourceView* mWorldSRV;
+        ID3D11RenderTargetView* mWorldRTV;
+        ID3D11UnorderedAccessView* mWorldUAV;
+
+        // Normal.
+        ID3D11Texture2D* mNormTex;
+        ID3D11ShaderResourceView* mNormSRV;
+        ID3D11RenderTargetView* mNormRTV;
+        ID3D11UnorderedAccessView* mNormUAV;
+
+        // Depth.
+        ID3D11Texture2D* mDepthTex;
+        ID3D11ShaderResourceView* mDepthSRV;
+        ID3D11RenderTargetView* mDepthRTV;
+        ID3D11UnorderedAccessView* mDepthUAV;
 
         // Depth stencil.
         ID3D11Texture2D* mDepthStencilTex;
@@ -55,4 +72,8 @@ class FrameBuffer
     private:
         ID3D11Device* mpDevice;
         ID3D11DeviceContext* mpDeviceContext;
+
+        // Staging textures.
+        ID3D11Texture2D* mStagingTexR32G32B32A32;
+        ID3D11Texture2D* mStagingTexR32;
 };

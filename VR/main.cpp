@@ -110,7 +110,7 @@ int main()
         entity.mpAlbedoTex = &albedo;
         entity.mpNormalTex = &normal;
         {
-            int r = 1;
+            int r = 2;
             for (int z = 0; z < r; ++z)
                 for (int y = 0; y < r; ++y)
                     for (int x = 0; x < r; ++x)

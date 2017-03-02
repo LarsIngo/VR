@@ -40,7 +40,7 @@ void Material::Init(std::vector<D3D11_INPUT_ELEMENT_DESC>& inputDesc, const char
 
 void Material::Render(Scene& scene, const glm::vec3& cameraPosition, const glm::mat4& vpMatrix, FrameBuffer* targetFb)
 {
-    ID3D11RenderTargetView* rtvList[2] = { targetFb->mColRTV, targetFb->mDepthColRTV };
+    ID3D11RenderTargetView* rtvList[2] = { targetFb->mColRTV, targetFb->mDepthRTV };
     mpDeviceContext->OMSetRenderTargets(2, rtvList, targetFb->mDepthStencilDSV);
 
     mpDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
