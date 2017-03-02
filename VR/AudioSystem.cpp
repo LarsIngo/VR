@@ -318,7 +318,32 @@ void AudioSystem::UpdateAudioImage(Scene& scene, const glm::vec3& position, cons
         for (AudioSource& audioSource : scene.mAudioSourceList)
         {
             std::vector<float>& audioImagePhaseList = mAudioFilePhaseMap[audioSource.mpAudioFile];
-            float phase = 0.5f;
+
+            glm::vec3 cameraVec = position - world;
+            glm::vec3 audioSourceVec = audioSource.mPosition - world;
+
+            float cameraDistance = glm::length(cameraVec);
+            float audioSourceDistance = glm::length(audioSourceVec);
+            float totalDistance = cameraDistance + audioSourceDistance;
+
+            cameraVec = glm::normalize(cameraVec);
+            audioSourceVec = glm::normalize(audioSourceVec);
+
+            float audioVelocity = 342.f;
+            float phase = totalDistance / audioVelocity;
+
+            std::cout << "Phase: " << phase << std::endl << std::endl;
+
+            //float bouceFactor = glm::dot(cameraVec, audioSourceVec);
+            //if (bouceFactor > 0.f)
+            //{   // Infront of object
+            //    
+            //}
+            //else
+            //{   // Behind of object
+
+            //}
+
             audioImagePhaseList.push_back(phase);
         }
     }
