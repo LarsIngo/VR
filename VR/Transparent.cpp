@@ -86,8 +86,8 @@ void Transparent::Render(Scene& scene, const glm::vec3& cameraPosition, const gl
 		Entity& entity = scene.mEntityList[i];
 		if (entity.mTransparent)
 		{
-            ID3D11RenderTargetView* rtvList[2] = { targetFb->mColRTV, targetFb->mDepthRTV };
-            mpDeviceContext->OMSetRenderTargets(2, rtvList, targetFb->mDepthStencilDSV);
+            ID3D11RenderTargetView* rtvList[4] = { targetFb->mColRTV, targetFb->mWorldRTV, targetFb->mNormRTV, targetFb->mDepthRTV };
+            mpDeviceContext->OMSetRenderTargets(4, rtvList, targetFb->mDepthStencilDSV);
 
             modelMatrix = glm::translate(glm::mat4(), entity.mPosition);
 			mGSMeta.modelMatrix = glm::transpose(modelMatrix);
@@ -115,8 +115,8 @@ void Transparent::Render(Scene& scene, const glm::vec3& cameraPosition, const gl
 		}
 	}
 
-	void* p[2] = { NULL, NULL };
-	mpDeviceContext->OMSetRenderTargets(2, (ID3D11RenderTargetView**)p, *(ID3D11DepthStencilView**)p);
+	void* p[4] = { NULL, NULL, NULL, NULL };
+	mpDeviceContext->OMSetRenderTargets(4, (ID3D11RenderTargetView**)p, *(ID3D11DepthStencilView**)p);
 	mpDeviceContext->IASetVertexBuffers(0, 1, (ID3D11Buffer**)p, &stride, &offset);
 	mpDeviceContext->GSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);
 	mpDeviceContext->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);

@@ -40,8 +40,8 @@ void Material::Init(std::vector<D3D11_INPUT_ELEMENT_DESC>& inputDesc, const char
 
 void Material::Render(Scene& scene, const glm::vec3& cameraPosition, const glm::mat4& vpMatrix, FrameBuffer* targetFb)
 {
-    ID3D11RenderTargetView* rtvList[2] = { targetFb->mColRTV, targetFb->mDepthRTV };
-    mpDeviceContext->OMSetRenderTargets(2, rtvList, targetFb->mDepthStencilDSV);
+    ID3D11RenderTargetView* rtvList[4] = { targetFb->mColRTV, targetFb->mWorldRTV, targetFb->mNormRTV, targetFb->mDepthRTV };
+    mpDeviceContext->OMSetRenderTargets(4, rtvList, targetFb->mDepthStencilDSV);
 
     mpDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     mpDeviceContext->GSSetShaderResources(0, 1, &mGSMetaBuff);
@@ -94,8 +94,8 @@ void Material::Render(Scene& scene, const glm::vec3& cameraPosition, const glm::
 		}
     }
 
-    void* p[2] = { NULL, NULL };
-    mpDeviceContext->OMSetRenderTargets(2, (ID3D11RenderTargetView**)p, *(ID3D11DepthStencilView**)p);
+    void* p[4] = { NULL, NULL, NULL, NULL };
+    mpDeviceContext->OMSetRenderTargets(4, (ID3D11RenderTargetView**)p, *(ID3D11DepthStencilView**)p);
     mpDeviceContext->IASetVertexBuffers(0, 1, (ID3D11Buffer**)p, &stride, &offset);
     mpDeviceContext->GSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);
     mpDeviceContext->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);

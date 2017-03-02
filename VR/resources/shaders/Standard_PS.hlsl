@@ -9,7 +9,9 @@ struct Input
 struct Output
 {
     float4 color : SV_TARGET0;
-    float depth : SV_TARGET1;
+    float4 world : SV_TARGET1;
+    float4 normal : SV_TARGET2;
+    float depth : SV_TARGET3;
 };
 
 
@@ -86,6 +88,8 @@ Output main(Input input) : SV_TARGET
 
     Output output;
     output.color = float4(finalColor, 1.f);
+    output.world = float4(worldPosition, 1.f);
+    output.normal = float4(normal, 1.f);
     output.depth = input.position.z / input.position.w;
     return output;
 }
