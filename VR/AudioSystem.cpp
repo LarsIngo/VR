@@ -109,9 +109,9 @@ void AudioSystem::mUpdate()
             {
                 audioCount++;
                 SF_INFO& info = audioFile.mpAudioData->mAudioInfo;
-                sf_count_t frameCount = info.channels * FRAMES_PER_CHANNEL;
                 sf_count_t frameStart = audioFile.mCurrFrame;
-                sf_count_t frameEnd = std::min(audioFile.mCurrFrame + frameCount, info.frames);
+                sf_count_t frameEnd = std::min(audioFile.mCurrFrame + info.channels * FRAMES_PER_CHANNEL, info.frames);
+                sf_count_t frameCount = frameEnd - frameStart;
                 sf_count_t f = 0;
                 float* bufferIn = audioFile.mpAudioData->mAudioBuffer;
 
@@ -121,10 +121,10 @@ void AudioSystem::mUpdate()
                     {
                         // Left.
                         assert(f < FRAMES_PER_BUFFER);
-                        mBufferOut[f++] += bufferIn[frameWalker] * audioFile.mVolumeLeft;
+                        mBufferOut[f++] += mMixAudio(frameWalker, bufferIn, info) * audioFile.mVolumeLeft;
                         // Right.
                         assert(f < FRAMES_PER_BUFFER);
-                        mBufferOut[f++] += bufferIn[frameWalker] * audioFile.mVolumeRight;
+                        mBufferOut[f++] += mMixAudio(frameWalker, bufferIn, info) * audioFile.mVolumeRight;
                     }
                 }
                 else
@@ -133,10 +133,10 @@ void AudioSystem::mUpdate()
                     {
                         // Left.
                         assert(f < FRAMES_PER_BUFFER);
-                        mBufferOut[f++] += bufferIn[frameWalker] * audioFile.mVolumeLeft;
+                        mBufferOut[f++] += mMixAudio(frameWalker, bufferIn, info) * audioFile.mVolumeLeft;
                         // Right.
                         assert(f < FRAMES_PER_BUFFER);
-                        mBufferOut[f++] += bufferIn[frameWalker + 1] * audioFile.mVolumeRight;
+                        mBufferOut[f++] += mMixAudio(frameWalker + 1, bufferIn, info) * audioFile.mVolumeRight;
                     }
                 }
 
@@ -195,9 +195,21 @@ void AudioSystem::mUpdate()
     //std::free(sampleBlock);
 }
 
-float AudioSystem::mMixAudio(unsigned int frameIndexIn, float* bufferIn, float* lastBufferIn)
+float AudioSystem::mMixAudio(sf_count_t frameWalker, float* bufferIn, SF_INFO& infoIn)
 {
-    return bufferIn[frameIndexIn];
+    float delaySeconds = 0.5f; // half a second
+    sf_count_t delayFrames = delaySeconds * SAMPLE_RATE;
+    int delayFrame = frameWalker - delayFrames;
+
+    float decay = 0.5f;
+
+    float frameValue = 0.f;
+    if (delayFrame < 0)
+        frameValue = bufferIn[frameWalker];
+    else
+        frameValue = (bufferIn[frameWalker] + bufferIn[delayFrame] * decay);
+
+    return frameValue;
 }
 
 float AudioSystem::mEchoFilter(unsigned int frameIndexIn, float* bufferIn, float* lastBufferIn)

@@ -65,8 +65,6 @@ int main()
     // --- INIT DEVICES --- //
 
     // +++ INIT SCENE +++ //
-    AudioSystem audioSystem;
-
     Skybox skybox(renderer.mDevice, renderer.mDeviceContext);
     {
         Texture2D bk(renderer.mDevice, renderer.mDeviceContext);
@@ -92,6 +90,8 @@ int main()
 	Texture2D white(renderer.mDevice, renderer.mDeviceContext);
 	Texture2D black(renderer.mDevice, renderer.mDeviceContext);
 	Texture2D whiteBlack(renderer.mDevice, renderer.mDeviceContext);
+
+    AudioSystem audioSystem;
     Scene scene(renderer.mDevice, renderer.mDeviceContext);
     {
         scene.mpSkybox = &skybox;
@@ -137,8 +137,8 @@ int main()
             scene.mAudioSourceList.push_back(audioSource);
         }
     }
-    AudioFile* bgAudioFile = audioSystem.Load("resources/assets/Audio/WinAssignment.wav");
-    bgAudioFile->Play(true, 27.f, 0.3f, 0.3f);
+    //AudioFile* bgAudioFile = audioSystem.Load("resources/assets/Audio/WinAssignment.wav");
+    //bgAudioFile->Play(true, 27.f, 0.3f, 0.3f);
     // --- INIT SCENE --- //
 
     // +++ MAIN LOOP +++ //

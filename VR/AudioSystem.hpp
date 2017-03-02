@@ -69,7 +69,7 @@ class AudioSystem
         void mUpdate();
 
         // Mix buffers
-        static float mMixAudio(unsigned int frameIndexIn, float* bufferIn, float* lastBufferIn);
+        static float mMixAudio(sf_count_t frameWalker, float* bufferIn, SF_INFO& infoIn);
 
         // Echo audio effect.
         static float mEchoFilter(unsigned int frameIndexIn, float* bufferIn, float* lastBufferIn);
