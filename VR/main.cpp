@@ -10,7 +10,7 @@
 #include <crtdbg.h>
 #include <glm/glm.hpp>
 
-#include "AudioSystem.hpp"
+#include "AudioSourceSystem.hpp"
 #include "Camera.hpp"
 #include "DoubleFrameBuffer.hpp"
 #include "DxAssert.hpp"
@@ -91,7 +91,7 @@ int main()
 	Texture2D black(renderer.mDevice, renderer.mDeviceContext);
 	Texture2D whiteBlack(renderer.mDevice, renderer.mDeviceContext);
 
-    AudioSystem audioSystem;
+    AudioSourceSystem audioSourceSystem;
     Scene scene(renderer.mDevice, renderer.mDeviceContext);
     {
         scene.mpSkybox = &skybox;
@@ -130,7 +130,7 @@ int main()
         for (Entity& entity : scene.mEntityList)
         {
             std::string filePath("resources/assets/Audio/COHORT" + std::to_string(scene.mAudioSourceList.size() % 4 + 1) + ".WAV");
-            AudioFile* audioFile = audioSystem.Load(filePath.c_str());
+            AudioFile* audioFile = audioSourceSystem.Load(filePath.c_str());
             audioFile->Play(true);
             audioSource.mpAudioFile = audioFile;
             audioSource.mPosition = entity.mPosition;
@@ -155,13 +155,13 @@ int main()
             if (VR)
             {
                 hmd.mPosition += hmd.mFrontDirection * dt * 10.f;
-                audioSystem.Update(scene, hmd.mPosition, hmd.mRightDirection, hmd.mUpDirection, hmd.mFrontDirection);
+                audioSourceSystem.Update(scene, hmd.mPosition, hmd.mRightDirection, hmd.mUpDirection, hmd.mFrontDirection);
                 scene.SortBackToFront(hmd.mPosition, hmd.mFrontDirection);
             }
             else
             {
                 camera.Update(20.f, dt, &renderer);
-                audioSystem.Update(scene, camera.mPosition, camera.mRightDirection, camera.mUpDirection, camera.mFrontDirection);
+                audioSourceSystem.Update(scene, camera.mPosition, camera.mRightDirection, camera.mUpDirection, camera.mFrontDirection);
                 scene.SortBackToFront(camera.mPosition, camera.mFrontDirection);
             }
             // --- UPDATE --- //
@@ -183,6 +183,12 @@ int main()
                 renderSystem.Render(scene, camera);
             }
             // --- RENDER --- //
+
+            // +++ TMP +++ //
+            FrameBuffer* fb = camera.mpFrameBuffer->GetFrameBuffer();
+            glm::vec4* worldArray = fb->ReadWorld();
+            glm::vec4* normArray = fb->ReadNormal();
+            // --- TMP --- //
 
 			// +++ PRESENET +++ //
             renderer.WinPresent(camera.mpFrameBuffer->GetFrameBuffer());

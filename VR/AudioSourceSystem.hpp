@@ -32,15 +32,15 @@ struct AudioData
     SF_INFO mAudioInfo;
 };
 
-class AudioSystem
+class AudioSourceSystem
 {
     friend AudioFile;
     public:
         // Constructor.
-        AudioSystem();
+        AudioSourceSystem();
 
         // Destructor.
-        ~AudioSystem();
+        ~AudioSourceSystem();
 
         // Load sound.
         AudioFile* Load(const char* filePath);

@@ -1,10 +1,10 @@
-#include "AudioSystem.hpp"
+#include "AudioSourceSystem.hpp"
 #include <assert.h>
 #include <iostream>
 
 #define PaErrCheck(paError) if (paError != paNoError) { const char* strError = Pa_GetErrorText(paError); std::cout << strError << std::endl; assert(0 && strError); }
 
-AudioSystem::AudioSystem()
+AudioSourceSystem::AudioSourceSystem()
 {
     PaErrCheck(Pa_Initialize());
     //const PaDeviceIndex deviceIn = Pa_GetDefaultInputDevice();
@@ -39,10 +39,10 @@ AudioSystem::AudioSystem()
 
     PaErrCheck(Pa_StartStream(mStream));
 
-    mThread = std::thread(&AudioSystem::mUpdate, this);
+    mThread = std::thread(&AudioSourceSystem::mUpdate, this);
 }
 
-AudioSystem::~AudioSystem()
+AudioSourceSystem::~AudioSourceSystem()
 {
     mShutdown = true;
     mThread.join();
@@ -59,7 +59,7 @@ AudioSystem::~AudioSystem()
     PaErrCheck(Pa_Terminate());
 }
 
-AudioFile* AudioSystem::Load(const char* filePath)
+AudioFile* AudioSourceSystem::Load(const char* filePath)
 {
     std::unique_lock<std::mutex> lock(mMutex, std::defer_lock);
 
@@ -92,7 +92,7 @@ AudioFile* AudioSystem::Load(const char* filePath)
     return audioFile;
 }
 
-void AudioSystem::mUpdate()
+void AudioSourceSystem::mUpdate()
 {
     while (!mShutdown)
     {
@@ -195,7 +195,7 @@ void AudioSystem::mUpdate()
     //std::free(sampleBlock);
 }
 
-float AudioSystem::mMixAudio(sf_count_t frameWalker, float* bufferIn, SF_INFO& infoIn)
+float AudioSourceSystem::mMixAudio(sf_count_t frameWalker, float* bufferIn, SF_INFO& infoIn)
 {
     float delaySeconds = 0.5f; // half a second
     sf_count_t delayFrames = delaySeconds * SAMPLE_RATE;
@@ -212,7 +212,7 @@ float AudioSystem::mMixAudio(sf_count_t frameWalker, float* bufferIn, SF_INFO& i
     return frameValue;
 }
 
-float AudioSystem::mEchoFilter(unsigned int frameIndexIn, float* bufferIn, float* lastBufferIn)
+float AudioSourceSystem::mEchoFilter(unsigned int frameIndexIn, float* bufferIn, float* lastBufferIn)
 {
     //http://stackoverflow.com/questions/5318989/reverb-algorithm
     return 0.f;
@@ -262,7 +262,7 @@ float AudioSystem::mEchoFilter(unsigned int frameIndexIn, float* bufferIn, float
     //}
 }
 
-void AudioSystem::Update(Scene& scene, const glm::vec3& position, const glm::vec3& rightDirection, const glm::vec3& upDirection, glm::vec3& frontDirection)
+void AudioSourceSystem::Update(Scene& scene, const glm::vec3& position, const glm::vec3& rightDirection, const glm::vec3& upDirection, glm::vec3& frontDirection)
 {
     std::unique_lock<std::mutex> lock(mMutex, std::defer_lock);
 

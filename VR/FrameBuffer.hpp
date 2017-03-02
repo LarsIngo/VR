@@ -1,6 +1,7 @@
 #pragma once
 
 #include <d3d11.h>
+#include <glm/glm.hpp>
 
 class FrameBuffer
 {
@@ -18,19 +19,16 @@ class FrameBuffer
         // Destructor.
         ~FrameBuffer();
 
+        // Clear textures.
         void ClearAll(float r = 0.f, float g = 0.f, float b = 0.f, float a = 0.f, float depth = 1.f);
-        // Clear color.
-        void ClearColor(float r, float g, float b, float a);
-        // Clear depth.
-        void ClearDepth(float depth);
 
 		// Copy other frame buffer.
 		void Copy(FrameBuffer* fb);
 
         // Read world texture.
-        float*  ReadWorld();
+        glm::vec4*  ReadWorld();
         // Read normal texture.
-        float*  ReadNormal();
+        glm::vec4*  ReadNormal();
         // Read depth texture.
         float*  ReadDepth();
 

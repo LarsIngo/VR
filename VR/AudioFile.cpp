@@ -1,5 +1,5 @@
 #include "AudioFile.hpp"
-#include "AudioSystem.hpp"
+#include "AudioSourceSystem.hpp"
 #include <assert.h>
 
 AudioFile::AudioFile()
@@ -12,17 +12,17 @@ AudioFile::~AudioFile()
 
 }
 
-void AudioFile::Load(AudioData* audioData, AudioSystem* audioSystem)
+void AudioFile::Load(AudioData* audioData, AudioSourceSystem* audioSourceSystem)
 {
-    mAudioSystem = audioSystem;
+    mAudioSourceSystem = audioSourceSystem;
     mpAudioData = audioData;
     mDuration = mpAudioData->mAudioInfo.frames / mpAudioData->mAudioInfo.samplerate;
 }
 
 void AudioFile::Play(bool loop, float phase, float volumeLeft, float volumeRight)
 {
-    assert(mAudioSystem != nullptr);
-    std::unique_lock<std::mutex> lock(mAudioSystem->mMutex, std::defer_lock);
+    assert(mAudioSourceSystem != nullptr);
+    std::unique_lock<std::mutex> lock(mAudioSourceSystem->mMutex, std::defer_lock);
     lock.lock();
 
     mPlay = true;
@@ -36,8 +36,8 @@ void AudioFile::Play(bool loop, float phase, float volumeLeft, float volumeRight
 
 void AudioFile::Stop()
 {
-    assert(mAudioSystem != nullptr);
-    std::unique_lock<std::mutex> lock(mAudioSystem->mMutex, std::defer_lock);
+    assert(mAudioSourceSystem != nullptr);
+    std::unique_lock<std::mutex> lock(mAudioSourceSystem->mMutex, std::defer_lock);
     lock.lock();
 
     mPlay = false;
@@ -47,8 +47,8 @@ void AudioFile::Stop()
 
 void AudioFile::End()
 {
-    assert(mAudioSystem != nullptr);
-    std::unique_lock<std::mutex> lock(mAudioSystem->mMutex, std::defer_lock);
+    assert(mAudioSourceSystem != nullptr);
+    std::unique_lock<std::mutex> lock(mAudioSourceSystem->mMutex, std::defer_lock);
     lock.lock();
 
     mLoop = false;
@@ -58,8 +58,8 @@ void AudioFile::End()
 
 void AudioFile::SetVolumeLeft(float volume)
 {
-    assert(mAudioSystem != nullptr);
-    std::unique_lock<std::mutex> lock(mAudioSystem->mMutex, std::defer_lock);
+    assert(mAudioSourceSystem != nullptr);
+    std::unique_lock<std::mutex> lock(mAudioSourceSystem->mMutex, std::defer_lock);
     lock.lock();
 
     mVolumeLeft = volume;
@@ -69,8 +69,8 @@ void AudioFile::SetVolumeLeft(float volume)
 
 void AudioFile::SetVolumeRight(float volume)
 {
-    assert(mAudioSystem != nullptr);
-    std::unique_lock<std::mutex> lock(mAudioSystem->mMutex, std::defer_lock);
+    assert(mAudioSourceSystem != nullptr);
+    std::unique_lock<std::mutex> lock(mAudioSourceSystem->mMutex, std::defer_lock);
     lock.lock();
 
     mVolumeRight = volume;
@@ -80,8 +80,8 @@ void AudioFile::SetVolumeRight(float volume)
 
 void AudioFile::SetPhase(float phase)
 {
-    assert(mAudioSystem != nullptr);
-    std::unique_lock<std::mutex> lock(mAudioSystem->mMutex, std::defer_lock);
+    assert(mAudioSourceSystem != nullptr);
+    std::unique_lock<std::mutex> lock(mAudioSourceSystem->mMutex, std::defer_lock);
     lock.lock();
 
     mCurrFrame = mpAudioData->mAudioInfo.samplerate * phase;
@@ -91,8 +91,8 @@ void AudioFile::SetPhase(float phase)
 
 void AudioFile::SetLoop(bool loop)
 {
-    assert(mAudioSystem != nullptr);
-    std::unique_lock<std::mutex> lock(mAudioSystem->mMutex, std::defer_lock);
+    assert(mAudioSourceSystem != nullptr);
+    std::unique_lock<std::mutex> lock(mAudioSourceSystem->mMutex, std::defer_lock);
     lock.lock();
 
     mLoop = loop;

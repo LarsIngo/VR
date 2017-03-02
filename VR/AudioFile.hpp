@@ -1,6 +1,6 @@
 #pragma once
 
-class AudioSystem;
+class AudioSourceSystem;
 class AudioData;
 
 #include <sndfile.hh>
@@ -10,7 +10,7 @@ class AudioData;
 
 class AudioFile
 {
-    friend AudioSystem;
+    friend AudioSourceSystem;
     public:
         // Constructor.
         AudioFile();
@@ -19,7 +19,7 @@ class AudioFile
         ~AudioFile();
 
         // Load sound.
-        void Load(AudioData* audioData, AudioSystem* audioSystem);
+        void Load(AudioData* audioData, AudioSourceSystem* audioSourceSystem);
 
         // Play sound.
         void Play(bool loop = false, float phase = 0, float volumeLeft = 1.f, float volumeRight = 1.f);
@@ -47,7 +47,7 @@ class AudioFile
         bool mPlay = false;
         float mVolumeLeft = 0.f;
         float mVolumeRight = 0.f;
-        AudioSystem* mAudioSystem = nullptr;
+        AudioSourceSystem* mAudioSourceSystem = nullptr;
         float mDuration = 0.f;
 };
 

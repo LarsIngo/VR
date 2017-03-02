@@ -139,21 +139,14 @@ FrameBuffer::~FrameBuffer()
 
 void FrameBuffer::ClearAll(float r, float g, float b, float a, float depth)
 {
-    ClearColor(r, g, b, a);
-    ClearDepth(depth);
-}
-
-void FrameBuffer::ClearColor(float r, float g, float b, float a)
-{
     float clrColor[4] = { r, g, b, a };
+    float clrWorld[4] = { 0.f, 0.f, 0.f, 0.f };
+    float clrNorm[4] = { 0.f, 0.f, 0.f, 0.f };
+    float clrDepth[4] = { 0.f, 0.f, 0.f, 0.f };
     if (mColRTV != nullptr) mpDeviceContext->ClearRenderTargetView(mColRTV, clrColor);
-    if (mWorldRTV != nullptr) mpDeviceContext->ClearRenderTargetView(mWorldRTV, clrColor);
-    if (mNormRTV != nullptr) mpDeviceContext->ClearRenderTargetView(mNormRTV, clrColor);
-    if (mDepthRTV != nullptr) mpDeviceContext->ClearRenderTargetView(mDepthRTV, clrColor);
-}
-
-void FrameBuffer::ClearDepth(float depth)
-{
+    if (mWorldRTV != nullptr) mpDeviceContext->ClearRenderTargetView(mWorldRTV, clrWorld);
+    if (mNormRTV != nullptr) mpDeviceContext->ClearRenderTargetView(mNormRTV, clrNorm);
+    if (mDepthRTV != nullptr) mpDeviceContext->ClearRenderTargetView(mDepthRTV, clrDepth);
     if (mDepthStencilDSV != nullptr) mpDeviceContext->ClearDepthStencilView(mDepthStencilDSV, D3D11_CLEAR_DEPTH, depth, 0);
 }
 
@@ -171,7 +164,7 @@ void FrameBuffer::Copy(FrameBuffer* fb)
     mpDeviceContext->CopyResource(mDepthStencilTex, fb->mDepthStencilTex);
 }
 
-float* FrameBuffer::ReadWorld()
+glm::vec4* FrameBuffer::ReadWorld()
 {
     DxHelp::CopyTexture(mpDeviceContext, mStagingTexR32G32B32A32, mWorldTex, mWidth, mHeight, mMipLevels);
 
@@ -181,10 +174,10 @@ float* FrameBuffer::ReadWorld()
     DxAssert(mpDeviceContext->Map(mStagingTexR32G32B32A32, 0, D3D11_MAP_READ, 0, &mappedResource), S_OK);
     mpDeviceContext->Unmap(mStagingTexR32G32B32A32, 0);
 
-    return (float*)mappedResource.pData;
+    return (glm::vec4*)mappedResource.pData;
 }
 
-float* FrameBuffer::ReadNormal()
+glm::vec4* FrameBuffer::ReadNormal()
 {
     DxHelp::CopyTexture(mpDeviceContext, mStagingTexR32G32B32A32, mNormTex, mWidth, mHeight, mMipLevels);
 
@@ -194,7 +187,7 @@ float* FrameBuffer::ReadNormal()
     DxAssert(mpDeviceContext->Map(mStagingTexR32G32B32A32, 0, D3D11_MAP_READ, 0, &mappedResource), S_OK);
     mpDeviceContext->Unmap(mStagingTexR32G32B32A32, 0);
 
-    return (float*)mappedResource.pData;
+    return (glm::vec4*)mappedResource.pData;
 }
 
 float* FrameBuffer::ReadDepth()
