@@ -10,7 +10,7 @@
 #include <crtdbg.h>
 #include <glm/glm.hpp>
 
-#include "AudioSourceSystem.hpp"
+#include "AudioSystem.hpp"
 #include "Camera.hpp"
 #include "DoubleFrameBuffer.hpp"
 #include "DxAssert.hpp"
@@ -91,7 +91,7 @@ int main()
 	Texture2D black(renderer.mDevice, renderer.mDeviceContext);
 	Texture2D whiteBlack(renderer.mDevice, renderer.mDeviceContext);
 
-    AudioSourceSystem audioSourceSystem;
+    AudioSystem audioSystem;
     Scene scene(renderer.mDevice, renderer.mDeviceContext);
     {
         scene.mpSkybox = &skybox;
@@ -110,7 +110,7 @@ int main()
         entity.mpAlbedoTex = &albedo;
         entity.mpNormalTex = &normal;
         {
-            int r = 2;
+            int r = 1;
             for (int z = 0; z < r; ++z)
                 for (int y = 0; y < r; ++y)
                     for (int x = 0; x < r; ++x)
@@ -130,7 +130,7 @@ int main()
         for (Entity& entity : scene.mEntityList)
         {
             std::string filePath("resources/assets/Audio/COHORT" + std::to_string(scene.mAudioSourceList.size() % 4 + 1) + ".WAV");
-            AudioFile* audioFile = audioSourceSystem.Load(filePath.c_str());
+            AudioFile* audioFile = audioSystem.Load(filePath.c_str());
             audioFile->Play(true);
             audioSource.mpAudioFile = audioFile;
             audioSource.mPosition = entity.mPosition;
@@ -146,25 +146,25 @@ int main()
     float dt = 0.f;
     while (renderer.Running())
     {
-        { PROFILE("FRAME: " + std::to_string(10), true);
+        { PROFILE("FRAME: " + std::to_string(10), false);
             long long newTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
             dt = static_cast<float>(newTime - lastTime)/1000.f;
             lastTime = newTime;
 
-            // +++ UPDATE +++ //
+            // +++ PRE RENDER UPDATE +++ //
             if (VR)
             {
                 hmd.mPosition += hmd.mFrontDirection * dt * 10.f;
-                audioSourceSystem.Update(scene, hmd.mPosition, hmd.mRightDirection, hmd.mUpDirection, hmd.mFrontDirection);
+                audioSystem.UpdateAudioSource(scene, hmd.mPosition, hmd.mRightDirection, hmd.mUpDirection, hmd.mFrontDirection);
                 scene.SortBackToFront(hmd.mPosition, hmd.mFrontDirection);
             }
             else
             {
                 camera.Update(20.f, dt, &renderer);
-                audioSourceSystem.Update(scene, camera.mPosition, camera.mRightDirection, camera.mUpDirection, camera.mFrontDirection);
+                audioSystem.UpdateAudioSource(scene, camera.mPosition, camera.mRightDirection, camera.mUpDirection, camera.mFrontDirection);
                 scene.SortBackToFront(camera.mPosition, camera.mFrontDirection);
             }
-            // --- UPDATE --- //
+            // --- PRE RENDER UPDATE --- //
 
             // +++ RENDER +++ //
             renderer.WinClear();
@@ -184,11 +184,16 @@ int main()
             }
             // --- RENDER --- //
 
-            // +++ TMP +++ //
-            FrameBuffer* fb = camera.mpFrameBuffer->GetFrameBuffer();
-            glm::vec4* worldArray = fb->ReadWorld();
-            glm::vec4* normArray = fb->ReadNormal();
-            // --- TMP --- //
+            // +++ POST RENDER UPDATE +++ //
+            if (VR)
+            {
+                audioSystem.UpdateAudioImage(scene, hmd.mPosition, hmd.mRightDirection, hmd.mUpDirection, hmd.mFrontDirection, hmd.mpLeftFrameBuffer->GetFrameBuffer());
+            }
+            else
+            {
+                audioSystem.UpdateAudioImage(scene, camera.mPosition, camera.mRightDirection, camera.mUpDirection, camera.mFrontDirection, camera.mpFrameBuffer->GetFrameBuffer());
+            }
+            // --- POST RENDER UPDATE --- //
 
 			// +++ PRESENET +++ //
             renderer.WinPresent(camera.mpFrameBuffer->GetFrameBuffer());

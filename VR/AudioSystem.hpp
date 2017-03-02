@@ -1,5 +1,7 @@
 #pragma once
 
+class FrameBuffer;
+
 #include "AudioFile.hpp"
 
 #include <sndfile.hh>
@@ -32,20 +34,24 @@ struct AudioData
     SF_INFO mAudioInfo;
 };
 
-class AudioSourceSystem
+class AudioSystem
 {
     friend AudioFile;
     public:
         // Constructor.
-        AudioSourceSystem();
+        AudioSystem();
 
         // Destructor.
-        ~AudioSourceSystem();
+        ~AudioSystem();
 
         // Load sound.
         AudioFile* Load(const char* filePath);
 
-        void Update(Scene& scene, const glm::vec3& position, const glm::vec3& rightDirection, const glm::vec3& upDirection, glm::vec3& frontDirection);
+        // Update audio sources.
+        void UpdateAudioSource(Scene& scene, const glm::vec3& position, const glm::vec3& rightDirection, const glm::vec3& upDirection, glm::vec3& frontDirection);
+
+        // Update audio image.
+        void UpdateAudioImage(Scene& scene, const glm::vec3& position, const glm::vec3& rightDirection, const glm::vec3& upDirection, glm::vec3& frontDirection, FrameBuffer* fb);
 
     private:
         std::thread mThread;

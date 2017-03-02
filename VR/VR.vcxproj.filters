@@ -66,7 +66,10 @@
     <ClCompile Include="AudioSource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="AudioSourceSystem.cpp">
+    <ClCompile Include="AudioSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioImage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -125,7 +128,10 @@
     <ClInclude Include="AudioSource.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="AudioSourceSystem.hpp">
+    <ClInclude Include="AudioSystem.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioImage.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

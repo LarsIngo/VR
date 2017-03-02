@@ -1,10 +1,11 @@
-#include "AudioSourceSystem.hpp"
+#include "AudioSystem.hpp"
 #include <assert.h>
 #include <iostream>
+#include "FrameBuffer.hpp"
 
 #define PaErrCheck(paError) if (paError != paNoError) { const char* strError = Pa_GetErrorText(paError); std::cout << strError << std::endl; assert(0 && strError); }
 
-AudioSourceSystem::AudioSourceSystem()
+AudioSystem::AudioSystem()
 {
     PaErrCheck(Pa_Initialize());
     //const PaDeviceIndex deviceIn = Pa_GetDefaultInputDevice();
@@ -39,10 +40,10 @@ AudioSourceSystem::AudioSourceSystem()
 
     PaErrCheck(Pa_StartStream(mStream));
 
-    mThread = std::thread(&AudioSourceSystem::mUpdate, this);
+    mThread = std::thread(&AudioSystem::mUpdate, this);
 }
 
-AudioSourceSystem::~AudioSourceSystem()
+AudioSystem::~AudioSystem()
 {
     mShutdown = true;
     mThread.join();
@@ -59,7 +60,7 @@ AudioSourceSystem::~AudioSourceSystem()
     PaErrCheck(Pa_Terminate());
 }
 
-AudioFile* AudioSourceSystem::Load(const char* filePath)
+AudioFile* AudioSystem::Load(const char* filePath)
 {
     std::unique_lock<std::mutex> lock(mMutex, std::defer_lock);
 
@@ -92,7 +93,7 @@ AudioFile* AudioSourceSystem::Load(const char* filePath)
     return audioFile;
 }
 
-void AudioSourceSystem::mUpdate()
+void AudioSystem::mUpdate()
 {
     while (!mShutdown)
     {
@@ -195,7 +196,7 @@ void AudioSourceSystem::mUpdate()
     //std::free(sampleBlock);
 }
 
-float AudioSourceSystem::mMixAudio(sf_count_t frameWalker, float* bufferIn, SF_INFO& infoIn)
+float AudioSystem::mMixAudio(sf_count_t frameWalker, float* bufferIn, SF_INFO& infoIn)
 {
     float delaySeconds = 0.5f; // half a second
     sf_count_t delayFrames = delaySeconds * SAMPLE_RATE;
@@ -212,7 +213,7 @@ float AudioSourceSystem::mMixAudio(sf_count_t frameWalker, float* bufferIn, SF_I
     return frameValue;
 }
 
-float AudioSourceSystem::mEchoFilter(unsigned int frameIndexIn, float* bufferIn, float* lastBufferIn)
+float AudioSystem::mEchoFilter(unsigned int frameIndexIn, float* bufferIn, float* lastBufferIn)
 {
     //http://stackoverflow.com/questions/5318989/reverb-algorithm
     return 0.f;
@@ -262,7 +263,7 @@ float AudioSourceSystem::mEchoFilter(unsigned int frameIndexIn, float* bufferIn,
     //}
 }
 
-void AudioSourceSystem::Update(Scene& scene, const glm::vec3& position, const glm::vec3& rightDirection, const glm::vec3& upDirection, glm::vec3& frontDirection)
+void AudioSystem::UpdateAudioSource(Scene& scene, const glm::vec3& position, const glm::vec3& rightDirection, const glm::vec3& upDirection, glm::vec3& frontDirection)
 {
     std::unique_lock<std::mutex> lock(mMutex, std::defer_lock);
 
@@ -285,4 +286,45 @@ void AudioSourceSystem::Update(Scene& scene, const glm::vec3& position, const gl
         audioFile->mVolumeRight = volumeScale * volumeDistance * (volumeFront + volumeRight);
     }
     lock.unlock();
+}
+
+void AudioSystem::UpdateAudioImage(Scene& scene, const glm::vec3& position, const glm::vec3& rightDirection, const glm::vec3& upDirection, glm::vec3& frontDirection, FrameBuffer* fb)
+{
+    glm::vec4* worldArray = fb->ReadWorld();
+    glm::vec4* normArray = fb->ReadNormal();
+
+    unsigned int centerIndex = fb->mWidth * fb->mHeight / 2 + fb->mWidth / 2;
+    glm::vec4 centerWorld = glm::vec4(worldArray[centerIndex]);
+    glm::vec4 centerNormal = glm::vec4(normArray[centerIndex]);
+
+    if (centerWorld.a > 0.5f && centerNormal.a > 0.5f)
+    {
+        glm::vec3 world = glm::vec3(centerWorld);
+        glm::vec3 normal = glm::vec3(centerNormal);
+
+        std::cout << "World: " << world.x << ", " << world.y << ", " << world.z << std::endl;
+        std::cout << "Normal: " << normal.x << ", " << normal.y << ", " << normal.z << std::endl << std::endl;
+    }
+
+    //std::unique_lock<std::mutex> lock(mMutex, std::defer_lock);
+    
+    //lock.lock();
+    //for (AudioSource& audioSource : scene.mAudioSourceList)
+    //{
+    //    AudioFile* audioFile = audioSource.mpAudioFile;
+    //    glm::vec3 audioVector = audioSource.mPosition - position;
+    //    float audioDistance = glm::length(audioVector);
+    //    if (audioDistance < 0.001f) audioVector += glm::vec3(0.f, 0.1f, 0.f);
+    //    audioVector = glm::normalize(audioVector);
+
+    //    float volumeScale = 5.f;
+    //    float volumeDistance = glm::clamp(1.f / audioDistance, 0.f, 1.f);
+    //    float volumeFront = glm::clamp(glm::dot(frontDirection, audioVector), 0.f, 1.f);
+    //    float volumeLeft = glm::clamp(glm::dot(-rightDirection, audioVector), 0.f, 1.f);
+    //    float volumeRight = glm::clamp(glm::dot(rightDirection, audioVector), 0.f, 1.f);
+
+    //    audioFile->mVolumeLeft = volumeScale * volumeDistance * (volumeFront + volumeLeft);
+    //    audioFile->mVolumeRight = volumeScale * volumeDistance * (volumeFront + volumeRight);
+    //}
+    //lock.unlock();
 }
