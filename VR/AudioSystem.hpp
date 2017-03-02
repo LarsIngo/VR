@@ -13,12 +13,13 @@ class FrameBuffer;
 #include <map>
 #include <string>
 #include <array>
+#include <vector>
 #include "Scene.hpp"
 #include <glm/glm.hpp>
 
 #define PA_SAMPLE_TYPE (paFloat32)
 #define SAMPLE_SIZE (4)
-#define SAMPLE_SILENCE (0.0f)
+#define SAMPLE_SILENCE (0)
 #define NUM_CHANNELS (2)
 
 #define FRAMES_PER_CHANNEL (512)
@@ -61,6 +62,8 @@ class AudioSystem
 
         std::map<std::string, AudioData> mAudioDataMap;
 
+        std::map<AudioFile*, std::vector<float>> mAudioFilePhaseMap;
+
         static const unsigned int mMaxNumAudioFiles = 50;
         unsigned int mNumAudioFiles = 0;
         AudioFile mAudioFileArray[mMaxNumAudioFiles];
@@ -75,8 +78,5 @@ class AudioSystem
         void mUpdate();
 
         // Mix buffers
-        static float mMixAudio(sf_count_t frameWalker, float* bufferIn, SF_INFO& infoIn);
-
-        // Echo audio effect.
-        static float mEchoFilter(unsigned int frameIndexIn, float* bufferIn, float* lastBufferIn);
+        float mMixAudio(sf_count_t frameWalker, float* buffer, SF_INFO& info, AudioFile& audioFile);
 };

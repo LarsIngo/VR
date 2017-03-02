@@ -122,10 +122,10 @@ void AudioSystem::mUpdate()
                     {
                         // Left.
                         assert(f < FRAMES_PER_BUFFER);
-                        mBufferOut[f++] += mMixAudio(frameWalker, bufferIn, info) * audioFile.mVolumeLeft;
+                        mBufferOut[f++] += mMixAudio(frameWalker, bufferIn, info, audioFile) * audioFile.mVolumeLeft;
                         // Right.
                         assert(f < FRAMES_PER_BUFFER);
-                        mBufferOut[f++] += mMixAudio(frameWalker, bufferIn, info) * audioFile.mVolumeRight;
+                        mBufferOut[f++] += mMixAudio(frameWalker, bufferIn, info, audioFile) * audioFile.mVolumeRight;
                     }
                 }
                 else
@@ -134,10 +134,10 @@ void AudioSystem::mUpdate()
                     {
                         // Left.
                         assert(f < FRAMES_PER_BUFFER);
-                        mBufferOut[f++] += mMixAudio(frameWalker, bufferIn, info) * audioFile.mVolumeLeft;
+                        mBufferOut[f++] += mMixAudio(frameWalker, bufferIn, info, audioFile) * audioFile.mVolumeLeft;
                         // Right.
                         assert(f < FRAMES_PER_BUFFER);
-                        mBufferOut[f++] += mMixAudio(frameWalker + 1, bufferIn, info) * audioFile.mVolumeRight;
+                        mBufferOut[f++] += mMixAudio(frameWalker + 1, bufferIn, info, audioFile) * audioFile.mVolumeRight;
                     }
                 }
 
@@ -196,72 +196,76 @@ void AudioSystem::mUpdate()
     //std::free(sampleBlock);
 }
 
-float AudioSystem::mMixAudio(sf_count_t frameWalker, float* bufferIn, SF_INFO& infoIn)
+float AudioSystem::mMixAudio(sf_count_t frameWalker, float* buffer, SF_INFO& info, AudioFile& audioFile)
 {
-    float delaySeconds = 0.5f; // half a second
-    sf_count_t delayFrames = delaySeconds * SAMPLE_RATE;
-    int delayFrame = frameWalker - delayFrames;
+    float frameValue = buffer[frameWalker];
+    unsigned int audioCount = 0;
+    for (float delaySeconds : mAudioFilePhaseMap[&audioFile])
+    {
+        int delayFrames = (int)((float)delaySeconds * SAMPLE_RATE);
+        int delayFrame = (int)frameWalker - delayFrames;
 
-    float decay = 0.5f;
-
-    float frameValue = 0.f;
-    if (delayFrame < 0)
-        frameValue = bufferIn[frameWalker];
-    else
-        frameValue = (bufferIn[frameWalker] + bufferIn[delayFrame] * decay);
+        if (delayFrame >= 0)
+        {
+            frameValue += buffer[delayFrame];
+            ++audioCount;
+        }
+    }
+    if (audioCount > 0)
+        frameValue /= audioCount;
 
     return frameValue;
 }
 
-float AudioSystem::mEchoFilter(unsigned int frameIndexIn, float* bufferIn, float* lastBufferIn)
-{
-    //http://stackoverflow.com/questions/5318989/reverb-algorithm
-    return 0.f;
-    //int delayMilliseconds = 500; // half a second
-    //int delaySamples =
-    //    (int)((float)delayMilliseconds * 44.1f); // assumes 44100 Hz sample rate
-    //float decay = 0.5f;
-    //for (int i = 0; i < buffer.length - delaySamples; i++)
-    //{
-    //    // WARNING: overflow potential
-    //    buffer[i + delaySamples] += (short)((float)buffer[i] * decay);
-    //}
-
-    //unsigned int delayFrames = FRAMES_PER_CHANNEL / 2;
-    //float decay = 0.5f;
-    //for (unsigned int f = 0; f < FRAMES_PER_BUFFER - delayFrames; ++f)
-    //{
-    //    bufferOut[f + delayFrames] += (short)((float)bufferIn[f] * decay);
-    //}
-    
-    //float frameValue = 0.f;
-    //for (unsigned int f = 0; f < BUFFER_NUM_FRAMES; ++f)
-    //{
-    //    frameValue += lastBufferIn[(BUFFER_NUM_FRAMES - 1) - f];
-    //}
-    //return frameValue / BUFFER_NUM_FRAMES;
-
-    //unsigned int frameDelay = 32;
-    //return (bufferIn[frameIndexIn] + lastBufferIn[(BUFFER_NUM_FRAMES - 1) - frameDelay]) / 2.f;
-
-    //for (unsigned int frameIT = 0; frameIT < numFrames; ++frameIT)
-    //{
-    //    float frameValue = 0.f;
-    //    unsigned int frameCount = 0;
-    //    for (unsigned int filterIT = 0; filterIT < filterSize; ++filterIT)
-    //    {
-    //        float scale = (float)filterIT / filterSize;
-    //        unsigned int frameIndex = frameIT + filterIT;
-    //        if (frameIndex < numFrames)
-    //        {
-    //            frameValue += buffer[frameIndex] * (1.f - scale);
-    //            ++frameCount;
-    //        }
-    //    }
-    //    frameValue /= frameCount;
-    //    buffer[frameIT] = frameValue;
-    //}
-}
+//float AudioSystem::mEchoFilter(unsigned int frameIndexIn, float* bufferIn, float* lastBufferIn)
+//{
+//    //http://stackoverflow.com/questions/5318989/reverb-algorithm
+//    return 0.f;
+//    //int delayMilliseconds = 500; // half a second
+//    //int delaySamples =
+//    //    (int)((float)delayMilliseconds * 44.1f); // assumes 44100 Hz sample rate
+//    //float decay = 0.5f;
+//    //for (int i = 0; i < buffer.length - delaySamples; i++)
+//    //{
+//    //    // WARNING: overflow potential
+//    //    buffer[i + delaySamples] += (short)((float)buffer[i] * decay);
+//    //}
+//
+//    //unsigned int delayFrames = FRAMES_PER_CHANNEL / 2;
+//    //float decay = 0.5f;
+//    //for (unsigned int f = 0; f < FRAMES_PER_BUFFER - delayFrames; ++f)
+//    //{
+//    //    bufferOut[f + delayFrames] += (short)((float)bufferIn[f] * decay);
+//    //}
+//    
+//    //float frameValue = 0.f;
+//    //for (unsigned int f = 0; f < BUFFER_NUM_FRAMES; ++f)
+//    //{
+//    //    frameValue += lastBufferIn[(BUFFER_NUM_FRAMES - 1) - f];
+//    //}
+//    //return frameValue / BUFFER_NUM_FRAMES;
+//
+//    //unsigned int frameDelay = 32;
+//    //return (bufferIn[frameIndexIn] + lastBufferIn[(BUFFER_NUM_FRAMES - 1) - frameDelay]) / 2.f;
+//
+//    //for (unsigned int frameIT = 0; frameIT < numFrames; ++frameIT)
+//    //{
+//    //    float frameValue = 0.f;
+//    //    unsigned int frameCount = 0;
+//    //    for (unsigned int filterIT = 0; filterIT < filterSize; ++filterIT)
+//    //    {
+//    //        float scale = (float)filterIT / filterSize;
+//    //        unsigned int frameIndex = frameIT + filterIT;
+//    //        if (frameIndex < numFrames)
+//    //        {
+//    //            frameValue += buffer[frameIndex] * (1.f - scale);
+//    //            ++frameCount;
+//    //        }
+//    //    }
+//    //    frameValue /= frameCount;
+//    //    buffer[frameIT] = frameValue;
+//    //}
+//}
 
 void AudioSystem::UpdateAudioSource(Scene& scene, const glm::vec3& position, const glm::vec3& rightDirection, const glm::vec3& upDirection, glm::vec3& frontDirection)
 {
@@ -290,6 +294,12 @@ void AudioSystem::UpdateAudioSource(Scene& scene, const glm::vec3& position, con
 
 void AudioSystem::UpdateAudioImage(Scene& scene, const glm::vec3& position, const glm::vec3& rightDirection, const glm::vec3& upDirection, glm::vec3& frontDirection, FrameBuffer* fb)
 {
+    std::unique_lock<std::mutex> lock(mMutex, std::defer_lock);
+
+    lock.lock();
+
+    mAudioFilePhaseMap.clear();
+
     glm::vec4* worldArray = fb->ReadWorld();
     glm::vec4* normArray = fb->ReadNormal();
 
@@ -304,7 +314,16 @@ void AudioSystem::UpdateAudioImage(Scene& scene, const glm::vec3& position, cons
 
         std::cout << "World: " << world.x << ", " << world.y << ", " << world.z << std::endl;
         std::cout << "Normal: " << normal.x << ", " << normal.y << ", " << normal.z << std::endl << std::endl;
+
+        for (AudioSource& audioSource : scene.mAudioSourceList)
+        {
+            std::vector<float>& audioImagePhaseList = mAudioFilePhaseMap[audioSource.mpAudioFile];
+            float phase = 0.5f;
+            audioImagePhaseList.push_back(phase);
+        }
     }
+
+    lock.unlock();
 
     //std::unique_lock<std::mutex> lock(mMutex, std::defer_lock);
     
