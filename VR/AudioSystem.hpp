@@ -26,6 +26,12 @@
 #define FRAMES_PER_BUFFER (FRAMES_PER_CHANNEL * NUM_CHANNELS)
 #define BUFFER_SIZE (FRAMES_PER_BUFFER * SAMPLE_SIZE)
 
+struct AudioData
+{
+    float* mAudioBuffer;
+    SF_INFO mAudioInfo;
+};
+
 class AudioSystem
 {
     friend AudioFile;
@@ -47,23 +53,16 @@ class AudioSystem
 
         bool mShutdown = false;
 
-        struct SFDATA
-        {
-            SNDFILE* sndFile;
-            SF_INFO info;
-        };
-        std::map<std::string, SFDATA> mSFDataMap;
+        std::map<std::string, AudioData> mAudioDataMap;
 
         static const unsigned int mMaxNumAudioFiles = 50;
         unsigned int mNumAudioFiles = 0;
-        std::array<AudioFile, mMaxNumAudioFiles> mAudioFileArray;
+        AudioFile mAudioFileArray[mMaxNumAudioFiles];
 
         PaDeviceIndex mDeviceOut;
         const PaDeviceInfo* mDeviceInfoOut;
         PaStream* mStream = nullptr;
         PaStreamParameters mPaStreamOut;
-        float mBufferIn[FRAMES_PER_BUFFER];
-        float mLastBufferIn[FRAMES_PER_BUFFER];
         float mBufferOut[FRAMES_PER_BUFFER];
 
         // Update audio system.

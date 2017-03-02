@@ -66,7 +66,6 @@ int main()
 
     // +++ INIT SCENE +++ //
     AudioSystem audioSystem;
-    AudioFile* bgAudioFile = audioSystem.Load("resources/assets/Audio/WinAssignment.wav");
 
     Skybox skybox(renderer.mDevice, renderer.mDeviceContext);
     {
@@ -138,6 +137,7 @@ int main()
             scene.mAudioSourceList.push_back(audioSource);
         }
     }
+    AudioFile* bgAudioFile = audioSystem.Load("resources/assets/Audio/WinAssignment.wav");
     bgAudioFile->Play(true, 27.f, 0.3f, 0.3f);
     // --- INIT SCENE --- //
 

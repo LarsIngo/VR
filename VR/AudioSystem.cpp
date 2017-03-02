@@ -47,12 +47,11 @@ AudioSystem::~AudioSystem()
     mShutdown = true;
     mThread.join();
 
-    for (auto& it : mSFDataMap)
+    for (auto& it : mAudioDataMap)
     {
-        if (sf_close(it.second.sndFile))
-            assert(0 && "sf_close");
+        delete it.second.mAudioBuffer;
     }
-    mSFDataMap.clear();
+    mAudioDataMap.clear();
 
     PaErrCheck(Pa_StopStream(mStream));
     PaErrCheck(Pa_CloseStream(mStream));
@@ -66,21 +65,27 @@ AudioFile* AudioSystem::Load(const char* filePath)
 
     lock.lock();
 
-    if (mSFDataMap.find(filePath) == mSFDataMap.end())
+    if (mAudioDataMap.find(filePath) == mAudioDataMap.end())
     {
-        SFDATA& sfData = mSFDataMap[filePath];
-        sfData.sndFile = sf_open(filePath, SFM_READ, &sfData.info);
-        if (!sfData.sndFile)
+        AudioData& audioData = mAudioDataMap[filePath];
+        SNDFILE* sndFile = sf_open(filePath, SFM_READ, &audioData.mAudioInfo);
+        if (!sndFile)
             assert(0 && "sf_open");
-        if (!sf_format_check(&sfData.info))
+        if (!sf_format_check(&audioData.mAudioInfo))
             assert(0 && "sf_format_check");
-        assert(sfData.info.channels <= NUM_CHANNELS);
+        assert(audioData.mAudioInfo.channels <= NUM_CHANNELS);
+
+        audioData.mAudioBuffer = new float[audioData.mAudioInfo.frames * audioData.mAudioInfo.channels];
+        sf_readf_float(sndFile, audioData.mAudioBuffer, audioData.mAudioInfo.frames);
+
+        if (sf_close(sndFile))
+            assert(0 && "sf_close");
     }
     
     assert(mNumAudioFiles < mMaxNumAudioFiles);
-    SFDATA& sfData = mSFDataMap[filePath];
+    AudioData& audioData = mAudioDataMap[filePath];
     AudioFile* audioFile = &mAudioFileArray[mNumAudioFiles++];
-    audioFile->Load(sfData.sndFile, sfData.info, this);
+    audioFile->Load(&audioData, this);
     
     lock.unlock();
 
@@ -97,53 +102,48 @@ void AudioSystem::mUpdate()
         std::memset(mBufferOut, SAMPLE_SILENCE, BUFFER_SIZE);
         unsigned int audioCount = 0;
 
-        for (AudioFile& audioFile : mAudioFileArray)
+        for (unsigned int audioFileIndex = 0; audioFileIndex < mNumAudioFiles; ++audioFileIndex)
         {
+            AudioFile& audioFile = mAudioFileArray[audioFileIndex];
             if (audioFile.mPlay)
             {
                 audioCount++;
-                sf_count_t frameCount = audioFile.mInfo.channels * FRAMES_PER_CHANNEL;
+                SF_INFO& info = audioFile.mpAudioData->mAudioInfo;
+                sf_count_t frameCount = info.channels * FRAMES_PER_CHANNEL;
+                sf_count_t frameStart = audioFile.mCurrFrame;
+                sf_count_t frameEnd = std::min(audioFile.mCurrFrame + frameCount, info.frames);
+                sf_count_t f = 0;
+                float* bufferIn = audioFile.mpAudioData->mAudioBuffer;
 
-                std::memset(mLastBufferIn, SAMPLE_SILENCE, BUFFER_SIZE);
-                if (audioFile.mSfCount < frameCount)
-                {
-                    sf_seek(audioFile.mSndFile, 0, SEEK_SET);
-                    sf_read_float(audioFile.mSndFile, mLastBufferIn, audioFile.mSfCount);
-                }
-                else
-                {
-                    sf_count_t readPoint = audioFile.mSfCount - frameCount;
-                    sf_seek(audioFile.mSndFile, readPoint, SEEK_SET);
-                    sf_count_t readCount = sf_read_float(audioFile.mSndFile, mLastBufferIn, frameCount);
-                }
-
-                std::memset(mBufferIn, SAMPLE_SILENCE, BUFFER_SIZE);
-                sf_count_t readCount = sf_readf_float(audioFile.mSndFile, mBufferIn, FRAMES_PER_CHANNEL);
-                if (audioFile.mInfo.channels == 1)
+                if (info.channels == 1)
                 {   // MONO -> STEREO
-                    for (int f = 0; f < readCount; ++f)
+                    for (sf_count_t frameWalker = frameStart; frameWalker < frameEnd; ++frameWalker)
                     {
                         // Left.
-                        mBufferOut[2 * f] += mMixAudio(f, mBufferIn, mLastBufferIn) * audioFile.mVolumeLeft;
+                        assert(f < FRAMES_PER_BUFFER);
+                        mBufferOut[f++] += bufferIn[frameWalker] * audioFile.mVolumeLeft;
                         // Right.
-                        mBufferOut[2 * f + 1] += mMixAudio(f, mBufferIn, mLastBufferIn) * audioFile.mVolumeRight;
+                        assert(f < FRAMES_PER_BUFFER);
+                        mBufferOut[f++] += bufferIn[frameWalker] * audioFile.mVolumeRight;
                     }
                 }
                 else
                 {   // STEREO
-                    for (int f = 0; f < readCount * 2; f += 2)
+                    for (sf_count_t frameWalker = frameStart; frameWalker < frameEnd; frameWalker += 2)
                     {
                         // Left.
-                        mBufferOut[f] += mMixAudio(f, mBufferIn, mLastBufferIn) * audioFile.mVolumeLeft;
+                        assert(f < FRAMES_PER_BUFFER);
+                        mBufferOut[f++] += bufferIn[frameWalker] * audioFile.mVolumeLeft;
                         // Right.
-                        mBufferOut[f + 1] += mMixAudio(f + 1, mBufferIn, mLastBufferIn) * audioFile.mVolumeRight;
+                        assert(f < FRAMES_PER_BUFFER);
+                        mBufferOut[f++] += bufferIn[frameWalker + 1] * audioFile.mVolumeRight;
                     }
                 }
 
-                audioFile.mSfCount += readCount;
-                if (readCount == 0)
+                audioFile.mCurrFrame = frameEnd;
+                if (audioFile.mpAudioData->mAudioInfo.frames == frameEnd)
                 {
-                    audioFile.mSfCount = 0;
+                    audioFile.mCurrFrame = 0;
                     audioFile.mPlay = audioFile.mLoop;
                 }
             }
@@ -202,6 +202,7 @@ float AudioSystem::mMixAudio(unsigned int frameIndexIn, float* bufferIn, float* 
 
 float AudioSystem::mEchoFilter(unsigned int frameIndexIn, float* bufferIn, float* lastBufferIn)
 {
+    //http://stackoverflow.com/questions/5318989/reverb-algorithm
     return 0.f;
     //int delayMilliseconds = 500; // half a second
     //int delaySamples =

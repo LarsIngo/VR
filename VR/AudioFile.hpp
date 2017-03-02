@@ -1,6 +1,7 @@
 #pragma once
 
 class AudioSystem;
+class AudioData;
 
 #include <sndfile.hh>
 #include <windows.h>
@@ -18,7 +19,7 @@ class AudioFile
         ~AudioFile();
 
         // Load sound.
-        void Load(SNDFILE* sndFile, SF_INFO& info, AudioSystem* audioSystem);
+        void Load(AudioData* audioData, AudioSystem* audioSystem);
 
         // Play sound.
         void Play(bool loop = false, float phase = 0, float volumeLeft = 1.f, float volumeRight = 1.f);
@@ -40,9 +41,8 @@ class AudioFile
         void Stop();
 
     private:
-        SF_INFO mInfo;
-        SNDFILE* mSndFile = nullptr;
-        sf_count_t mSfCount = 0;
+        AudioData* mpAudioData;
+        sf_count_t mCurrFrame = 0;
         bool mLoop = false;
         bool mPlay = false;
         float mVolumeLeft = 0.f;

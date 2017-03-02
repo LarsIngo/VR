@@ -12,17 +12,16 @@ AudioFile::~AudioFile()
 
 }
 
-void AudioFile::Load(SNDFILE* sndFile, SF_INFO& info, AudioSystem* audioSystem)
+void AudioFile::Load(AudioData* audioData, AudioSystem* audioSystem)
 {
     mAudioSystem = audioSystem;
-    mSndFile = sndFile;
-    mInfo = info;
-    mDuration = mInfo.frames / mInfo.samplerate;
+    mpAudioData = audioData;
+    mDuration = mpAudioData->mAudioInfo.frames / mpAudioData->mAudioInfo.samplerate;
 }
 
 void AudioFile::Play(bool loop, float phase, float volumeLeft, float volumeRight)
 {
-    assert(mSndFile != nullptr && mAudioSystem != nullptr);
+    assert(mAudioSystem != nullptr);
     std::unique_lock<std::mutex> lock(mAudioSystem->mMutex, std::defer_lock);
     lock.lock();
 
@@ -30,14 +29,14 @@ void AudioFile::Play(bool loop, float phase, float volumeLeft, float volumeRight
     mLoop = loop;
     mVolumeLeft = volumeLeft;
     mVolumeRight = volumeRight;
-    mSfCount = mInfo.samplerate * phase;
+    mCurrFrame = mpAudioData->mAudioInfo.samplerate * phase;
 
     lock.unlock();
 }
 
 void AudioFile::Stop()
 {
-    assert(mSndFile != nullptr && mAudioSystem != nullptr);
+    assert(mAudioSystem != nullptr);
     std::unique_lock<std::mutex> lock(mAudioSystem->mMutex, std::defer_lock);
     lock.lock();
 
@@ -48,7 +47,7 @@ void AudioFile::Stop()
 
 void AudioFile::End()
 {
-    assert(mSndFile != nullptr && mAudioSystem != nullptr);
+    assert(mAudioSystem != nullptr);
     std::unique_lock<std::mutex> lock(mAudioSystem->mMutex, std::defer_lock);
     lock.lock();
 
@@ -59,7 +58,7 @@ void AudioFile::End()
 
 void AudioFile::SetVolumeLeft(float volume)
 {
-    assert(mSndFile != nullptr && mAudioSystem != nullptr);
+    assert(mAudioSystem != nullptr);
     std::unique_lock<std::mutex> lock(mAudioSystem->mMutex, std::defer_lock);
     lock.lock();
 
@@ -70,7 +69,7 @@ void AudioFile::SetVolumeLeft(float volume)
 
 void AudioFile::SetVolumeRight(float volume)
 {
-    assert(mSndFile != nullptr && mAudioSystem != nullptr);
+    assert(mAudioSystem != nullptr);
     std::unique_lock<std::mutex> lock(mAudioSystem->mMutex, std::defer_lock);
     lock.lock();
 
@@ -81,18 +80,18 @@ void AudioFile::SetVolumeRight(float volume)
 
 void AudioFile::SetPhase(float phase)
 {
-    assert(mSndFile != nullptr && mAudioSystem != nullptr);
+    assert(mAudioSystem != nullptr);
     std::unique_lock<std::mutex> lock(mAudioSystem->mMutex, std::defer_lock);
     lock.lock();
 
-    mSfCount = mInfo.samplerate * phase;
+    mCurrFrame = mpAudioData->mAudioInfo.samplerate * phase;
 
     lock.unlock();
 }
 
 void AudioFile::SetLoop(bool loop)
 {
-    assert(mSndFile != nullptr && mAudioSystem != nullptr);
+    assert(mAudioSystem != nullptr);
     std::unique_lock<std::mutex> lock(mAudioSystem->mMutex, std::defer_lock);
     lock.lock();
 
