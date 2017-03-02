@@ -16,6 +16,9 @@ class AudioSource
         // Position.
         glm::vec3 mPosition = glm::vec3(0.f, 0.f, 0.f);
 
+        // Radius.
+        float mInnerRadius = 0.f;
+
         // Audio file.
         AudioFile* mpAudioFile = nullptr;
 

@@ -62,7 +62,12 @@ class AudioSystem
 
         std::map<std::string, AudioData> mAudioDataMap;
 
-        std::map<AudioFile*, std::vector<float>> mAudioFilePhaseMap;
+        struct AudioBounceData
+        {
+            float phase;
+            float volumeFactor;
+        };
+        std::map<AudioFile*, std::vector<AudioBounceData>> mAudioBounceDataMap;
 
         static const unsigned int mMaxNumAudioFiles = 50;
         unsigned int mNumAudioFiles = 0;

@@ -110,11 +110,15 @@ int main()
         entity.mpAlbedoTex = &albedo;
         entity.mpNormalTex = &normal;
         {
-            int r = 1;
+            int max = 2;
+            int i = 0;
+            int r = 2;
             for (int z = 0; z < r; ++z)
                 for (int y = 0; y < r; ++y)
                     for (int x = 0; x < r; ++x)
                     {
+                        if (i >= max)
+                            break;
                         entity.mPosition = glm::vec3(x, y, z) * 10.f;
 						if (x % 2) entity.mpMetalTex = &white;
 						else entity.mpMetalTex = &black;
@@ -123,6 +127,7 @@ int main()
 						if (z % 2) entity.mTransparent = true;
 						else entity.mTransparent = false;
                         scene.mEntityList.push_back(entity);
+                        ++i;
                     }
         }
 
@@ -134,6 +139,7 @@ int main()
             audioFile->Play(true);
             audioSource.mpAudioFile = audioFile;
             audioSource.mPosition = entity.mPosition;
+            audioSource.mInnerRadius = 2.f;
             scene.mAudioSourceList.push_back(audioSource);
         }
     }

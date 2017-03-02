@@ -16,7 +16,7 @@ void AudioFile::Load(AudioData* audioData, AudioSystem* audioSystem)
 {
     mpAudioSystem = audioSystem;
     mpAudioData = audioData;
-    mDuration = (sf_count_t)mpAudioData->mAudioInfo.frames / mpAudioData->mAudioInfo.samplerate;
+    mDuration = (float)mpAudioData->mAudioInfo.frames / mpAudioData->mAudioInfo.samplerate;
 }
 
 void AudioFile::Play(bool loop, float phase, float volumeLeft, float volumeRight)
@@ -29,7 +29,8 @@ void AudioFile::Play(bool loop, float phase, float volumeLeft, float volumeRight
     mLoop = loop;
     mVolumeLeft = volumeLeft;
     mVolumeRight = volumeRight;
-    mCurrFrame = (sf_count_t)mpAudioData->mAudioInfo.samplerate * phase;
+    assert(phase >= 0.f);
+    mCurrFrame = (sf_count_t)(mpAudioData->mAudioInfo.samplerate * phase);
 
     lock.unlock();
 }
@@ -84,7 +85,8 @@ void AudioFile::SetPhase(float phase)
     std::unique_lock<std::mutex> lock(mpAudioSystem->mMutex, std::defer_lock);
     lock.lock();
 
-    mCurrFrame = (sf_count_t)mpAudioData->mAudioInfo.samplerate * phase;
+    assert(phase >= 0.f);
+    mCurrFrame = (sf_count_t)(mpAudioData->mAudioInfo.samplerate * phase);
 
     lock.unlock();
 }
