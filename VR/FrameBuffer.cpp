@@ -31,8 +31,9 @@ FrameBuffer::FrameBuffer(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceCont
     mDepthStencilTex = nullptr;
     mDepthStencilDSV = nullptr;
 
-    mStagingTexR32 = nullptr;
-    mStagingTexR32G32B32A32 = nullptr;
+    mWorldStagingTex = nullptr;
+    mNormStagingTex = nullptr;
+    mDepthStagingTex = nullptr;
 
     D3D11_TEXTURE2D_DESC texDesc;
     ZeroMemory(&texDesc, sizeof(D3D11_TEXTURE2D_DESC));
@@ -102,10 +103,11 @@ FrameBuffer::FrameBuffer(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceCont
     texDesc.Usage = D3D11_USAGE_STAGING;
     texDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
     texDesc.BindFlags = 0;
-    texDesc.Format = DXGI_FORMAT_R32_FLOAT;
-    DxAssert(mpDevice->CreateTexture2D(&texDesc, NULL, &mStagingTexR32), S_OK);
     texDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-    DxAssert(mpDevice->CreateTexture2D(&texDesc, NULL, &mStagingTexR32G32B32A32), S_OK);
+    DxAssert(mpDevice->CreateTexture2D(&texDesc, NULL, &mWorldStagingTex), S_OK);
+    DxAssert(mpDevice->CreateTexture2D(&texDesc, NULL, &mNormStagingTex), S_OK);
+    texDesc.Format = DXGI_FORMAT_R32_FLOAT;
+    DxAssert(mpDevice->CreateTexture2D(&texDesc, NULL, &mDepthStagingTex), S_OK);
 }
 
 FrameBuffer::~FrameBuffer()
@@ -133,8 +135,9 @@ FrameBuffer::~FrameBuffer()
     if (mDepthStencilTex != nullptr) mDepthStencilTex->Release();
     if (mDepthStencilDSV != nullptr) mDepthStencilDSV->Release();
 
-    if (mStagingTexR32 != nullptr) mStagingTexR32->Release();
-    if (mStagingTexR32G32B32A32 != nullptr) mStagingTexR32G32B32A32->Release();
+    if (mWorldStagingTex != nullptr) mWorldStagingTex->Release();
+    if (mNormStagingTex != nullptr) mNormStagingTex->Release();
+    if (mDepthStagingTex != nullptr) mDepthStagingTex->Release();
 }
 
 void FrameBuffer::ClearAll(float r, float g, float b, float a, float depth)
@@ -166,39 +169,39 @@ void FrameBuffer::Copy(FrameBuffer* fb)
 
 glm::vec4* FrameBuffer::ReadWorld()
 {
-    DxHelp::CopyTexture(mpDeviceContext, mStagingTexR32G32B32A32, mWorldTex, mWidth, mHeight, mMipLevels);
+    DxHelp::CopyTexture(mpDeviceContext, mWorldStagingTex, mWorldTex, mWidth, mHeight, mMipLevels);
 
     D3D11_MAPPED_SUBRESOURCE mappedResource;
     ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
-    DxAssert(mpDeviceContext->Map(mStagingTexR32G32B32A32, 0, D3D11_MAP_READ, 0, &mappedResource), S_OK);
-    mpDeviceContext->Unmap(mStagingTexR32G32B32A32, 0);
+    DxAssert(mpDeviceContext->Map(mWorldStagingTex, 0, D3D11_MAP_READ, 0, &mappedResource), S_OK);
+    mpDeviceContext->Unmap(mWorldStagingTex, 0);
 
     return (glm::vec4*)mappedResource.pData;
 }
 
 glm::vec4* FrameBuffer::ReadNormal()
 {
-    DxHelp::CopyTexture(mpDeviceContext, mStagingTexR32G32B32A32, mNormTex, mWidth, mHeight, mMipLevels);
+    DxHelp::CopyTexture(mpDeviceContext, mNormStagingTex, mNormTex, mWidth, mHeight, mMipLevels);
 
     D3D11_MAPPED_SUBRESOURCE mappedResource;
     ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
-    DxAssert(mpDeviceContext->Map(mStagingTexR32G32B32A32, 0, D3D11_MAP_READ, 0, &mappedResource), S_OK);
-    mpDeviceContext->Unmap(mStagingTexR32G32B32A32, 0);
+    DxAssert(mpDeviceContext->Map(mNormStagingTex, 0, D3D11_MAP_READ, 0, &mappedResource), S_OK);
+    mpDeviceContext->Unmap(mNormStagingTex, 0);
 
     return (glm::vec4*)mappedResource.pData;
 }
 
 float* FrameBuffer::ReadDepth()
 {
-    DxHelp::CopyTexture(mpDeviceContext, mStagingTexR32, mDepthTex, mWidth, mHeight, mMipLevels);
+    DxHelp::CopyTexture(mpDeviceContext, mDepthStagingTex, mDepthTex, mWidth, mHeight, mMipLevels);
 
     D3D11_MAPPED_SUBRESOURCE mappedResource;
     ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
-    DxAssert(mpDeviceContext->Map(mStagingTexR32, 0, D3D11_MAP_READ, 0, &mappedResource), S_OK);
-    mpDeviceContext->Unmap(mStagingTexR32, 0);
+    DxAssert(mpDeviceContext->Map(mDepthStagingTex, 0, D3D11_MAP_READ, 0, &mappedResource), S_OK);
+    mpDeviceContext->Unmap(mDepthStagingTex, 0);
 
     return (float*)mappedResource.pData;
 }

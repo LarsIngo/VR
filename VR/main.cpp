@@ -152,7 +152,7 @@ int main()
     float dt = 0.f;
     while (renderer.Running())
     {
-        { PROFILE("FRAME: " + std::to_string(10), false);
+        { PROFILE("FRAME: " + std::to_string(10), true);
             long long newTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
             dt = static_cast<float>(newTime - lastTime)/1000.f;
             lastTime = newTime;

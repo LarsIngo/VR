@@ -122,10 +122,10 @@ void AudioSystem::mUpdate()
                     {
                         // Left.
                         assert(f < FRAMES_PER_BUFFER);
-                        mBufferOut[f++] += mMixAudio(frameWalker, bufferIn, info, audioFile);// * audioFile.mVolumeLeft;
+                        mBufferOut[f++] += mMixAudio(frameWalker, bufferIn, info, audioFile) * audioFile.mVolumeLeft;
                         // Right.
                         assert(f < FRAMES_PER_BUFFER);
-                        mBufferOut[f++] += mMixAudio(frameWalker, bufferIn, info, audioFile);// * audioFile.mVolumeRight;
+                        mBufferOut[f++] += mMixAudio(frameWalker, bufferIn, info, audioFile) * audioFile.mVolumeRight;
                     }
                 }
                 else
@@ -134,10 +134,10 @@ void AudioSystem::mUpdate()
                     {
                         // Left.
                         assert(f < FRAMES_PER_BUFFER);
-                        mBufferOut[f++] += mMixAudio(frameWalker, bufferIn, info, audioFile);// * audioFile.mVolumeLeft;
+                        mBufferOut[f++] += mMixAudio(frameWalker, bufferIn, info, audioFile) * audioFile.mVolumeLeft;
                         // Right.
                         assert(f < FRAMES_PER_BUFFER);
-                        mBufferOut[f++] += mMixAudio(frameWalker + 1, bufferIn, info, audioFile);// * audioFile.mVolumeRight;
+                        mBufferOut[f++] += mMixAudio(frameWalker + 1, bufferIn, info, audioFile) * audioFile.mVolumeRight;
                     }
                 }
 
@@ -198,8 +198,12 @@ void AudioSystem::mUpdate()
 
 float AudioSystem::mMixAudio(sf_count_t frameWalker, float* buffer, SF_INFO& info, AudioFile& audioFile)
 {
-    //float frameValue = buffer[frameWalker]; // TMP REMOVE DIRECT SOUND.
+#ifdef DIRECT_AUDIO
+    float frameValue = buffer[frameWalker];
+#else
     float frameValue = 0.f;
+#endif
+#ifdef ECHO_AUIDO
     unsigned int audioCount = 0;
     for (AudioBounceData audioBounceData : mAudioBounceDataMap[&audioFile])
     {
@@ -209,65 +213,19 @@ float AudioSystem::mMixAudio(sf_count_t frameWalker, float* buffer, SF_INFO& inf
 
         if (delayFrame >= 0)
         {
-            frameValue += buffer[delayFrame] * audioBounceData.volumeFactor;
+            float volumeFactor = glm::clamp(1.f / audioBounceData.totalDistance, 0.f, 1.f) * glm::clamp(audioBounceData.bounceFactor, 0.f, 1.f);
+            if (audioBounceData.bounceFactor > 0.f)
+                frameValue += buffer[delayFrame] * volumeFactor;
+            else
+                frameValue += abs(buffer[delayFrame]) * volumeFactor * 0.f;
             ++audioCount;
         }
     }
     if (audioCount > 0)
         frameValue /= (audioCount + 1);
-
+#endif
     return frameValue;
 }
-
-//float AudioSystem::mEchoFilter(unsigned int frameIndexIn, float* bufferIn, float* lastBufferIn)
-//{
-//    //http://stackoverflow.com/questions/5318989/reverb-algorithm
-//    return 0.f;
-//    //int delayMilliseconds = 500; // half a second
-//    //int delaySamples =
-//    //    (int)((float)delayMilliseconds * 44.1f); // assumes 44100 Hz sample rate
-//    //float decay = 0.5f;
-//    //for (int i = 0; i < buffer.length - delaySamples; i++)
-//    //{
-//    //    // WARNING: overflow potential
-//    //    buffer[i + delaySamples] += (short)((float)buffer[i] * decay);
-//    //}
-//
-//    //unsigned int delayFrames = FRAMES_PER_CHANNEL / 2;
-//    //float decay = 0.5f;
-//    //for (unsigned int f = 0; f < FRAMES_PER_BUFFER - delayFrames; ++f)
-//    //{
-//    //    bufferOut[f + delayFrames] += (short)((float)bufferIn[f] * decay);
-//    //}
-//    
-//    //float frameValue = 0.f;
-//    //for (unsigned int f = 0; f < BUFFER_NUM_FRAMES; ++f)
-//    //{
-//    //    frameValue += lastBufferIn[(BUFFER_NUM_FRAMES - 1) - f];
-//    //}
-//    //return frameValue / BUFFER_NUM_FRAMES;
-//
-//    //unsigned int frameDelay = 32;
-//    //return (bufferIn[frameIndexIn] + lastBufferIn[(BUFFER_NUM_FRAMES - 1) - frameDelay]) / 2.f;
-//
-//    //for (unsigned int frameIT = 0; frameIT < numFrames; ++frameIT)
-//    //{
-//    //    float frameValue = 0.f;
-//    //    unsigned int frameCount = 0;
-//    //    for (unsigned int filterIT = 0; filterIT < filterSize; ++filterIT)
-//    //    {
-//    //        float scale = (float)filterIT / filterSize;
-//    //        unsigned int frameIndex = frameIT + filterIT;
-//    //        if (frameIndex < numFrames)
-//    //        {
-//    //            frameValue += buffer[frameIndex] * (1.f - scale);
-//    //            ++frameCount;
-//    //        }
-//    //    }
-//    //    frameValue /= frameCount;
-//    //    buffer[frameIT] = frameValue;
-//    //}
-//}
 
 void AudioSystem::UpdateAudioSource(Scene& scene, const glm::vec3& position, const glm::vec3& rightDirection, const glm::vec3& upDirection, glm::vec3& frontDirection)
 {
@@ -282,7 +240,7 @@ void AudioSystem::UpdateAudioSource(Scene& scene, const glm::vec3& position, con
         if (audioDistance < 0.001f) audioVector += glm::vec3(0.f, 0.1f, 0.f);
         audioVector = glm::normalize(audioVector);
 
-        float volumeScale = 5.f;
+        float volumeScale = 1.f;
         float volumeDistance = glm::clamp(1.f / audioDistance, 0.f, 1.f);
         float volumeFront = glm::clamp(glm::dot(frontDirection, audioVector), 0.f, 1.f);
         float volumeLeft = glm::clamp(glm::dot(-rightDirection, audioVector), 0.f, 1.f);
@@ -296,6 +254,7 @@ void AudioSystem::UpdateAudioSource(Scene& scene, const glm::vec3& position, con
 
 void AudioSystem::UpdateAudioImage(Scene& scene, const glm::vec3& position, const glm::vec3& rightDirection, const glm::vec3& upDirection, glm::vec3& frontDirection, FrameBuffer* fb)
 {
+#ifdef ECHO_AUIDO
     std::unique_lock<std::mutex> lock(mMutex, std::defer_lock);
 
     lock.lock();
@@ -314,8 +273,8 @@ void AudioSystem::UpdateAudioImage(Scene& scene, const glm::vec3& position, cons
         glm::vec3 world = glm::vec3(centerWorld);
         glm::vec3 normal = glm::vec3(centerNormal);
 
-        std::cout << "World: " << world.x << ", " << world.y << ", " << world.z << std::endl;
-        std::cout << "Normal: " << normal.x << ", " << normal.y << ", " << normal.z << std::endl << std::endl;
+        //std::cout << "World: " << world.x << ", " << world.y << ", " << world.z << std::endl;
+        //std::cout << "Normal: " << normal.x << ", " << normal.y << ", " << normal.z << std::endl << std::endl;
 
         for (AudioSource& audioSource : scene.mAudioSourceList)
         {
@@ -334,25 +293,18 @@ void AudioSystem::UpdateAudioImage(Scene& scene, const glm::vec3& position, cons
             cameraVec = glm::normalize(cameraVec);
             audioSourceVec = glm::normalize(audioSourceVec);
 
-            float audioVelocity = 342.f / 4.f;
-            float phase = totalDistance / audioVelocity;
+            float phase = totalDistance / AUDIO_VELOCITY;
 
-            std::cout << "Phase: " << phase << std::endl << std::endl;
+            //std::cout << "Phase: " << phase << std::endl << std::endl;
 
             glm::vec3 reflectVec = glm::reflect(-audioSourceVec, normal);
 
-            float bounceFactor = glm::clamp(glm::dot(reflectVec, normal), 0.f, 1.f);
-            std::cout << "Bounce Factor: " << bounceFactor << std::endl << std::endl;
+            float bounceFactor = glm::dot(reflectVec, normal);
+            //std::cout << "Bounce Factor: " << bounceFactor << std::endl << std::endl;
 
-            float distanceFactor = glm::clamp(1.f / totalDistance, 0.f, 1.f);;
-            std::cout << "Distance Factor: " << distanceFactor << std::endl << std::endl;
+            //std::cout << "Total distance: " << totalDistance << std::endl << std::endl;
 
-            //bool infront = glm::dot(normal, audioSourceVec) > 0.f || audioSourceDistance < audioSource.mInnerRadius;
-            //float bouceFactor = glm::dot(normal, audioSourceVec);
-            //if (audioSourceDistance < audioSource.mInnerRadius)
-            //    bouceFactor = abs(bouceFactor);
-
-            //if (bouceFactor > 0.f)
+            //if (bounceFactor > 0.f)
             //{   // Infront of object.
             //    std::cout << "Infront" << std::endl << std::endl;
             //}
@@ -363,13 +315,14 @@ void AudioSystem::UpdateAudioImage(Scene& scene, const glm::vec3& position, cons
 
             AudioBounceData audioBounceData;
             audioBounceData.phase = phase;
-            audioBounceData.volumeFactor = distanceFactor;// * bounceFactor;
+            audioBounceData.totalDistance = totalDistance;
+            audioBounceData.bounceFactor = bounceFactor;
             audioBounceDataList.push_back(audioBounceData);
         }
     }
 
     lock.unlock();
-
+#endif
     //std::unique_lock<std::mutex> lock(mMutex, std::defer_lock);
     
     //lock.lock();

@@ -22,12 +22,16 @@ class FrameBuffer;
 #define SAMPLE_SILENCE (0)
 #define NUM_CHANNELS (2)
 
-#define FRAMES_PER_CHANNEL (512)
+#define FRAMES_PER_CHANNEL (1024)
 #define SAMPLE_RATE (44100/2)
 #define DURATION_PER_BUFFER ((float)FRAMES_PER_CHANNEL / SAMPLE_RATE)
 
 #define FRAMES_PER_BUFFER (FRAMES_PER_CHANNEL * NUM_CHANNELS)
 #define BUFFER_SIZE (FRAMES_PER_BUFFER * SAMPLE_SIZE)
+
+#define AUDIO_VELOCITY (342.f / 8.f)
+//#define DIRECT_AUDIO
+#define ECHO_AUIDO
 
 struct AudioData
 {
@@ -62,12 +66,15 @@ class AudioSystem
 
         std::map<std::string, AudioData> mAudioDataMap;
 
+#ifdef ECHO_AUIDO
         struct AudioBounceData
         {
             float phase;
-            float volumeFactor;
+            float bounceFactor;
+            float totalDistance;
         };
         std::map<AudioFile*, std::vector<AudioBounceData>> mAudioBounceDataMap;
+#endif
 
         static const unsigned int mMaxNumAudioFiles = 50;
         unsigned int mNumAudioFiles = 0;

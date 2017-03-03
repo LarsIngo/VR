@@ -72,6 +72,7 @@ class FrameBuffer
         ID3D11DeviceContext* mpDeviceContext;
 
         // Staging textures.
-        ID3D11Texture2D* mStagingTexR32G32B32A32;
-        ID3D11Texture2D* mStagingTexR32;
+        ID3D11Texture2D* mWorldStagingTex;
+        ID3D11Texture2D* mNormStagingTex;
+        ID3D11Texture2D* mDepthStagingTex;
 };
