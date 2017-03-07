@@ -32,6 +32,7 @@ class FrameBuffer;
 #define AUDIO_VELOCITY (342.f / 8.f)
 //#define DIRECT_AUDIO
 #define ECHO_AUIDO
+#define LINEAR_DEPTH_AUDIO
 
 struct AudioData
 {
@@ -90,5 +91,8 @@ class AudioSystem
         void mUpdate();
 
         // Mix buffers
-        float mMixAudio(sf_count_t frameWalker, float* buffer, SF_INFO& info, AudioFile& audioFile);
+        float mMixAudio(sf_count_t frameWalker, float* buffer, SF_INFO& info, AudioFile& audioFile, bool left);
+
+        // Distance falloff function.
+        float mDistanceFalloff(float distance);
 };

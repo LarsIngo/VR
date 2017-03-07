@@ -122,10 +122,10 @@ void AudioSystem::mUpdate()
                     {
                         // Left.
                         assert(f < FRAMES_PER_BUFFER);
-                        mBufferOut[f++] += mMixAudio(frameWalker, bufferIn, info, audioFile) * audioFile.mVolumeLeft;
+                        mBufferOut[f++] += mMixAudio(frameWalker, bufferIn, info, audioFile, true);
                         // Right.
                         assert(f < FRAMES_PER_BUFFER);
-                        mBufferOut[f++] += mMixAudio(frameWalker, bufferIn, info, audioFile) * audioFile.mVolumeRight;
+                        mBufferOut[f++] += mMixAudio(frameWalker, bufferIn, info, audioFile, false);
                     }
                 }
                 else
@@ -134,10 +134,10 @@ void AudioSystem::mUpdate()
                     {
                         // Left.
                         assert(f < FRAMES_PER_BUFFER);
-                        mBufferOut[f++] += mMixAudio(frameWalker, bufferIn, info, audioFile) * audioFile.mVolumeLeft;
+                        mBufferOut[f++] += mMixAudio(frameWalker, bufferIn, info, audioFile, true);
                         // Right.
                         assert(f < FRAMES_PER_BUFFER);
-                        mBufferOut[f++] += mMixAudio(frameWalker + 1, bufferIn, info, audioFile) * audioFile.mVolumeRight;
+                        mBufferOut[f++] += mMixAudio(frameWalker + 1, bufferIn, info, audioFile, false);
                     }
                 }
 
@@ -196,10 +196,10 @@ void AudioSystem::mUpdate()
     //std::free(sampleBlock);
 }
 
-float AudioSystem::mMixAudio(sf_count_t frameWalker, float* buffer, SF_INFO& info, AudioFile& audioFile)
+float AudioSystem::mMixAudio(sf_count_t frameWalker, float* buffer, SF_INFO& info, AudioFile& audioFile, bool left)
 {
 #ifdef DIRECT_AUDIO
-    float frameValue = buffer[frameWalker];
+    float frameValue = buffer[frameWalker] * (left ? audioFile.mVolumeLeft : audioFile.mVolumeRight);
 #else
     float frameValue = 0.f;
 #endif
@@ -213,11 +213,11 @@ float AudioSystem::mMixAudio(sf_count_t frameWalker, float* buffer, SF_INFO& inf
 
         if (delayFrame >= 0)
         {
-            float volumeFactor = glm::clamp(1.f / audioBounceData.totalDistance, 0.f, 1.f) * glm::clamp(audioBounceData.bounceFactor, 0.f, 1.f);
+            float volumeFactor = mDistanceFalloff(audioBounceData.totalDistance) * glm::clamp(std::abs(audioBounceData.bounceFactor), 0.f, 1.f);
             if (audioBounceData.bounceFactor > 0.f)
                 frameValue += buffer[delayFrame] * volumeFactor;
             else
-                frameValue += abs(buffer[delayFrame]) * volumeFactor * 0.f;
+                frameValue += abs(buffer[delayFrame]) * volumeFactor;
             ++audioCount;
         }
     }
@@ -241,7 +241,7 @@ void AudioSystem::UpdateAudioSource(Scene& scene, const glm::vec3& position, con
         audioVector = glm::normalize(audioVector);
 
         float volumeScale = 1.f;
-        float volumeDistance = glm::clamp(1.f / audioDistance, 0.f, 1.f);
+        float volumeDistance = mDistanceFalloff(audioDistance);
         float volumeFront = glm::clamp(glm::dot(frontDirection, audioVector), 0.f, 1.f);
         float volumeLeft = glm::clamp(glm::dot(-rightDirection, audioVector), 0.f, 1.f);
         float volumeRight = glm::clamp(glm::dot(rightDirection, audioVector), 0.f, 1.f);
@@ -258,12 +258,10 @@ void AudioSystem::UpdateAudioImage(Scene& scene, const glm::vec3& position, cons
     std::unique_lock<std::mutex> lock(mMutex, std::defer_lock);
 
     lock.lock();
-
     mAudioBounceDataMap.clear();
 
     glm::vec4* worldArray = fb->ReadWorld();
     glm::vec4* normArray = fb->ReadNormal();
-
     unsigned int centerIndex = fb->mWidth * fb->mHeight / 2 + fb->mWidth / 2;
     glm::vec4 centerWorld = glm::vec4(worldArray[centerIndex]);
     glm::vec4 centerNormal = glm::vec4(normArray[centerIndex]);
@@ -272,9 +270,6 @@ void AudioSystem::UpdateAudioImage(Scene& scene, const glm::vec3& position, cons
     {
         glm::vec3 world = glm::vec3(centerWorld);
         glm::vec3 normal = glm::vec3(centerNormal);
-
-        //std::cout << "World: " << world.x << ", " << world.y << ", " << world.z << std::endl;
-        //std::cout << "Normal: " << normal.x << ", " << normal.y << ", " << normal.z << std::endl << std::endl;
 
         for (AudioSource& audioSource : scene.mAudioSourceList)
         {
@@ -287,61 +282,32 @@ void AudioSystem::UpdateAudioImage(Scene& scene, const glm::vec3& position, cons
             float audioSourceDistance = glm::length(audioSourceVec);
             float totalDistance = cameraDistance + audioSourceDistance;
 
-            if (audioSourceDistance < audioSource.mInnerRadius)
-                audioSourceVec = -audioSourceVec;
+            if (audioSourceDistance > audioSource.mInnerRadius)
+            {
+                cameraVec = glm::normalize(cameraVec);
+                audioSourceVec = glm::normalize(audioSourceVec);
 
-            cameraVec = glm::normalize(cameraVec);
-            audioSourceVec = glm::normalize(audioSourceVec);
+                float phase = totalDistance / AUDIO_VELOCITY;
+                glm::vec3 reflectVec = glm::reflect(-audioSourceVec, normal);
+                float bounceFactor = glm::dot(reflectVec, normal);
 
-            float phase = totalDistance / AUDIO_VELOCITY;
-
-            //std::cout << "Phase: " << phase << std::endl << std::endl;
-
-            glm::vec3 reflectVec = glm::reflect(-audioSourceVec, normal);
-
-            float bounceFactor = glm::dot(reflectVec, normal);
-            //std::cout << "Bounce Factor: " << bounceFactor << std::endl << std::endl;
-
-            //std::cout << "Total distance: " << totalDistance << std::endl << std::endl;
-
-            //if (bounceFactor > 0.f)
-            //{   // Infront of object.
-            //    std::cout << "Infront" << std::endl << std::endl;
-            //}
-            //else
-            //{   // Behind of object.
-            //    std::cout << "Behind" << std::endl << std::endl;
-            //}
-
-            AudioBounceData audioBounceData;
-            audioBounceData.phase = phase;
-            audioBounceData.totalDistance = totalDistance;
-            audioBounceData.bounceFactor = bounceFactor;
-            audioBounceDataList.push_back(audioBounceData);
+                AudioBounceData audioBounceData;
+                audioBounceData.phase = phase;
+                audioBounceData.totalDistance = totalDistance;
+                audioBounceData.bounceFactor = bounceFactor;
+                audioBounceDataList.push_back(audioBounceData);
+            }
         }
     }
-
     lock.unlock();
 #endif
-    //std::unique_lock<std::mutex> lock(mMutex, std::defer_lock);
-    
-    //lock.lock();
-    //for (AudioSource& audioSource : scene.mAudioSourceList)
-    //{
-    //    AudioFile* audioFile = audioSource.mpAudioFile;
-    //    glm::vec3 audioVector = audioSource.mPosition - position;
-    //    float audioDistance = glm::length(audioVector);
-    //    if (audioDistance < 0.001f) audioVector += glm::vec3(0.f, 0.1f, 0.f);
-    //    audioVector = glm::normalize(audioVector);
+}
 
-    //    float volumeScale = 5.f;
-    //    float volumeDistance = glm::clamp(1.f / audioDistance, 0.f, 1.f);
-    //    float volumeFront = glm::clamp(glm::dot(frontDirection, audioVector), 0.f, 1.f);
-    //    float volumeLeft = glm::clamp(glm::dot(-rightDirection, audioVector), 0.f, 1.f);
-    //    float volumeRight = glm::clamp(glm::dot(rightDirection, audioVector), 0.f, 1.f);
-
-    //    audioFile->mVolumeLeft = volumeScale * volumeDistance * (volumeFront + volumeLeft);
-    //    audioFile->mVolumeRight = volumeScale * volumeDistance * (volumeFront + volumeRight);
-    //}
-    //lock.unlock();
+float AudioSystem::mDistanceFalloff(float distance)
+{
+#ifdef LINEAR_DEPTH_AUDIO
+    return 0.5f;
+#else
+    return glm::clamp(1.f / distance, 0.f, 1.f);
+#endif
 }
