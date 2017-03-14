@@ -8,10 +8,11 @@
 
 Camera::Camera(unsigned int width, unsigned int height, DoubleFrameBuffer* frameBuffer)
 {
-    mProjectionMatrix = glm::perspectiveFovLH(45.f, (float)width, (float)height, 0.01f, 200.f);
+    mProjectionMatrix = glm::perspectiveFovLH(glm::radians(60.f), (float)width, (float)height, 0.01f, 200.f);
     mpFrameBuffer = frameBuffer;
 	mScreenWidth = width;
 	mScreenHeight = height;
+    
 }
 
 Camera::~Camera() 
@@ -97,21 +98,21 @@ void Camera::Update(float speed, float dt, Renderer* renderer)
 
 void Camera::Yaw(float rotation)
 {
-    glm::quat q = glm::angleAxis(rotation, mUpDirection);
+    glm::quat q = glm::angleAxis(glm::radians(rotation), mUpDirection);
     mRightDirection = glm::normalize(q * mRightDirection);
     mFrontDirection = glm::normalize(q * mFrontDirection);
 }
 
 void Camera::Pitch(float rotation)
 {
-    glm::quat q = glm::angleAxis(rotation, mRightDirection);
+    glm::quat q = glm::angleAxis(glm::radians(rotation), mRightDirection);
     mFrontDirection = glm::normalize(q * mFrontDirection);
     mUpDirection = glm::normalize(q * mUpDirection);
 }
 
 void Camera::Roll(float rotation)
 {
-    glm::quat q = glm::angleAxis(rotation, mFrontDirection);
+    glm::quat q = glm::angleAxis(glm::radians(rotation), mFrontDirection);
     mUpDirection = glm::normalize(q * mUpDirection);
     mRightDirection = glm::normalize(q * mRightDirection);
 }
