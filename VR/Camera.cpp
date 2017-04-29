@@ -1,18 +1,19 @@
 #include "Camera.hpp"
 #include "Renderer.hpp"
+#include "DoubleFrameBuffer.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <iostream>
 #include <Windows.h>
 
-Camera::Camera(unsigned int width, unsigned int height, DoubleFrameBuffer* frameBuffer)
+Camera::Camera(float fov, DoubleFrameBuffer* frameBuffer)
 {
-    mProjectionMatrix = glm::perspectiveFovLH(glm::radians(60.f), (float)width, (float)height, 0.01f, 200.f);
+    mFov = fov;
     mpFrameBuffer = frameBuffer;
-	mScreenWidth = width;
-	mScreenHeight = height;
-    
+    mScreenWidth = mpFrameBuffer->mWidth;
+    mScreenHeight = mpFrameBuffer->mHeight;
+    mProjectionMatrix = glm::perspectiveFovLH(mFov, (float)mScreenWidth, (float)mScreenHeight, 0.01f, 200.f);
 }
 
 Camera::~Camera() 
@@ -78,8 +79,13 @@ void Camera::Update(float speed, float dt, Renderer* renderer)
         mOldMousePosition = mNewMousePosition;
         mNewMousePosition = renderer->GetMousePosition();
         if (renderer->GetMouseLeftButtonPressed()) {
-            glm::vec2 delta = mNewMousePosition - mOldMousePosition;
-            rotation += glm::vec3(delta.x, -delta.y, 0.f) * 15.f;
+            //glm::vec2 delta = mNewMousePosition - mOldMousePosition;
+            //rotation += glm::vec3(delta.x, -delta.y, 0.f) * 15.f;
+            int dx = mOldMousePosition.x - mNewMousePosition.x;
+            int dy = mOldMousePosition.y - mNewMousePosition.y;
+            std::cout << "dx: " << dx << "; dy: " << dy << std::endl;
+            rotation.x += (float)dx / mpFrameBuffer->mWidth * 2.f * mFov;
+            rotation.y += (float)dy / mpFrameBuffer->mHeight * 2.f * mFov * mpFrameBuffer->mHeight / mpFrameBuffer->mWidth;
         }
     }
 

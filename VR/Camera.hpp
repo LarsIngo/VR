@@ -10,10 +10,9 @@ class Camera
 {
     public:
         // Constructor.
-        // width Width of screen to render in pixels.
-        // height Height of screen to render in pixels.
+        // fov Field of view in degrees.
         // frameBuffer Framebuffer to render.
-        Camera(unsigned int width, unsigned int height, DoubleFrameBuffer* frameBuffer);
+        Camera(float fov, DoubleFrameBuffer* frameBuffer);
 
         // Destructor.
         ~Camera();
@@ -65,6 +64,9 @@ class Camera
 
 		//Screeb height.
 		unsigned int mScreenHeight;
+
+        // Field of view in degrees.
+        float mFov;
 
         // Frame buffer.
         DoubleFrameBuffer* mpFrameBuffer;

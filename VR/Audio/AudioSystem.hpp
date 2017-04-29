@@ -29,10 +29,10 @@ class FrameBuffer;
 #define FRAMES_PER_BUFFER (FRAMES_PER_CHANNEL * NUM_CHANNELS)
 #define BUFFER_SIZE (FRAMES_PER_BUFFER * SAMPLE_SIZE)
 
-#define AUDIO_VELOCITY (342.f / 8.f)
-//#define DIRECT_AUDIO
+#define AUDIO_VELOCITY (342.f / 8.f) //8.f
+#define DIRECT_AUDIO
 #define ECHO_AUIDO
-#define LINEAR_DEPTH_AUDIO
+//#define LINEAR_DEPTH_AUDIO
 
 struct AudioData
 {

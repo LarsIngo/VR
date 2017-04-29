@@ -1,7 +1,6 @@
 #pragma once
 
 #define CAMERA_CONTROLL 0
-#define FRAME_LATENCY
 //#define D3D_REPORT_LIVE_OBJ
 #define _CRTDBG_MAP_ALLOC
 //#define BUILD_VR
@@ -10,7 +9,6 @@
 #include <crtdbg.h>
 #include <glm/glm.hpp>
 
-#include "AudioSystem.hpp"
 #include "Camera.hpp"
 #include "DoubleFrameBuffer.hpp"
 #include "DxAssert.hpp"
@@ -48,13 +46,6 @@ int main()
     }
     // Init D3D devices.
     Renderer renderer(winWidth, winHeight);
-#ifdef FRAME_LATENCY
-    // Set Frame Latency.
-    IDXGIDevice1 * pDXGIDevice;
-    DxAssert(renderer.mDevice->QueryInterface(__uuidof(IDXGIDevice), (void **)&pDXGIDevice), S_OK);
-    DxAssert(pDXGIDevice->SetMaximumFrameLatency(1), S_OK);
-    pDXGIDevice->Release();
-#endif
 	DoubleFrameBuffer cameraFrameBuffer(renderer.mDevice, renderer.mDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
     DoubleFrameBuffer hmdLeftFrameBuffer(renderer.mDevice, renderer.mDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
     DoubleFrameBuffer hmdRightFrameBuffer(renderer.mDevice, renderer.mDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
@@ -81,7 +72,7 @@ int main()
         up.Load("resources/assets/DeepSpaceBlue/upImage.png");
         skybox.Load(&bk, &dn, &fr, &lf, &rt, &up);
     }
-    Camera camera(winWidth, winHeight, &cameraFrameBuffer);
+    Camera camera(glm::radians(60.f), &cameraFrameBuffer);
 	camera.mPosition = glm::vec3(0,0,-2.f);
     RenderSystem renderSystem(renderer.mDevice, renderer.mDeviceContext);
     Mesh mesh(renderer.mDevice, renderer.mDeviceContext);
@@ -91,7 +82,6 @@ int main()
 	Texture2D black(renderer.mDevice, renderer.mDeviceContext);
 	Texture2D whiteBlack(renderer.mDevice, renderer.mDeviceContext);
 
-    AudioSystem audioSystem;
     Scene scene(renderer.mDevice, renderer.mDeviceContext);
     {
         scene.mpSkybox = &skybox;
@@ -130,21 +120,7 @@ int main()
                         ++i;
                     }
         }
-
-        AudioSource audioSource;
-        for (Entity& entity : scene.mEntityList)
-        {
-            std::string filePath("resources/assets/Audio/COHORT" + std::to_string(scene.mAudioSourceList.size() % 4 + 1) + ".WAV");
-            AudioFile* audioFile = audioSystem.Load(filePath.c_str());
-            audioFile->Play(true);
-            audioSource.mpAudioFile = audioFile;
-            audioSource.mPosition = entity.mPosition;
-            audioSource.mInnerRadius = 2.f;
-            scene.mAudioSourceList.push_back(audioSource);
-        }
     }
-    //AudioFile* bgAudioFile = audioSystem.Load("resources/assets/Audio/WinAssignment.wav");
-    //bgAudioFile->Play(true, 27.f, 0.3f, 0.3f);
     // --- INIT SCENE --- //
 
     // +++ MAIN LOOP +++ //
@@ -152,7 +128,7 @@ int main()
     float dt = 0.f;
     while (renderer.Running())
     {
-        { PROFILE("FRAME: " + std::to_string(10), true);
+        { PROFILE("FRAME: " + std::to_string(10), false);
             long long newTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
             dt = static_cast<float>(newTime - lastTime)/1000.f;
             lastTime = newTime;
@@ -161,13 +137,11 @@ int main()
             if (VR)
             {
                 hmd.mPosition += hmd.mFrontDirection * dt * 10.f;
-                audioSystem.UpdateAudioSource(scene, hmd.mPosition, hmd.mRightDirection, hmd.mUpDirection, hmd.mFrontDirection);
                 scene.SortBackToFront(hmd.mPosition, hmd.mFrontDirection);
             }
             else
             {
                 camera.Update(20.f, dt, &renderer);
-                audioSystem.UpdateAudioSource(scene, camera.mPosition, camera.mRightDirection, camera.mUpDirection, camera.mFrontDirection);
                 scene.SortBackToFront(camera.mPosition, camera.mFrontDirection);
             }
             // --- PRE RENDER UPDATE --- //
@@ -191,14 +165,6 @@ int main()
             // --- RENDER --- //
 
             // +++ POST RENDER UPDATE +++ //
-            if (VR)
-            {
-                audioSystem.UpdateAudioImage(scene, hmd.mPosition, hmd.mRightDirection, hmd.mUpDirection, hmd.mFrontDirection, hmd.mpLeftFrameBuffer->GetFrameBuffer());
-            }
-            else
-            {
-                audioSystem.UpdateAudioImage(scene, camera.mPosition, camera.mRightDirection, camera.mUpDirection, camera.mFrontDirection, camera.mpFrameBuffer->GetFrameBuffer());
-            }
             // --- POST RENDER UPDATE --- //
 
 			// +++ PRESENET +++ //

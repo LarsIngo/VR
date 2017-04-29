@@ -72,24 +72,24 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(SolutionDir)externals\portaudio\include;$(SolutionDir)externals\assimp\include;$(SolutionDir)externals\openvr\headers;$(SolutionDir)externals\libsndfile\include;$(SolutionDir)externals\openal\include;$(SolutionDir)externals\glm;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)intermediate\$(Platform)\$(Configuration)\</IntDir>
     <SourcePath>$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(SolutionDir)externals\portaudio\include;$(SolutionDir)externals\assimp\include;$(SolutionDir)externals\openvr\headers;$(SolutionDir)externals\libsndfile\include;$(SolutionDir)externals\openal\include;$(SolutionDir)externals\glm;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)intermediate\$(Platform)\$(Configuration)\</IntDir>
     <SourcePath>$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(SolutionDir)externals\portaudio\include;$(SolutionDir)externals\assimp\include;$(SolutionDir)externals\openvr\headers;$(SolutionDir)externals\libsndfile\include;$(SolutionDir)externals\openal\include;$(SolutionDir)externals\glm;$(IncludePath)</IncludePath>
-    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)intermediate\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
     <SourcePath>$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SolutionDir)externals\portaudio\include;$(SolutionDir)externals\assimp\include;$(SolutionDir)externals\openvr\headers;$(SolutionDir)externals\libsndfile\include;$(SolutionDir)externals\openal\include;$(SolutionDir)externals\glm;$(IncludePath)</IncludePath>
-    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)intermediate\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
     <SourcePath>$(SourcePath)</SourcePath>
   </PropertyGroup>
@@ -175,9 +175,6 @@ echo d | xcopy "$(SolutionDir)externals\portaudio\bin\win64" "$(OutputPath)" /E 
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AudioFile.cpp" />
-    <ClCompile Include="AudioSource.cpp" />
-    <ClCompile Include="AudioSystem.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="DoubleFrameBuffer.cpp" />
     <ClCompile Include="Entity.cpp" />
@@ -195,9 +192,6 @@ echo d | xcopy "$(SolutionDir)externals\portaudio\bin\win64" "$(OutputPath)" /E 
     <ClCompile Include="VRDevice.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AudioFile.hpp" />
-    <ClInclude Include="AudioSource.hpp" />
-    <ClInclude Include="AudioSystem.hpp" />
     <ClInclude Include="Camera.hpp" />
     <ClInclude Include="DoubleFrameBuffer.hpp" />
     <ClInclude Include="DxAssert.hpp" />
