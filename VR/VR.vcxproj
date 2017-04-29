@@ -194,6 +194,7 @@ echo d | xcopy "$(SolutionDir)externals\portaudio\bin\win64" "$(OutputPath)" /E 
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.hpp" />
+    <ClInclude Include="CPUTimer.hpp" />
     <ClInclude Include="DoubleFrameBuffer.hpp" />
     <ClInclude Include="DxAssert.hpp" />
     <ClInclude Include="DxHelp.hpp" />

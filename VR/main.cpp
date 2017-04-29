@@ -10,6 +10,7 @@
 #include <glm/glm.hpp>
 
 #include "Camera.hpp"
+#include "CPUTimer.hpp"
 #include "DoubleFrameBuffer.hpp"
 #include "DxAssert.hpp"
 #include "InputManager.hpp"
@@ -104,15 +105,11 @@ int main()
         entity.mpAlbedoTex = &albedo;
         entity.mpNormalTex = &normal;
         {
-            int max = 2;
-            int i = 0;
             int r = 2;
             for (int z = 0; z < r; ++z)
                 for (int y = 0; y < r; ++y)
                     for (int x = 0; x < r; ++x)
                     {
-                        if (i >= max)
-                            break;
                         entity.mPosition = glm::vec3(x, y, z) * 10.f;
 						if (x % 2) entity.mpMetalTex = &white;
 						else entity.mpMetalTex = &black;
@@ -121,21 +118,17 @@ int main()
 						if (z % 2) entity.mTransparent = true;
 						else entity.mTransparent = false;
                         scene.mEntityList.push_back(entity);
-                        ++i;
                     }
         }
     }
     // --- INIT SCENE --- //
 
     // +++ MAIN LOOP +++ //
-    long long lastTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     float dt = 0.f;
     while (renderer.Running())
     {
-        { PROFILE("FRAME: " + std::to_string(10), false);
-            long long newTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-            dt = static_cast<float>(newTime - lastTime)/1000.f;
-            lastTime = newTime;
+        { PROFILE("FRAME: " + std::to_string(dt), true);
+            CPUTIMER(dt);
 
             // +++ PRE RENDER UPDATE +++ //
             if (VR)

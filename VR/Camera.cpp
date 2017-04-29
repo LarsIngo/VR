@@ -76,8 +76,8 @@ void Camera::Update(float moveSpeed, float rotationSpeed, float dt, InputManager
         {
             int dx = lastX - x;
             int dy = lastY - y;
-            rotation.x += (float)dx / mpFrameBuffer->mWidth * 2.f * mFov;
-            rotation.y += (float)dy / mpFrameBuffer->mHeight * 2.f * mFov * mpFrameBuffer->mHeight / mpFrameBuffer->mWidth;
+            rotation.x += (float)dx / mScreenWidth * 2.f * mFov;
+            rotation.y += (float)dy / mScreenHeight * 2.f * mFov * mScreenHeight / mScreenWidth;
         }
     }
 
