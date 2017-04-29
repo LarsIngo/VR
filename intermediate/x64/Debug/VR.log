@@ -1,4 +1,7 @@
-﻿  main.cpp
+﻿  Renderer.cpp
+c:\program files (x86)\windows kits\8.1\include\shared\minwindef.h(130): warning C4005: 'APIENTRY': macro redefinition
+  d:\openvrhelloworld\vr\externals\glfw\include\glfw\glfw3.h(98): note: see previous definition of 'APIENTRY'
+d:\openvrhelloworld\vr\vr\dxhelp.hpp(245): warning C4267: 'argument': conversion from 'size_t' to 'UINT', possible loss of data
   VR.vcxproj -> D:\OpenVRHelloWorld\VR\build\x64\Debug\VR.exe
   VR.vcxproj -> D:\OpenVRHelloWorld\VR\build\x64\Debug\VR.pdb (Partial PDB)
   D:\OpenVRHelloWorld\VR\externals\openvr\bin\win64\openvr_api.dll

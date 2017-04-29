@@ -70,25 +70,25 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)externals\portaudio\include;$(SolutionDir)externals\assimp\include;$(SolutionDir)externals\openvr\headers;$(SolutionDir)externals\libsndfile\include;$(SolutionDir)externals\openal\include;$(SolutionDir)externals\glm;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)externals\portaudio\include;$(SolutionDir)externals\assimp\include;$(SolutionDir)externals\openvr\headers;$(SolutionDir)externals\libsndfile\include;$(SolutionDir)externals\openal\include;$(SolutionDir)externals\glm;$(SolutionDir)externals\glfw\include;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)intermediate\$(Platform)\$(Configuration)\</IntDir>
     <SourcePath>$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)externals\portaudio\include;$(SolutionDir)externals\assimp\include;$(SolutionDir)externals\openvr\headers;$(SolutionDir)externals\libsndfile\include;$(SolutionDir)externals\openal\include;$(SolutionDir)externals\glm;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)externals\portaudio\include;$(SolutionDir)externals\assimp\include;$(SolutionDir)externals\openvr\headers;$(SolutionDir)externals\libsndfile\include;$(SolutionDir)externals\openal\include;$(SolutionDir)externals\glm;$(SolutionDir)externals\glfw\include;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)intermediate\$(Platform)\$(Configuration)\</IntDir>
     <SourcePath>$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)externals\portaudio\include;$(SolutionDir)externals\assimp\include;$(SolutionDir)externals\openvr\headers;$(SolutionDir)externals\libsndfile\include;$(SolutionDir)externals\openal\include;$(SolutionDir)externals\glm;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)externals\portaudio\include;$(SolutionDir)externals\assimp\include;$(SolutionDir)externals\openvr\headers;$(SolutionDir)externals\libsndfile\include;$(SolutionDir)externals\openal\include;$(SolutionDir)externals\glm;$(SolutionDir)externals\glfw\include;$(IncludePath)</IncludePath>
     <IntDir>$(SolutionDir)intermediate\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
     <SourcePath>$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)externals\portaudio\include;$(SolutionDir)externals\assimp\include;$(SolutionDir)externals\openvr\headers;$(SolutionDir)externals\libsndfile\include;$(SolutionDir)externals\openal\include;$(SolutionDir)externals\glm;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)externals\portaudio\include;$(SolutionDir)externals\assimp\include;$(SolutionDir)externals\openvr\headers;$(SolutionDir)externals\libsndfile\include;$(SolutionDir)externals\openal\include;$(SolutionDir)externals\glm;$(SolutionDir)externals\glfw\include;$(IncludePath)</IncludePath>
     <IntDir>$(SolutionDir)intermediate\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
     <SourcePath>$(SourcePath)</SourcePath>
@@ -100,8 +100,8 @@
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>openvr_api.lib;assimp-vc140-mt.lib;d3d11.lib;d3dcompiler.lib;Winmm.lib;libsndfile-1.lib;portaudio_x86.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)externals\libsndfile\lib\win32;$(SolutionDir)externals\portaudio\lib\win32\Debug;$(SolutionDir)externals\assimp\lib\win32\Debug;$(SolutionDir)externals\openvr\lib\win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>openvr_api.lib;assimp-vc140-mt.lib;d3d11.lib;d3dcompiler.lib;Winmm.lib;libsndfile-1.lib;glfw3.lib;portaudio_x86.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)externals\glfw\lib\win32;$(SolutionDir)externals\libsndfile\lib\win32;$(SolutionDir)externals\portaudio\lib\win32\Debug;$(SolutionDir)externals\assimp\lib\win32\Debug;$(SolutionDir)externals\openvr\lib\win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>echo f | xcopy "$(SolutionDir)externals\openvr\bin\win32\openvr_api.dll" "$(OutputPath)openvr_api.dll" /E /Y
@@ -118,8 +118,8 @@ echo d | xcopy "$(SolutionDir)externals\portaudio\bin\win32" "$(OutputPath)" /E 
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>openvr_api.lib;assimp-vc140-mt.lib;d3d11.lib;d3dcompiler.lib;Winmm.lib;libsndfile-1.lib;portaudio_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)externals\portaudio\lib\win64\Debug;$(SolutionDir)externals\libsndfile\lib\win64;$(SolutionDir)externals\assimp\lib\win64\Debug;$(SolutionDir)externals\openvr\lib\win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>openvr_api.lib;assimp-vc140-mt.lib;d3d11.lib;d3dcompiler.lib;Winmm.lib;libsndfile-1.lib;glfw3.lib;portaudio_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)externals\glfw\lib\win64;$(SolutionDir)externals\portaudio\lib\win64\Debug;$(SolutionDir)externals\libsndfile\lib\win64;$(SolutionDir)externals\assimp\lib\win64\Debug;$(SolutionDir)externals\openvr\lib\win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>echo f | xcopy "$(SolutionDir)externals\openvr\bin\win64\openvr_api.dll" "$(OutputPath)openvr_api.dll" /E /Y
@@ -141,8 +141,8 @@ echo d | xcopy "$(SolutionDir)externals\portaudio\bin\win64" "$(OutputPath)" /E 
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>openvr_api.lib;assimp-vc140-mt.lib;d3d11.lib;d3dcompiler.lib;Winmm.lib;libsndfile-1.lib;portaudio_x86.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)externals\libsndfile\lib\win32;$(SolutionDir)externals\assimp\lib\win32\Release;$(SolutionDir)externals\openvr\lib\win32;$(SolutionDir)externals\portaudio\lib\win32\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>openvr_api.lib;assimp-vc140-mt.lib;d3d11.lib;d3dcompiler.lib;Winmm.lib;libsndfile-1.lib;glfw3.lib;portaudio_x86.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)externals\glfw\lib\win32;$(SolutionDir)externals\libsndfile\lib\win32;$(SolutionDir)externals\assimp\lib\win32\Release;$(SolutionDir)externals\openvr\lib\win32;$(SolutionDir)externals\portaudio\lib\win32\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>echo f | xcopy "$(SolutionDir)externals\openvr\bin\win32\openvr_api.dll" "$(OutputPath)openvr_api.dll" /E /Y
@@ -163,8 +163,8 @@ echo d | xcopy "$(SolutionDir)externals\portaudio\bin\win32" "$(OutputPath)" /E 
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>openvr_api.lib;assimp-vc140-mt.lib;d3d11.lib;d3dcompiler.lib;Winmm.lib;libsndfile-1.lib;portaudio_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)externals\portaudio\lib\win64\Release;$(SolutionDir)externals\libsndfile\lib\win64;$(SolutionDir)externals\assimp\lib\win64\Release;$(SolutionDir)externals\openvr\lib\win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>openvr_api.lib;assimp-vc140-mt.lib;d3d11.lib;d3dcompiler.lib;Winmm.lib;libsndfile-1.lib;glfw3.lib;portaudio_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)externals\glfw\lib\win64;$(SolutionDir)externals\portaudio\lib\win64\Release;$(SolutionDir)externals\libsndfile\lib\win64;$(SolutionDir)externals\assimp\lib\win64\Release;$(SolutionDir)externals\openvr\lib\win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>echo f | xcopy "$(SolutionDir)externals\openvr\bin\win64\openvr_api.dll" "$(OutputPath)openvr_api.dll" /E /Y
@@ -179,6 +179,7 @@ echo d | xcopy "$(SolutionDir)externals\portaudio\bin\win64" "$(OutputPath)" /E 
     <ClCompile Include="DoubleFrameBuffer.cpp" />
     <ClCompile Include="Entity.cpp" />
     <ClCompile Include="FrameBuffer.cpp" />
+    <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="Mesh.cpp" />
@@ -198,6 +199,7 @@ echo d | xcopy "$(SolutionDir)externals\portaudio\bin\win64" "$(OutputPath)" /E 
     <ClInclude Include="DxHelp.hpp" />
     <ClInclude Include="Entity.hpp" />
     <ClInclude Include="FrameBuffer.hpp" />
+    <ClInclude Include="InputManager.hpp" />
     <ClInclude Include="Material.hpp" />
     <ClInclude Include="Mesh.hpp" />
     <ClInclude Include="Profiler.hpp" />

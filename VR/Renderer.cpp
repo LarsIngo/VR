@@ -6,6 +6,8 @@
 #include "Skybox.hpp"
 #include "Texture2D.hpp"
 
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include <vector>
@@ -17,7 +19,7 @@ Renderer::Renderer(unsigned int winWidth, unsigned int winHeight)
     mClose = false;
 
     // Window.
-    InitialiseHWND();
+    InitialiseGLFW();
     // DirectX.
     InitialiseD3D();
 
@@ -44,31 +46,17 @@ void Renderer::Shutdown()
     delete mWinFrameBuffer;
     mScreenQuadVS->Release();
     mCompanionWindowPS->Release();
+    glfwTerminate();
 }
 
 bool Renderer::Running() const 
 {
-    if (mClose) {
-        PostQuitMessage(0);
-    }
+    if (mClose)
+        return true;
 
-    MSG windowMsg = { 0 };
+    glfwPollEvents();
 
-    while (windowMsg.message != WM_QUIT)
-    {
-        if (PeekMessage(&windowMsg, NULL, NULL, NULL, PM_REMOVE))
-        {
-            TranslateMessage(&windowMsg);
-
-            DispatchMessage(&windowMsg);
-        }
-        else
-        {
-            // If there are no more messages to handle, run a frame.
-            return true;
-        }
-    }
-    return false;
+    return !glfwWindowShouldClose(mGLFWwindow);
 }
 
 void Renderer::Close()
@@ -89,99 +77,29 @@ void Renderer::WinPresent(FrameBuffer* fb)
     mSwapChain->Present(0, 0);
 }
 
-bool Renderer::GetKeyPressed(int vKey)
+void Renderer::InitialiseGLFW()
 {
-    return GetAsyncKeyState(vKey) != 0 ? true : false;
-}
+    /* Initialize the library */
+    if (!glfwInit())
+        assert(0 && "GLFWERROR: Initialize the library.");
 
-glm::vec2 Renderer::GetMousePosition()
-{
-    return mMousePosition;
-}
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 
-bool Renderer::GetMouseInsideWindow()
-{
-    // Get current mouse position in screen coords.
-    POINT pos = { 0, 0 };
-    if (GetCursorPos(&pos))
-    {
-        // Convert position to client window coords.
-        if (ScreenToClient(mHWND, &pos))
-        {
-            // Get window's client rect.
-            RECT rcClient = { 0 };
-            GetClientRect(mHWND, &rcClient);
+    glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+    glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+    glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+    glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-            // If mouse cursor is inside rect.
-            if (PtInRect(&rcClient, pos)) {
-                mMousePosition = glm::vec2(static_cast<float>(pos.x) / mWinWidth * 2.f - 1.f, -(static_cast<float>(pos.y) / mWinHeight * 2.f - 1.f));
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-bool Renderer::GetMouseLeftButtonPressed()
-{
-    return (GetKeyState(VK_LBUTTON) & 0x80) != 0;
-}
-
-LRESULT CALLBACK WindowProcedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    switch (message)
-    {
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        return 0;
-    }
-
-    // If a message has not been handled, send it to the default window procedure for handling.
-    return DefWindowProc(handle, message, wParam, lParam);
-}
-
-void Renderer::InitialiseHWND()
-{
-    // Register the window class to create.
-    HINSTANCE applicationHandle = GetModuleHandle(NULL);
-    WNDCLASS windowClass;
-    windowClass.style = CS_HREDRAW | CS_VREDRAW;
-    windowClass.lpfnWndProc = WindowProcedure;
-    windowClass.cbClsExtra = 0;
-    windowClass.cbWndExtra = 0;
-    windowClass.hInstance = applicationHandle;
-    windowClass.hIcon = LoadIcon(0, IDI_APPLICATION);
-    windowClass.hCursor = LoadCursor(0, IDC_ARROW);
-    windowClass.hbrBackground = static_cast<HBRUSH>(GetStockObject(WHITE_BRUSH));
-    windowClass.lpszMenuName = NULL;
-    windowClass.lpszClassName = "WindowClass";
-
-    RegisterClass(&windowClass);
-
-    RECT rect = { 0, 0, (long)mWinWidth, (long)mWinHeight };
-    AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
-
-    mHWND = CreateWindow(
-        "WindowClass",
-        "Window Title",
-        WS_OVERLAPPEDWINDOW,
-        10,
-        10,
-        rect.right - rect.left,
-        rect.bottom - rect.top,
-        NULL,
-        NULL,
-        applicationHandle,
-        NULL
-    );
-
-    ShowWindow(mHWND, SW_SHOWDEFAULT);
-    UpdateWindow(mHWND);
+    /* Create window */
+    mGLFWwindow = glfwCreateWindow(mWinWidth, mWinHeight, "D3D11 window", NULL, NULL);
 }
 
 void Renderer::InitialiseD3D()
 {
-    assert(mHWND != NULL);
+    assert(mGLFWwindow != NULL);
 
     // We initiate the device, device context and swap chain.
     DXGI_SWAP_CHAIN_DESC scDesc;
@@ -196,16 +114,20 @@ void Renderer::InitialiseD3D()
     scDesc.SampleDesc.Quality = 0;												// Disable multisampling.
     scDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;   // The back buffer will be rendered to.
     scDesc.BufferCount = 1;							        // We only have one back buffer.
-    scDesc.OutputWindow = mHWND;			                // Must point to the handle for the window used for rendering.
+    scDesc.OutputWindow = glfwGetWin32Window(mGLFWwindow);;			                // Must point to the handle for the window used for rendering.
     scDesc.Windowed = true;					                // Run in windowed mode.
     scDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;	        // This makes the display driver select the most efficient technique.
     scDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;  // Alt-enter fullscreen.
 
+    UINT createDeviceFlags = D3D11_CREATE_DEVICE_SINGLETHREADED | D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+#ifdef BUILD_ENABLE_D3D11_DEBUG
+    createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
     DxAssert(D3D11CreateDeviceAndSwapChain(
         nullptr,					// Use the default adapter.
         D3D_DRIVER_TYPE_HARDWARE,	// Use the graphics card for rendering. Other options include software emulation.
         NULL,						// NULL since we don't use software emulation.
-        D3D11_CREATE_DEVICE_DEBUG,	// Dbg creation flags.
+        createDeviceFlags,	        // Dbg creation flags.
         nullptr,					// Array of feature levels to try using. With null the following are used 11.0, 10.1, 10.0, 9.3, 9.2, 9.1.
         0,							// The array above has 0 elements.
         D3D11_SDK_VERSION,			// Always use this.

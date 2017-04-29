@@ -2,8 +2,8 @@
 
 #include <glm/glm.hpp>
 
-class Renderer;
 class DoubleFrameBuffer;
+class InputManager;
 
 // A camera.
 class Camera 
@@ -18,10 +18,11 @@ class Camera
         ~Camera();
 
         // Update camera attributes.
-        // speed Speed of movement.
+        // moveSpeed Speed of movement.
+        // rotationSpeed Speed of rotation-
         // dt Delta time.
-        // render Parse renderer to get info about windwow.
-        void Update(float speed, float dt, Renderer* render);
+        // inputManager Input manager to handle inputs. 
+        void Update(float moveSpeed, float rotationSpeed, float dt, InputManager* inputManager);
 
         // Rotate camera around up direction.
         // rotation Amount of rotation in degrees.

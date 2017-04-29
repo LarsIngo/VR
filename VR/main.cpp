@@ -12,6 +12,7 @@
 #include "Camera.hpp"
 #include "DoubleFrameBuffer.hpp"
 #include "DxAssert.hpp"
+#include "InputManager.hpp"
 #include "Mesh.hpp"
 #include "Profiler.hpp"
 #include "Renderer.hpp"
@@ -75,6 +76,9 @@ int main()
     Camera camera(glm::radians(60.f), &cameraFrameBuffer);
 	camera.mPosition = glm::vec3(0,0,-2.f);
     RenderSystem renderSystem(renderer.mDevice, renderer.mDeviceContext);
+    
+    InputManager inputManager(renderer.mGLFWwindow);
+    
     Mesh mesh(renderer.mDevice, renderer.mDeviceContext);
     Texture2D albedo(renderer.mDevice, renderer.mDeviceContext);
     Texture2D normal(renderer.mDevice, renderer.mDeviceContext);
@@ -141,7 +145,7 @@ int main()
             }
             else
             {
-                camera.Update(20.f, dt, &renderer);
+                camera.Update(20.f, 2.f, dt, &inputManager);
                 scene.SortBackToFront(camera.mPosition, camera.mFrontDirection);
             }
             // --- PRE RENDER UPDATE --- //

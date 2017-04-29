@@ -1,5 +1,10 @@
 #pragma once
 
+#ifdef _DEBUG
+#define BUILD_ENABLE_D3D11_DEBUG
+#endif
+
+#include <GLFW/glfw3.h>
 #include <d3d11.h>
 #include <d3dcompiler.inl>
 
@@ -15,9 +20,6 @@
 #include "VRDevice.hpp"
 
 class Material;
-
-// Window call back procedure.
-static LRESULT CALLBACK WindowProcedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam);
 
 // Renders scene to windows.
 class Renderer 
@@ -48,30 +50,14 @@ class Renderer
         // Render companion window.
         void RenderCompanionWindow(FrameBuffer* leftEyeFb, FrameBuffer* rightEyeFb, FrameBuffer* windowFb);
 
-        // Get key status.
-        // vKey Windows virtual key.
-        // Returns whether key is pressed or not.
-        bool GetKeyPressed(int vKey);
-
-        // Get mouse inside window.
-        // Return whether mouse is inside window or not.
-        bool GetMouseInsideWindow();
-
-        // Get mouse postion in screen space.
-        // Return mouse position relative window upper left coner.
-        glm::vec2 GetMousePosition();
-
-        // Get mouse left button status.
-        // Return whether mouse left button is pressed or not.
-        bool GetMouseLeftButtonPressed();
-
         // mWinWidth Window width in pixels.
         unsigned int mWinWidth;
         // mWinHeight Window height in pixels.
         unsigned int mWinHeight;
 
-        // Window handle.
-        HWND mHWND;
+        // GLFW window.
+        GLFWwindow* mGLFWwindow;
+
         // Window swap chain.
         IDXGISwapChain* mSwapChain;
 
@@ -89,8 +75,8 @@ class Renderer
         ID3D11PixelShader* mCompanionWindowPS;
 
     private:
-        // Initialise HWND(window).
-        void InitialiseHWND();
+        // Initialise Window.
+        void InitialiseGLFW();
 
         // Initialise D3D(directX).
         void InitialiseD3D();

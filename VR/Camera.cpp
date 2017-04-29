@@ -1,11 +1,9 @@
 #include "Camera.hpp"
-#include "Renderer.hpp"
+#include "InputManager.hpp"
 #include "DoubleFrameBuffer.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/quaternion.hpp>
-#include <iostream>
-#include <Windows.h>
 
 Camera::Camera(float fov, DoubleFrameBuffer* frameBuffer)
 {
@@ -21,77 +19,67 @@ Camera::~Camera()
 
 }
 
-void Camera::Update(float speed, float dt, Renderer* renderer)
+void Camera::Update(float moveSpeed, float rotationSpeed, float dt, InputManager* inputManager)
 {
     // Get movement & rotation.
     glm::vec3 movement = glm::vec3(0.f, 0.f, 0.f);
     glm::vec3 rotation = glm::vec3(0.f, 0.f, 0.f);
 
-    if (GetAsyncKeyState('W'))
+    if (inputManager->KeyPressed(GLFW_KEY_W))
     {
         movement += mFrontDirection;
     }
-    if (GetAsyncKeyState('A'))
+    if (inputManager->KeyPressed(GLFW_KEY_A))
     {
         movement -= mRightDirection;
     }
-    if (GetAsyncKeyState('S'))
+    if (inputManager->KeyPressed(GLFW_KEY_S))
     {
         movement -= mFrontDirection;
     }
-    if (GetAsyncKeyState('D'))
+    if (inputManager->KeyPressed(GLFW_KEY_D))
     {
         movement += mRightDirection;
     }
 
-    if (GetAsyncKeyState('Q'))
+    if (inputManager->KeyPressed(GLFW_KEY_Q))
     {
         movement += mUpDirection;
     }
 
-    if (GetAsyncKeyState('E'))
+    if (inputManager->KeyPressed(GLFW_KEY_E))
     {
         movement -= mUpDirection;
     }
 
-    if (GetAsyncKeyState('Q'))
+    if (inputManager->KeyPressed(GLFW_KEY_X))
     {
-        movement += mUpDirection;
+        rotation.z -= 360.f;
     }
 
-    if (GetAsyncKeyState('E'))
+    if (inputManager->KeyPressed(GLFW_KEY_Z))
     {
-        movement -= mUpDirection;
+        rotation.z += 360.f;
     }
 
-    if (GetAsyncKeyState('X')) 
-    {
-        rotation -= glm::vec3(0.f, 0.f, 1.f);
-    }
+    // Update postion & rotation.
+    mPosition += movement * moveSpeed * dt;
+    rotation *= rotationSpeed * dt;
 
-    if (GetAsyncKeyState('Z')) 
+    // Update mouse rotation.
+    if (inputManager->GetMouseInsideWindow())
     {
-        rotation += glm::vec3(0.f, 0.f, 1.f);
-    }
-
-    if (renderer->GetMouseInsideWindow())
-    {
-        mOldMousePosition = mNewMousePosition;
-        mNewMousePosition = renderer->GetMousePosition();
-        if (renderer->GetMouseLeftButtonPressed()) {
-            //glm::vec2 delta = mNewMousePosition - mOldMousePosition;
-            //rotation += glm::vec3(delta.x, -delta.y, 0.f) * 15.f;
-            int dx = mOldMousePosition.x - mNewMousePosition.x;
-            int dy = mOldMousePosition.y - mNewMousePosition.y;
-            std::cout << "dx: " << dx << "; dy: " << dy << std::endl;
+        int x, y, lastX, lastY;
+        inputManager->GetMousePositionLast(lastX, lastY);
+        inputManager->GetMousePositionCurrent(x, y);
+        if (inputManager->GetMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
+        {
+            int dx = lastX - x;
+            int dy = lastY - y;
             rotation.x += (float)dx / mpFrameBuffer->mWidth * 2.f * mFov;
             rotation.y += (float)dy / mpFrameBuffer->mHeight * 2.f * mFov * mpFrameBuffer->mHeight / mpFrameBuffer->mWidth;
         }
     }
-
-    // Update postion & rotation.
-    mPosition += movement * speed * dt;
-    rotation *= speed / 2.f * dt;
 
     // Update direction vectors and matrices.
     Roll(rotation.z);
@@ -133,7 +121,7 @@ glm::mat4 Camera::CalculateOrientationMatrix() const
     ));
 }
 
-glm::mat4 Camera::CalculateViewMatrix() const 
+glm::mat4 Camera::CalculateViewMatrix() const
 {
     return mOrientationMatrix * glm::translate(glm::mat4(), -mPosition);
 }
