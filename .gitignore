@@ -9,4 +9,5 @@
 #*.vcxproj.filters
 .suo
 /build
+/intermediate
 /packages
