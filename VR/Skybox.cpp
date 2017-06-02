@@ -10,8 +10,8 @@ Skybox::Skybox(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext)
     mCubeMapSRV = nullptr;
 	mMipLevels = 0;
 
-    DxHelp::CreateVS(mpDevice, "resources/shaders/ScreenQuad_VS.hlsl", "main", &mScreenQuadVS);
-    DxHelp::CreatePS(mpDevice, "resources/shaders/Skybox_PS.hlsl", "main", &mSkyboxPS);
+    DxHelp::CreateVS(mpDevice, "../resources/shaders/ScreenQuad_VS.hlsl", "main", &mScreenQuadVS);
+    DxHelp::CreatePS(mpDevice, "../resources/shaders/Skybox_PS.hlsl", "main", &mSkyboxPS);
     DxHelp::CreateCPUwriteGPUreadStructuredBuffer<PSMeta>(mpDevice, 1, &mPSMetaBuff);
 }
 

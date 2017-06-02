@@ -7,15 +7,16 @@
 
 #include <chrono>
 #include <crtdbg.h>
+#include <iostream>
 #include <glm/glm.hpp>
 
 #include "Camera.hpp"
 #include "CPUTimer.hpp"
+#include "D3D11Timer.hpp"
 #include "DoubleFrameBuffer.hpp"
 #include "DxAssert.hpp"
 #include "InputManager.hpp"
 #include "Mesh.hpp"
-#include "Profiler.hpp"
 #include "Renderer.hpp"
 #include "RenderSystem.hpp"
 #include "Scene.hpp"
@@ -43,62 +44,64 @@ int main()
     }
     else 
     {
-        winWidth = 1024;
-        winHeight = 1024;
+        winWidth = 1920 / 2;
+        winHeight = 1080 / 2;
     }
     // Init D3D devices.
     Renderer renderer(winWidth, winHeight);
-	DoubleFrameBuffer cameraFrameBuffer(renderer.mDevice, renderer.mDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
-    DoubleFrameBuffer hmdLeftFrameBuffer(renderer.mDevice, renderer.mDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
-    DoubleFrameBuffer hmdRightFrameBuffer(renderer.mDevice, renderer.mDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
+    ID3D11Device* pDevice = renderer.mDevice;
+    ID3D11DeviceContext* pDeviceContext = renderer.mDeviceContext;
+	DoubleFrameBuffer cameraFrameBuffer(pDevice, pDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
+    DoubleFrameBuffer hmdLeftFrameBuffer(pDevice, pDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
+    DoubleFrameBuffer hmdRightFrameBuffer(pDevice, pDeviceContext, winWidth, winHeight, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
     if (VR)
     {
-        hmd.InitD3D(renderer.mDevice, renderer.mDeviceContext, &hmdLeftFrameBuffer, &hmdRightFrameBuffer);
+        hmd.InitD3D(pDevice, pDeviceContext, &hmdLeftFrameBuffer, &hmdRightFrameBuffer);
     }
     // --- INIT DEVICES --- //
 
     // +++ INIT SCENE +++ //
-    Skybox skybox(renderer.mDevice, renderer.mDeviceContext);
+    Skybox skybox(pDevice, pDeviceContext);
     {
-        Texture2D bk(renderer.mDevice, renderer.mDeviceContext);
-        bk.Load("resources/assets/DeepSpaceBlue/backImage.png");
-        Texture2D dn(renderer.mDevice, renderer.mDeviceContext);
-        dn.Load("resources/assets/DeepSpaceBlue/downImage.png");
-        Texture2D fr(renderer.mDevice, renderer.mDeviceContext);
-        fr.Load("resources/assets/DeepSpaceBlue/frontImage.png");
-        Texture2D lf(renderer.mDevice, renderer.mDeviceContext);
-        lf.Load("resources/assets/DeepSpaceBlue/leftImage.png");
-        Texture2D rt(renderer.mDevice, renderer.mDeviceContext);
-        rt.Load("resources/assets/DeepSpaceBlue/rightImage.png");
-        Texture2D up(renderer.mDevice, renderer.mDeviceContext);
-        up.Load("resources/assets/DeepSpaceBlue/upImage.png");
+        Texture2D bk(pDevice, pDeviceContext);
+        bk.Load("../resources/assets/DeepSpaceBlue/backImage.png");
+        Texture2D dn(pDevice, pDeviceContext);
+        dn.Load("../resources/assets/DeepSpaceBlue/downImage.png");
+        Texture2D fr(pDevice, pDeviceContext);
+        fr.Load("../resources/assets/DeepSpaceBlue/frontImage.png");
+        Texture2D lf(pDevice, pDeviceContext);
+        lf.Load("../resources/assets/DeepSpaceBlue/leftImage.png");
+        Texture2D rt(pDevice,pDeviceContext);
+        rt.Load("../resources/assets/DeepSpaceBlue/rightImage.png");
+        Texture2D up(pDevice, pDeviceContext);
+        up.Load("../resources/assets/DeepSpaceBlue/upImage.png");
         skybox.Load(&bk, &dn, &fr, &lf, &rt, &up);
     }
     Camera camera(glm::radians(60.f), &cameraFrameBuffer);
 	camera.mPosition = glm::vec3(0,0,-2.f);
-    RenderSystem renderSystem(renderer.mDevice, renderer.mDeviceContext);
+    RenderSystem renderSystem(pDevice, pDeviceContext);
     
     InputManager inputManager(renderer.mGLFWwindow);
     
-    Mesh mesh(renderer.mDevice, renderer.mDeviceContext);
-    Texture2D albedo(renderer.mDevice, renderer.mDeviceContext);
-    Texture2D normal(renderer.mDevice, renderer.mDeviceContext);
-	Texture2D white(renderer.mDevice, renderer.mDeviceContext);
-	Texture2D black(renderer.mDevice, renderer.mDeviceContext);
-	Texture2D whiteBlack(renderer.mDevice, renderer.mDeviceContext);
+    Mesh mesh(pDevice, pDeviceContext);
+    Texture2D albedo(pDevice, pDeviceContext);
+    Texture2D normal(pDevice, pDeviceContext);
+	Texture2D white(pDevice, pDeviceContext);
+	Texture2D black(pDevice, pDeviceContext);
+	Texture2D whiteBlack(pDevice, pDeviceContext);
 
-    Scene scene(renderer.mDevice, renderer.mDeviceContext);
+    Scene scene(pDevice, pDeviceContext);
     {
         scene.mpSkybox = &skybox;
-        mesh.Load("resources/assets/skull/skull.obj");
-		//mesh.Load("resources/assets/OBJBox.obj");
-		albedo.Load("resources/assets/skull/skull_diffuse1.jpg");
-		//diffuse.Load("resources/assets/DefaultDiffuse.png");
-		normal.Load("resources/assets/skull/skull_normal.jpg");
-		//normal.Load("resources/assets/DefaultNormal.png");
-		white.Load("resources/assets/White.png");
-		black.Load("resources/assets/Black.png");
-		whiteBlack.Load("resources/assets/WhiteBlack.jpg");
+        mesh.Load("../resources/assets/skull/skull.obj");
+		//mesh.Load("../resources/assets/OBJBox.obj");
+		albedo.Load("../resources/assets/skull/skull_diffuse1.jpg");
+		//diffuse.Load("../resources/assets/DefaultDiffuse.png");
+		normal.Load("../resources/assets/skull/skull_normal.jpg");
+		//normal.Load("../resources/assets/DefaultNormal.png");
+		white.Load("../resources/assets/White.png");
+		black.Load("../resources/assets/Black.png");
+		whiteBlack.Load("../resources/assets/WhiteBlack.jpg");
 
         Entity entity;
         entity.mpMesh = &mesh;
@@ -107,7 +110,9 @@ int main()
         {
             int r = 2;
             for (int z = 0; z < r; ++z)
+            {
                 for (int y = 0; y < r; ++y)
+                {
                     for (int x = 0; x < r; ++x)
                     {
                         entity.mPosition = glm::vec3(x, y, z) * 10.f;
@@ -119,62 +124,74 @@ int main()
 						else entity.mTransparent = false;
                         scene.mEntityList.push_back(entity);
                     }
+                }
+            }
         }
     }
     // --- INIT SCENE --- //
 
     // +++ MAIN LOOP +++ //
     float dt = 0.f;
+    D3D11Timer gpuTimer(pDevice, pDeviceContext);
     while (renderer.Running())
     {
-        { PROFILE("FRAME: " + std::to_string(dt), true);
-            CPUTIMER(dt);
+        // +++ PRE FRAME +++ //
+        CPUTIMER(dt);
+        bool cpuProfile = inputManager.KeyPressed(GLFW_KEY_F1);
+        bool gpuProfile = inputManager.KeyPressed(GLFW_KEY_F2);
+        if (gpuProfile) gpuTimer.Start();
+        // --- PRE FRAME --- //
 
-            // +++ PRE RENDER UPDATE +++ //
-            if (VR)
-            {
-                hmd.mPosition += hmd.mFrontDirection * dt * 10.f;
-                scene.SortBackToFront(hmd.mPosition, hmd.mFrontDirection);
-            }
-            else
-            {
-                camera.Update(20.f, 2.f, dt, &inputManager);
-                scene.SortBackToFront(camera.mPosition, camera.mFrontDirection);
-            }
-            // --- PRE RENDER UPDATE --- //
-
-            // +++ RENDER +++ //
-            renderer.WinClear();
-            if (VR)
-            {
-                hmd.ClearFrameBuffers();
-                renderSystem.Render(scene, hmd);
-                if (CAMERA_CONTROLL)
-                    renderSystem.Render(scene, camera);
-                else
-                    renderer.RenderCompanionWindow(hmd.mpLeftFrameBuffer->GetFrameBuffer(), hmd.mpRightFrameBuffer->GetFrameBuffer(), renderer.mWinFrameBuffer); //TODO make own class.
-            }
-            else
-            {
-				camera.mpFrameBuffer->Clear(0.f, 1.f, 0.f, 1.f, 1.f);
-                renderSystem.Render(scene, camera);
-            }
-            // --- RENDER --- //
-
-            // +++ POST RENDER UPDATE +++ //
-            // --- POST RENDER UPDATE --- //
-
-			// +++ PRESENET +++ //
-            renderer.WinPresent(camera.mpFrameBuffer->GetFrameBuffer());
-            if (VR)
-            {
-                hmd.Submit();
-                if (CAMERA_CONTROLL)
-                    hmd.mPosition = camera.mPosition;
-                hmd.Sync();
-            }
-            // --- PRESENET --- //
+        // +++ PRE RENDER UPDATE +++ //
+        if (VR)
+        {
+            hmd.mPosition += hmd.mFrontDirection * dt * 10.f;
+            scene.SortBackToFront(hmd.mPosition, hmd.mFrontDirection);
         }
+        else
+        {
+            camera.Update(20.f, 2.f, dt, &inputManager);
+            scene.SortBackToFront(camera.mPosition, camera.mFrontDirection);
+        }
+        // --- PRE RENDER UPDATE --- //
+
+        // +++ RENDER +++ //
+        renderer.WinClear();
+        if (VR)
+        {
+            hmd.ClearFrameBuffers();
+            renderSystem.Render(scene, hmd);
+            if (CAMERA_CONTROLL)
+                renderSystem.Render(scene, camera);
+            else
+                renderer.RenderCompanionWindow(hmd.mpLeftFrameBuffer->GetFrameBuffer(), hmd.mpRightFrameBuffer->GetFrameBuffer(), renderer.mWinFrameBuffer); //TODO make own class.
+        }
+        else
+        {
+			camera.mpFrameBuffer->Clear(0.f, 1.f, 0.f, 1.f, 1.f);
+            renderSystem.Render(scene, camera);
+        }
+        // --- RENDER --- //
+
+        // +++ POST RENDER UPDATE +++ //
+        // --- POST RENDER UPDATE --- //
+
+		// +++ PRESENET +++ //
+        renderer.WinPresent(camera.mpFrameBuffer->GetFrameBuffer());
+        if (VR)
+        {
+            hmd.Submit();
+            if (CAMERA_CONTROLL)
+                hmd.mPosition = camera.mPosition;
+            hmd.Sync();
+        }
+        // --- PRESENET --- //
+
+        // +++ POST FRAME +++ //
+        if (gpuProfile) gpuTimer.Stop();
+        if (gpuProfile) std::cout << "GPU: " << gpuTimer.GetDeltaTime() / 1000000.f << " ms." << std::endl;
+        if (cpuProfile) std::cout << "CPU: " << dt * 1000.f << " ms." << std::endl;
+        // --- POST FRAME --- //
     }
     // --- MAIN LOOP --- //
 

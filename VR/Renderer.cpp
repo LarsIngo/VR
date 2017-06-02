@@ -24,8 +24,8 @@ Renderer::Renderer(unsigned int winWidth, unsigned int winHeight)
     InitialiseD3D();
 
     // Init shader
-    DxHelp::CreateVS(mDevice, "resources/shaders/ScreenQuad_VS.hlsl", "main", &mScreenQuadVS);
-    DxHelp::CreatePS(mDevice, "resources/shaders/CompanionWindow_PS.hlsl", "main", &mCompanionWindowPS);
+    DxHelp::CreateVS(mDevice, "../resources/shaders/ScreenQuad_VS.hlsl", "main", &mScreenQuadVS);
+    DxHelp::CreatePS(mDevice, "../resources/shaders/CompanionWindow_PS.hlsl", "main", &mCompanionWindowPS);
 }
 
 Renderer::~Renderer() 
