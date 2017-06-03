@@ -97,6 +97,7 @@ void Material::Render(Scene& scene, const glm::vec3& cameraPosition, const glm::
     mpDeviceContext->OMSetRenderTargets(4, (ID3D11RenderTargetView**)p, *(ID3D11DepthStencilView**)p);
 
     mpDeviceContext->GSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);
+
     mpDeviceContext->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);
     mpDeviceContext->PSSetShaderResources(1, 1, (ID3D11ShaderResourceView**)p);
 	mpDeviceContext->PSSetShaderResources(2, 1, (ID3D11ShaderResourceView**)p);

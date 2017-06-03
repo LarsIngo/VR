@@ -69,6 +69,12 @@ class Camera
         // Field of view in degrees.
         float mFov;
 
+        // Near clip plane.
+        float mNearZ;
+
+        // Far clip plane.
+        float mFarZ;
+
         // Frame buffer.
         DoubleFrameBuffer* mpFrameBuffer;
 

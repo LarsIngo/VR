@@ -8,10 +8,12 @@
 Camera::Camera(float fov, DoubleFrameBuffer* frameBuffer)
 {
     mFov = fov;
+    mNearZ = 0.01f;
+    mFarZ = 200000.f;
     mpFrameBuffer = frameBuffer;
+    mProjectionMatrix = glm::perspectiveFovLH(glm::radians(mFov), (float)mpFrameBuffer->mWidth, (float)mpFrameBuffer->mHeight, mNearZ, mFarZ);
     mScreenWidth = mpFrameBuffer->mWidth;
     mScreenHeight = mpFrameBuffer->mHeight;
-    mProjectionMatrix = glm::perspectiveFovLH(mFov, (float)mScreenWidth, (float)mScreenHeight, 0.01f, 200.f);
 }
 
 Camera::~Camera() 

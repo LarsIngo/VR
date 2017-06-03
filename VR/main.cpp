@@ -77,7 +77,7 @@ int main()
         up.Load("../resources/assets/DeepSpaceBlue/upImage.png");
         skybox.Load(&bk, &dn, &fr, &lf, &rt, &up);
     }
-    Camera camera(glm::radians(60.f), &cameraFrameBuffer);
+    Camera camera(60.f, &cameraFrameBuffer);
 	camera.mPosition = glm::vec3(0,0,-2.f);
     RenderSystem renderSystem(pDevice, pDeviceContext);
     
