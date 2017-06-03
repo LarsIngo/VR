@@ -77,8 +77,8 @@ class D3D11Timer {
 
             UINT64 delta = endTime - startTime;
             double frequency = static_cast<double>(disjointData.Frequency);
-            mDeltaTime = (UINT64)(delta / frequency) * 1000000000;
-            mBeginTime = (UINT64)(startTime / frequency) * 1000000000;
+            mDeltaTime = (delta / frequency) * 1000000000;
+            mBeginTime = (startTime / frequency) * 1000000000;
         }
 
         // Get time from start to stop in nanoseconds.
