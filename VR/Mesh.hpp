@@ -6,9 +6,8 @@
 #include <glm/glm.hpp>
 #include <vector>
 
-#include "Material.hpp"
+class StorageBuffer;
 
-//TODO TEMPLATE <VERTEX>
 class Mesh
 {
     public:
@@ -30,11 +29,14 @@ class Mesh
         //Number of indices.
         unsigned int mNumIndices;
 
-        // Vertex buffer.
-        ID3D11Buffer* mVertexBuffer;
+        // Buffer.
+        StorageBuffer* mPositionBuffer;
+        StorageBuffer* mUVBuffer;
+        StorageBuffer* mNormalBuffer;
+        StorageBuffer* mTangentBuffer;
 
         // Index buffer.
-        ID3D11Buffer* mIndexBuffer;
+        StorageBuffer* mIndexBuffer;
 
     private:
         struct MeshEntry {
@@ -52,6 +54,9 @@ class Mesh
         ID3D11DeviceContext* mpDeviceContext;
 
         static Assimp::Importer aImporter;
-        std::vector<Material::Vertex> vertices;
-        std::vector<unsigned int> indices;
+        std::vector<glm::vec3> positionList;
+        std::vector<glm::vec2> uvList;
+        std::vector<glm::vec3> normalList;
+        std::vector<glm::vec3> tangentList;
+        std::vector<unsigned int> indexList;
 };

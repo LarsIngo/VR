@@ -12,15 +12,6 @@ class FrameBuffer;
 class Material
 {
     public:
-        // Vertex
-        struct Vertex
-        {
-            glm::vec3 position;
-            glm::vec2 uv;
-            glm::vec3 normal;
-            glm::vec3 tangent;
-        };
-
         struct GSMeta
         {
             glm::mat4 modelMatrix;
@@ -42,7 +33,7 @@ class Material
         ~Material();
 
         // Intialise.
-        void Init(std::vector<D3D11_INPUT_ELEMENT_DESC>& inputDesc, const char* VSPath, const char* GSPath, const char* PSPath);
+        void Init(const char* VSPath, const char* GSPath, const char* PSPath);
 
         // Render scene.
         // scene Scene to render.
@@ -51,8 +42,6 @@ class Material
         // targetFb Frame buffer to render.
         void Render(Scene& scene, const glm::vec3& cameraPosition, const glm::mat4& vpMatrix, FrameBuffer* targetFb);
 
-        // D3D11 input layout.
-        ID3D11InputLayout* mInputLayout;
         // Vertex shader.
         ID3D11VertexShader* mVS;
         // Geometry shader.

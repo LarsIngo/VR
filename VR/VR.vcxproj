@@ -187,6 +187,7 @@ echo d | xcopy "$(SolutionDir)externals\portaudio\bin\win64" "$(OutputPath)" /E 
     <ClCompile Include="RenderSystem.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="Skybox.cpp" />
+    <ClCompile Include="StorageBuffer.cpp" />
     <ClCompile Include="Texture2D.cpp" />
     <ClCompile Include="Transparent.cpp" />
     <ClCompile Include="VRDevice.cpp" />
@@ -207,6 +208,7 @@ echo d | xcopy "$(SolutionDir)externals\portaudio\bin\win64" "$(OutputPath)" /E 
     <ClInclude Include="RenderSystem.hpp" />
     <ClInclude Include="Scene.hpp" />
     <ClInclude Include="Skybox.hpp" />
+    <ClInclude Include="StorageBuffer.hpp" />
     <ClInclude Include="Texture2D.hpp" />
     <ClInclude Include="Transparent.hpp" />
     <ClInclude Include="VRDevice.hpp" />

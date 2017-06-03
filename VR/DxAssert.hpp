@@ -3,7 +3,8 @@
 #ifdef NDEBUG
 #ifdef _WIN32
 #include <Windows.h>
-#define DxAssert(x, y) if (x != y) { MessageBox(NULL, "A", "B", MB_OK); }
+#include <tchar.h>
+#define DxAssert(x, y) if (x != y) { MessageBox(NULL, _T("DxAssert"), _T("ERROR"), MB_OK); }
 #else
 #define DxAssert(x, y) x
 #endif // WIN32
@@ -11,9 +12,9 @@
 #include <assert.h>
 #ifdef _WIN32
 #include <Windows.h>
-#define DxAssert(x, y) if (x != y) { MessageBox(NULL, "A", "B", MB_OK); assert(x == y); }
+#include <tchar.h>
+#define DxAssert(x, y) if (x != y) { MessageBox(NULL, _T("DxAssert"), _T("ERROR"), MB_OK); assert(x == y); }
 #else
 #define DxAssert(x, y) assert(x == y)
 #endif // WIN32
 #endif // NDEBUG
-

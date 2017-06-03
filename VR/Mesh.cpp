@@ -1,5 +1,6 @@
 #include "Mesh.hpp"
 #include "DxHelp.hpp"
+#include "StorageBuffer.hpp"
 
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -11,7 +12,10 @@ Mesh::Mesh(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext)
 {
     mpDevice = pDevice;
     mpDeviceContext = pDeviceContext;
-    mVertexBuffer = nullptr;
+    mPositionBuffer = nullptr;
+    mUVBuffer = nullptr;
+    mNormalBuffer = nullptr;
+    mTangentBuffer = nullptr;
     mIndexBuffer = nullptr;
     mNumVertices = 0;
     mNumIndices = 0;
@@ -19,13 +23,16 @@ Mesh::Mesh(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext)
 
 Mesh::~Mesh()
 {
-    if (mVertexBuffer != nullptr) mVertexBuffer->Release();
-    if (mIndexBuffer != nullptr) mIndexBuffer->Release();
+    if (mPositionBuffer != nullptr) delete mPositionBuffer;
+    if (mUVBuffer != nullptr) delete mUVBuffer;
+    if (mNormalBuffer != nullptr) delete mNormalBuffer;
+    if (mTangentBuffer != nullptr) delete mTangentBuffer;
+    if (mIndexBuffer != nullptr) delete mIndexBuffer;
 }
 
 void Mesh::Load(const char* meshPath)
 {
-    assert(mVertexBuffer == nullptr && mIndexBuffer == nullptr && mNumVertices == 0 && mNumIndices == 0);
+    assert(mNumVertices == 0 && mNumIndices == 0);
 
     const aiScene* aScene = aImporter.ReadFile(meshPath,
         aiProcess_CalcTangentSpace | \
@@ -47,10 +54,29 @@ void Mesh::Load(const char* meshPath)
 
     if (aScene != nullptr) LoadAssimpScene(aScene);
 
-    mNumVertices = (unsigned int)vertices.size();
-    mNumIndices = (unsigned int)indices.size();
-    DxHelp::CreateBuffer(mpDevice, D3D11_USAGE_IMMUTABLE, D3D11_BIND_VERTEX_BUFFER, 0, &mVertexBuffer, vertices.data(), mNumVertices);
-    DxHelp::CreateBuffer(mpDevice, D3D11_USAGE_IMMUTABLE, D3D11_BIND_INDEX_BUFFER, 0, &mIndexBuffer, indices.data(), mNumIndices);
+    mNumVertices = (unsigned int)positionList.size();
+    mNumIndices = (unsigned int)indexList.size();
+    
+    mPositionBuffer = new StorageBuffer(mpDevice, mpDeviceContext, sizeof(glm::vec3) * mNumVertices, sizeof(glm::vec3));
+    mUVBuffer = new StorageBuffer(mpDevice, mpDeviceContext, sizeof(glm::vec2) * mNumVertices, sizeof(glm::vec2));
+    mNormalBuffer = new StorageBuffer(mpDevice, mpDeviceContext, sizeof(glm::vec3) * mNumVertices, sizeof(glm::vec3));
+    mTangentBuffer = new StorageBuffer(mpDevice, mpDeviceContext, sizeof(glm::vec3) * mNumVertices, sizeof(glm::vec3));
+    mIndexBuffer = new StorageBuffer(mpDevice, mpDeviceContext, sizeof(unsigned int) * mNumIndices, sizeof(unsigned int));
+
+    mPositionBuffer->Write(positionList.data(), sizeof(glm::vec3) * mNumVertices, 0);
+    mUVBuffer->Write(uvList.data(), sizeof(glm::vec2) * mNumVertices, 0);
+    mNormalBuffer->Write(normalList.data(), sizeof(glm::vec3) * mNumVertices, 0);
+    mTangentBuffer->Write(tangentList.data(), sizeof(glm::vec3) * mNumVertices, 0);
+    mIndexBuffer->Write(indexList.data(), sizeof(unsigned int) * mNumIndices, 0);
+
+    positionList.clear();
+    positionList.shrink_to_fit();
+    uvList.clear();
+    uvList.shrink_to_fit();
+    normalList.clear();
+    normalList.shrink_to_fit();
+    tangentList.clear();
+    tangentList.shrink_to_fit();
 }
 
 void Mesh::LoadAssimpScene(const aiScene* aScene)
@@ -74,9 +100,12 @@ void Mesh::LoadAssimpScene(const aiScene* aScene)
     }
 
     // Resize vectors to fit.
-    vertices.resize(numVertices);
+    positionList.resize(numVertices);
+    uvList.resize(numVertices);
+    normalList.resize(numVertices);
+    tangentList.resize(numVertices);
     //verticesPos.resize(numVertices);
-    indices.resize(numIndices);
+    indexList.resize(numIndices);
 
     numVertices = 0;
     numIndices = 0;
@@ -86,21 +115,19 @@ void Mesh::LoadAssimpScene(const aiScene* aScene)
         const aiMesh* aMesh = aScene->mMeshes[m];
         // Load vertices.
         for (unsigned int i = 0; i < aMesh->mNumVertices; ++i) {
-            Material::Vertex& vert = vertices[numVertices];
-            CpyVec(vert.position, aMesh->mVertices[i]);
-            CpyVec(vert.uv, aMesh->mTextureCoords[0][i]);
-            CpyVec(vert.normal, aMesh->mNormals[i]);
-            CpyVec(vert.tangent, aMesh->mTangents[i]);
-            //verticesPos[numVertices] = &vertices[numVertices].position;
+            CpyVec(positionList[numVertices], aMesh->mVertices[i]);
+            CpyVec(uvList[numVertices], aMesh->mTextureCoords[0][i]);
+            CpyVec(normalList[numVertices], aMesh->mNormals[i]);
+            CpyVec(tangentList[numVertices], aMesh->mTangents[i]);
             numVertices++;
         }
         // Load indices.
         for (unsigned int i = 0; i < aMesh->mNumFaces; ++i) {
             const aiFace& aFace = aMesh->mFaces[i];
             assert(aFace.mNumIndices == 3);
-            indices[numIndices++] = entries[m].baseVertex + aFace.mIndices[0];
-            indices[numIndices++] = entries[m].baseVertex + aFace.mIndices[1];
-            indices[numIndices++] = entries[m].baseVertex + aFace.mIndices[2];
+            indexList[numIndices++] = entries[m].baseVertex + aFace.mIndices[0];
+            indexList[numIndices++] = entries[m].baseVertex + aFace.mIndices[1];
+            indexList[numIndices++] = entries[m].baseVertex + aFace.mIndices[2];
         }
     }
 }

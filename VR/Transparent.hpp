@@ -12,15 +12,6 @@ class DoubleFrameBuffer;
 class Transparent
 {
 public:
-	// Vertex
-	struct Vertex
-	{
-		glm::vec3 position;
-		glm::vec2 uv;
-		glm::vec3 normal;
-		glm::vec3 tangent;
-	};
-
 	struct GSMeta
 	{
 		glm::mat4 modelMatrix;
@@ -46,7 +37,7 @@ public:
 	~Transparent();
 
 	// Intialise.
-	void Init(std::vector<D3D11_INPUT_ELEMENT_DESC>& inputDesc, const char* VSPath, const char* GSPath, const char* PSPath);
+	void Init(const char* VSPath, const char* GSPath, const char* PSPath);
 
 	// Render scene.
 	// scene Scene to render.
@@ -57,8 +48,6 @@ public:
 	// fb Double frame buffer to render.
 	void Render(Scene& scene, const glm::vec3& cameraPosition, const glm::mat4& orientationMatix, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, unsigned int screenWidth, unsigned int screenHeight, DoubleFrameBuffer* fb);
 
-	// D3D11 input layout.
-	ID3D11InputLayout* mInputLayout;
 	// Vertex shader.
 	ID3D11VertexShader* mVS;
 	// Geometry shader.
