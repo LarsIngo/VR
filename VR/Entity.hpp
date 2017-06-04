@@ -5,6 +5,7 @@
 
 class Mesh;
 class Texture2D;
+class ParticleEmitter;
 
 class Entity
 {
@@ -34,4 +35,7 @@ class Entity
 
 		// Metal.
 		Texture2D* mpMetalTex;
+
+        // Particle Emitter.
+        ParticleEmitter* mpParticleEmitter;
 };

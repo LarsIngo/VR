@@ -80,39 +80,42 @@ void Transparent::Render(Scene& scene, const glm::vec3& cameraPosition, const gl
 
 	for (std::size_t i = 0; i < scene.mEntityList.size(); ++i)
 	{
-		Entity& entity = scene.mEntityList[i];
-		if (entity.mTransparent)
-		{
-            ID3D11RenderTargetView* rtvList[4] = { targetFb->mColRTV, targetFb->mWorldRTV, targetFb->mNormRTV, targetFb->mDepthRTV };
-            mpDeviceContext->OMSetRenderTargets(4, rtvList, targetFb->mDepthStencilDSV);
+        Entity& entity = scene.mEntityList[i];
 
-            modelMatrix = glm::translate(glm::mat4(), entity.mPosition);
-			mGSMeta.modelMatrix = glm::transpose(modelMatrix);
-			mGSMeta.mvpMatrix = glm::transpose(vpMatrix * modelMatrix);
-			DxHelp::WriteStructuredBuffer<Transparent::GSMeta>(mpDeviceContext, &mGSMeta, 1, mGSMetaBuff);
+        if (!entity.mTransparent) continue;
+        if (entity.mpAlbedoTex == nullptr || entity.mpNormalTex == nullptr || entity.mpGlossTex == nullptr || entity.mpMetalTex == nullptr) continue;
 
-			mpDeviceContext->PSSetShaderResources(0, 1, &entity.mpAlbedoTex->mSRV);
-			mpDeviceContext->PSSetShaderResources(1, 1, &entity.mpNormalTex->mSRV);
-			mpDeviceContext->PSSetShaderResources(2, 1, &entity.mpGlossTex->mSRV);
-			mpDeviceContext->PSSetShaderResources(3, 1, &sourceFb->mColSRV);
-            mpDeviceContext->PSSetShaderResources(4, 1, &sourceFb->mDepthSRV);
+        Mesh* mesh = entity.mpMesh;
+        if (mesh == nullptr) continue;
 
-            Mesh* mesh = entity.mpMesh;
-            mpDeviceContext->VSSetShaderResources(0, 1, &mesh->mIndexBuffer->mSRV);
-            mpDeviceContext->VSSetShaderResources(1, 1, &mesh->mPositionBuffer->mSRV);
-            mpDeviceContext->VSSetShaderResources(2, 1, &mesh->mUVBuffer->mSRV);
-            mpDeviceContext->VSSetShaderResources(3, 1, &mesh->mNormalBuffer->mSRV);
-            mpDeviceContext->VSSetShaderResources(4, 1, &mesh->mTangentBuffer->mSRV);
+        ID3D11RenderTargetView* rtvList[4] = { targetFb->mColRTV, targetFb->mWorldRTV, targetFb->mNormRTV, targetFb->mDepthRTV };
+        mpDeviceContext->OMSetRenderTargets(4, rtvList, targetFb->mDepthStencilDSV);
 
-            mpDeviceContext->Draw(mesh->mNumIndices, 0);
+        modelMatrix = glm::translate(glm::mat4(), entity.mPosition);
+		mGSMeta.modelMatrix = glm::transpose(modelMatrix);
+		mGSMeta.mvpMatrix = glm::transpose(vpMatrix * modelMatrix);
+		DxHelp::WriteStructuredBuffer<Transparent::GSMeta>(mpDeviceContext, &mGSMeta, 1, mGSMetaBuff);
 
-            void* p[2] = { NULL, NULL };
-            mpDeviceContext->OMSetRenderTargets(2, (ID3D11RenderTargetView**)p, *(ID3D11DepthStencilView**)p);
-            mpDeviceContext->PSSetShaderResources(3, 1, (ID3D11ShaderResourceView**)p);
-            mpDeviceContext->PSSetShaderResources(4, 1, (ID3D11ShaderResourceView**)p);
+		mpDeviceContext->PSSetShaderResources(0, 1, &entity.mpAlbedoTex->mSRV);
+		mpDeviceContext->PSSetShaderResources(1, 1, &entity.mpNormalTex->mSRV);
+		mpDeviceContext->PSSetShaderResources(2, 1, &entity.mpGlossTex->mSRV);
+		mpDeviceContext->PSSetShaderResources(3, 1, &sourceFb->mColSRV);
+        mpDeviceContext->PSSetShaderResources(4, 1, &sourceFb->mDepthSRV);
 
-            sourceFb->Copy(targetFb);
-		}
+        mpDeviceContext->VSSetShaderResources(0, 1, &mesh->mIndexBuffer->mSRV);
+        mpDeviceContext->VSSetShaderResources(1, 1, &mesh->mPositionBuffer->mSRV);
+        mpDeviceContext->VSSetShaderResources(2, 1, &mesh->mUVBuffer->mSRV);
+        mpDeviceContext->VSSetShaderResources(3, 1, &mesh->mNormalBuffer->mSRV);
+        mpDeviceContext->VSSetShaderResources(4, 1, &mesh->mTangentBuffer->mSRV);
+
+        mpDeviceContext->Draw(mesh->mNumIndices, 0);
+
+        void* p[2] = { NULL, NULL };
+        mpDeviceContext->OMSetRenderTargets(2, (ID3D11RenderTargetView**)p, *(ID3D11DepthStencilView**)p);
+        mpDeviceContext->PSSetShaderResources(3, 1, (ID3D11ShaderResourceView**)p);
+        mpDeviceContext->PSSetShaderResources(4, 1, (ID3D11ShaderResourceView**)p);
+
+        sourceFb->Copy(targetFb);
 	}
 
 	void* p[4] = { NULL, NULL, NULL, NULL };

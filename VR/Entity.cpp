@@ -9,6 +9,7 @@ Entity::Entity()
     mpNormalTex = nullptr;
 	mpGlossTex = nullptr;
 	mpMetalTex = nullptr;
+    mpParticleEmitter = nullptr;
 }
 
 Entity::~Entity()

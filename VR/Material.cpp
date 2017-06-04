@@ -70,27 +70,30 @@ void Material::Render(Scene& scene, const glm::vec3& cameraPosition, const glm::
     for (std::size_t i = 0; i < scene.mEntityList.size(); ++i)
     {
         Entity& entity = scene.mEntityList[i];
-		if (!entity.mTransparent)
-		{
-            modelMatrix = glm::translate(glm::mat4(), entity.mPosition);
-			mGSMeta.modelMatrix = glm::transpose(modelMatrix);
-			mGSMeta.mvpMatrix = glm::transpose(vpMatrix * modelMatrix);
-			DxHelp::WriteStructuredBuffer<Material::GSMeta>(mpDeviceContext, &mGSMeta, 1, mGSMetaBuff);
 
-			mpDeviceContext->PSSetShaderResources(0, 1, &entity.mpAlbedoTex->mSRV);
-			mpDeviceContext->PSSetShaderResources(1, 1, &entity.mpNormalTex->mSRV);
-			mpDeviceContext->PSSetShaderResources(2, 1, &entity.mpGlossTex->mSRV);
-			mpDeviceContext->PSSetShaderResources(3, 1, &entity.mpMetalTex->mSRV);
+        if (entity.mTransparent) continue;
+        if (entity.mpAlbedoTex == nullptr || entity.mpNormalTex == nullptr || entity.mpGlossTex == nullptr || entity.mpMetalTex == nullptr) continue;
 
-			Mesh* mesh = entity.mpMesh;
-            mpDeviceContext->VSSetShaderResources(0, 1, &mesh->mIndexBuffer->mSRV);
-            mpDeviceContext->VSSetShaderResources(1, 1, &mesh->mPositionBuffer->mSRV);
-            mpDeviceContext->VSSetShaderResources(2, 1, &mesh->mUVBuffer->mSRV);
-            mpDeviceContext->VSSetShaderResources(3, 1, &mesh->mNormalBuffer->mSRV);
-            mpDeviceContext->VSSetShaderResources(4, 1, &mesh->mTangentBuffer->mSRV);
+        Mesh* mesh = entity.mpMesh;
+        if (mesh == nullptr) continue;
 
-			mpDeviceContext->Draw(mesh->mNumIndices, 0);
-		}
+        modelMatrix = glm::translate(glm::mat4(), entity.mPosition);
+		mGSMeta.modelMatrix = glm::transpose(modelMatrix);
+		mGSMeta.mvpMatrix = glm::transpose(vpMatrix * modelMatrix);
+		DxHelp::WriteStructuredBuffer<Material::GSMeta>(mpDeviceContext, &mGSMeta, 1, mGSMetaBuff);
+
+		mpDeviceContext->PSSetShaderResources(0, 1, &entity.mpAlbedoTex->mSRV);
+		mpDeviceContext->PSSetShaderResources(1, 1, &entity.mpNormalTex->mSRV);
+		mpDeviceContext->PSSetShaderResources(2, 1, &entity.mpGlossTex->mSRV);
+		mpDeviceContext->PSSetShaderResources(3, 1, &entity.mpMetalTex->mSRV);
+
+        mpDeviceContext->VSSetShaderResources(0, 1, &mesh->mIndexBuffer->mSRV);
+        mpDeviceContext->VSSetShaderResources(1, 1, &mesh->mPositionBuffer->mSRV);
+        mpDeviceContext->VSSetShaderResources(2, 1, &mesh->mUVBuffer->mSRV);
+        mpDeviceContext->VSSetShaderResources(3, 1, &mesh->mNormalBuffer->mSRV);
+        mpDeviceContext->VSSetShaderResources(4, 1, &mesh->mTangentBuffer->mSRV);
+
+		mpDeviceContext->Draw(mesh->mNumIndices, 0);
     }
 
     void* p[4] = { NULL, NULL, NULL, NULL };

@@ -21,6 +21,8 @@
 #include "RenderSystem.hpp"
 #include "Scene.hpp"
 #include "Skybox.hpp"
+#include "Particle/ParticleEmitter.hpp"
+#include "Particle/ParticleSystem.hpp"
 #include "Texture2D.hpp"
 #include "VRDevice.hpp"
 
@@ -79,7 +81,9 @@ int main()
     }
     Camera camera(60.f, &cameraFrameBuffer);
 	camera.mPosition = glm::vec3(0,0,-2.f);
+
     RenderSystem renderSystem(pDevice, pDeviceContext);
+    ParticleSystem particleSystem(pDevice, pDeviceContext);
     
     InputManager inputManager(renderer.mGLFWwindow);
     
@@ -90,6 +94,7 @@ int main()
 	Texture2D black(pDevice, pDeviceContext);
 	Texture2D whiteBlack(pDevice, pDeviceContext);
 
+    ParticleEmitter particleEmitter(pDevice, pDeviceContext, 100);
     Scene scene(pDevice, pDeviceContext);
     {
         scene.mpSkybox = &skybox;
@@ -103,30 +108,39 @@ int main()
 		black.Load("../resources/assets/Black.png");
 		whiteBlack.Load("../resources/assets/WhiteBlack.jpg");
 
-        Entity entity;
-        entity.mpMesh = &mesh;
-        entity.mpAlbedoTex = &albedo;
-        entity.mpNormalTex = &normal;
-        {
-            int r = 2;
-            for (int z = 0; z < r; ++z)
+        {   // MESHES
+            Entity entity;
+            entity.mpMesh = &mesh;
+            entity.mpAlbedoTex = &albedo;
+            entity.mpNormalTex = &normal;
             {
-                for (int y = 0; y < r; ++y)
+                int r = 2;
+                for (int z = 0; z < r; ++z)
                 {
-                    for (int x = 0; x < r; ++x)
+                    for (int y = 0; y < r; ++y)
                     {
-                        entity.mPosition = glm::vec3(x, y, z) * 10.f;
-						if (x % 2) entity.mpMetalTex = &white;
-						else entity.mpMetalTex = &black;
-						if (y % 2) entity.mpGlossTex = &white;
-						else entity.mpGlossTex = &black;
-						if (z % 2) entity.mTransparent = true;
-						else entity.mTransparent = false;
-                        scene.mEntityList.push_back(entity);
+                        for (int x = 0; x < r; ++x)
+                        {
+                            entity.mPosition = glm::vec3(x, y, z) * 10.f;
+                            if (x % 2) entity.mpMetalTex = &white;
+                            else entity.mpMetalTex = &black;
+                            if (y % 2) entity.mpGlossTex = &white;
+                            else entity.mpGlossTex = &black;
+                            if (z % 2) entity.mTransparent = true;
+                            else entity.mTransparent = false;
+                            scene.mEntityList.push_back(entity);
+                        }
                     }
                 }
             }
         }
+
+        {
+            Entity entity;
+            entity.mpParticleEmitter = &particleEmitter;
+            scene.mEntityList.push_back(entity);
+        }
+        
     }
     // --- INIT SCENE --- //
 
@@ -143,6 +157,8 @@ int main()
         // --- PRE FRAME --- //
 
         // +++ PRE RENDER UPDATE +++ //
+        particleSystem.Update(scene, dt);
+
         if (VR)
         {
             hmd.mPosition += hmd.mFrontDirection * dt * 10.f;
@@ -170,6 +186,7 @@ int main()
         {
 			camera.mpFrameBuffer->Clear(0.f, 1.f, 0.f, 1.f, 1.f);
             renderSystem.Render(scene, camera);
+            particleSystem.Render(scene, camera);
         }
         // --- RENDER --- //
 
