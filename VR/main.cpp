@@ -94,7 +94,7 @@ int main()
 	Texture2D black(pDevice, pDeviceContext);
 	Texture2D whiteBlack(pDevice, pDeviceContext);
 
-    ParticleEmitter particleEmitter(pDevice, pDeviceContext, 100);
+    ParticleEmitter particleEmitter(pDevice, pDeviceContext, 1, 10);
     Scene scene(pDevice, pDeviceContext);
     {
         scene.mpSkybox = &skybox;

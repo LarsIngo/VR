@@ -12,6 +12,7 @@ ParticleSystem::ParticleSystem(ID3D11Device* pDevice, ID3D11DeviceContext* pDevi
     mpDeviceContext = pDeviceContext;
 
     // Create meta buffers.
+    mEmittMetaDataBuffer = new StorageBuffer(mpDevice, mpDeviceContext, sizeof(EmittMetaData) * 1, sizeof(EmittMetaData));
     mUpdateMetaDataBuffer = new StorageBuffer(mpDevice, mpDeviceContext, sizeof(UpdateMetaData) * 1, sizeof(UpdateMetaData));
     mRenderMetaDataBuffer = new StorageBuffer(mpDevice, mpDeviceContext, sizeof(RenderMetaData) * 1, sizeof(RenderMetaData));
 
@@ -40,16 +41,21 @@ ParticleSystem::ParticleSystem(ID3D11Device* pDevice, ID3D11DeviceContext* pDevi
         }
     }
 
+    // Create emitter pipeline.
+    DxHelp::CreateCS(mpDevice, "../resources/shaders/Particles_Emitter_CS.hlsl", "main", &mEmittCS);
+
     // Create update pipeline.
-    DxHelp::CreateCS(mpDevice, "../resources/shaders/Particles_Update_CS.hlsl", "main", &mComputeShader);
+    DxHelp::CreateCS(mpDevice, "../resources/shaders/Particles_Update_CS.hlsl", "main", &mUpdateCS);
 }
 
 ParticleSystem::~ParticleSystem()
 {
+    delete mEmittMetaDataBuffer;
     delete mUpdateMetaDataBuffer;
     delete mRenderMetaDataBuffer;
 
-    mComputeShader->Release();
+    mEmittCS->Release();
+    mUpdateCS->Release();
 
     mVertexShader->Release();
     mGeometryShader->Release();
@@ -59,7 +65,58 @@ ParticleSystem::~ParticleSystem()
 
 void ParticleSystem::Update(Scene& scene, float dt)
 {
-    mpDeviceContext->CSSetShader(mComputeShader, NULL, NULL);
+    // Update emitters.
+    mpDeviceContext->CSSetShader(mEmittCS, NULL, NULL);
+
+    for (Entity& entity : scene.mEntityList)
+    {
+        ParticleEmitter* emitter = entity.mpParticleEmitter;
+        if (emitter == nullptr) continue;
+
+        emitter->mTime += dt;
+        unsigned int emittCount = emitter->mTime * emitter->mEmittFrequency;
+
+        if (!emittCount) continue;
+
+        emitter->mTime = 0.f;
+
+        mpDeviceContext->CSSetUnorderedAccessViews(0, 1, &emitter->mPositionBuffer->GetOutputBuffer()->mUAV, NULL);
+        mpDeviceContext->CSSetUnorderedAccessViews(1, 1, &emitter->mOldPositionBuffer->GetOutputBuffer()->mUAV, NULL);
+        mpDeviceContext->CSSetUnorderedAccessViews(2, 1, &emitter->mVelocityBuffer->GetOutputBuffer()->mUAV, NULL);
+        mpDeviceContext->CSSetUnorderedAccessViews(3, 1, &emitter->mLifetimeBuffer->GetOutputBuffer()->mUAV, NULL);
+
+        for (unsigned int i = 0; i < emittCount; ++i)
+        {
+            mEmittMetaData.randomNumber = 0;
+            mEmittMetaData.emittIndex = emitter->mEmittIndex;
+            mEmittMetaDataBuffer->Write(&mEmittMetaData, sizeof(EmittMetaData), 0);
+
+            mpDeviceContext->CSSetShaderResources(0, 1, &mEmittMetaDataBuffer->mSRV);
+
+            mpDeviceContext->Dispatch(1, 1, 1);
+
+            emitter->mEmittIndex = (emitter->mEmittIndex + 1) % emitter->mParticleCount;
+
+            void* p[1] = { NULL };
+            mpDeviceContext->CSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)p);
+        }
+
+        void* p[1] = { NULL };
+        mpDeviceContext->CSSetUnorderedAccessViews(0, 1, (ID3D11UnorderedAccessView**)p, NULL);
+        mpDeviceContext->CSSetUnorderedAccessViews(1, 1, (ID3D11UnorderedAccessView**)p, NULL);
+        mpDeviceContext->CSSetUnorderedAccessViews(2, 1, (ID3D11UnorderedAccessView**)p, NULL);
+        mpDeviceContext->CSSetUnorderedAccessViews(3, 1, (ID3D11UnorderedAccessView**)p, NULL);
+
+        emitter->mPositionBuffer->Swap();
+        emitter->mOldPositionBuffer->Swap();
+        emitter->mVelocityBuffer->Swap();
+        emitter->mLifetimeBuffer->Swap();
+    }
+
+    mpDeviceContext->CSSetShader(NULL, NULL, NULL);
+
+    // Update particles.
+    mpDeviceContext->CSSetShader(mUpdateCS, NULL, NULL);
 
     for (Entity& entity : scene.mEntityList)
     {

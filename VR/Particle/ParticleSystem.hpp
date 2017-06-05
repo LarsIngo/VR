@@ -33,12 +33,20 @@ class ParticleSystem
         ID3D11Device* mpDevice;
         ID3D11DeviceContext* mpDeviceContext;
 
-        ID3D11ComputeShader* mComputeShader;
+        ID3D11ComputeShader* mEmittCS;
+        ID3D11ComputeShader* mUpdateCS;
 
         ID3D11VertexShader* mVertexShader;
         ID3D11GeometryShader* mGeometryShader;
         ID3D11PixelShader* mPixelShader;
         ID3D11BlendState* mBlendState;
+
+        struct EmittMetaData
+        {
+            unsigned int randomNumber;
+            unsigned int emittIndex;
+        } mEmittMetaData;
+        StorageBuffer* mEmittMetaDataBuffer;
 
         struct UpdateMetaData
         {

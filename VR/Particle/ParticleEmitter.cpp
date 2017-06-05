@@ -2,12 +2,18 @@
 
 #include "../StorageSwapBuffer.hpp"
 
-ParticleEmitter::ParticleEmitter(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext, unsigned int particleCount)
+ParticleEmitter::ParticleEmitter(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext, unsigned int emittFrequency, float lifeTime)
 {
     mpDevice = pDevice;
     mpDeviceContext = pDeviceContext;
 
-    mParticleCount = particleCount;
+    mEmittFrequency = emittFrequency;
+    mLifetime = lifeTime;
+
+    mParticleCount = mEmittFrequency * mLifetime;
+
+    mTime = 0.f;
+    mEmittIndex = 0.f;
 
     mPositionBuffer = new StorageSwapBuffer(mpDevice, mpDeviceContext, sizeof(glm::vec3) * mParticleCount, sizeof(glm::vec3));
     mOldPositionBuffer = new StorageSwapBuffer(mpDevice, mpDeviceContext, sizeof(glm::vec3) * mParticleCount, sizeof(glm::vec3));

@@ -16,8 +16,9 @@ class ParticleEmitter
         // Constructor.
         // pDevice Pointer to D3D11 device.
         // pDeviceContext Pointer to D3D11 device context.
-        // particleCount Number of particles in system.
-        ParticleEmitter(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext, unsigned int particleCount);
+        // emittFrequency Number of particles emitted per second.
+        // lifetime Lifetime of particles in seconds.
+        ParticleEmitter(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext, unsigned int emittFrequency, float lifeTime);
 
         // Destructor.
         ~ParticleEmitter();
@@ -26,10 +27,18 @@ class ParticleEmitter
         ID3D11Device* mpDevice;
         ID3D11DeviceContext* mpDeviceContext;
 
+        ID3D11ComputeShader* mEmittParticleCS;
+
         StorageSwapBuffer* mPositionBuffer;
         StorageSwapBuffer* mOldPositionBuffer;
         StorageSwapBuffer* mVelocityBuffer;
         StorageSwapBuffer* mLifetimeBuffer;
 
+        float mLifetime;
+        unsigned int mEmittFrequency;
+
         unsigned int mParticleCount;
+
+        float mTime;
+        unsigned int mEmittIndex;
 };
