@@ -4,6 +4,7 @@
 #include "../DxHelp.hpp"
 #include "../DoubleFrameBuffer.hpp"
 #include "../FrameBuffer.hpp"
+#include "../Mesh.hpp"
 #include "../StorageSwapBuffer.hpp"
 
 ParticleSystem::ParticleSystem(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext)
@@ -85,10 +86,22 @@ void ParticleSystem::Update(Scene& scene, float dt)
         mpDeviceContext->CSSetUnorderedAccessViews(2, 1, &emitter->mVelocityBuffer->GetOutputBuffer()->mUAV, NULL);
         mpDeviceContext->CSSetUnorderedAccessViews(3, 1, &emitter->mLifetimeBuffer->GetOutputBuffer()->mUAV, NULL);
 
+        if (entity.mpMesh != nullptr)
+            mpDeviceContext->CSSetShaderResources(1, 1, &entity.mpMesh->mPositionBuffer->mSRV);
+
         for (unsigned int i = 0; i < emittCount; ++i)
         {
-            mEmittMetaData.randomNumber = 0;
+            mEmittMetaData.position = entity.mPosition;
+            mEmittMetaData.velocity = glm::vec3(0.f, 1.f, 0.f);
+            mEmittMetaData.lifetime = emitter->mLifetime;
             mEmittMetaData.emittIndex = emitter->mEmittIndex;
+            mEmittMetaData.emittPointIndex = -1;
+            if (entity.mpMesh != nullptr)
+            {
+                std::uniform_int_distribution<int> distribution(0, entity.mpMesh->mNumVertices - 1);
+                mEmittMetaData.emittPointIndex = distribution(mRandomEngine);
+            }
+
             mEmittMetaDataBuffer->Write(&mEmittMetaData, sizeof(EmittMetaData), 0);
 
             mpDeviceContext->CSSetShaderResources(0, 1, &mEmittMetaDataBuffer->mSRV);
@@ -102,6 +115,9 @@ void ParticleSystem::Update(Scene& scene, float dt)
         }
 
         void* p[1] = { NULL };
+        if (entity.mpMesh != nullptr)
+            mpDeviceContext->CSSetShaderResources(1, 1, (ID3D11ShaderResourceView**)p);
+
         mpDeviceContext->CSSetUnorderedAccessViews(0, 1, (ID3D11UnorderedAccessView**)p, NULL);
         mpDeviceContext->CSSetUnorderedAccessViews(1, 1, (ID3D11UnorderedAccessView**)p, NULL);
         mpDeviceContext->CSSetUnorderedAccessViews(2, 1, (ID3D11UnorderedAccessView**)p, NULL);

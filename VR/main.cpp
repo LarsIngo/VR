@@ -128,19 +128,18 @@ int main()
                             else entity.mpGlossTex = &black;
                             if (z % 2) entity.mTransparent = true;
                             else entity.mTransparent = false;
+
+                            if (x + y + z == 0)
+                                entity.mpParticleEmitter = &particleEmitter;
+                            else
+                                entity.mpParticleEmitter = nullptr;
+
                             scene.mEntityList.push_back(entity);
                         }
                     }
                 }
             }
         }
-
-        {
-            Entity entity;
-            entity.mpParticleEmitter = &particleEmitter;
-            scene.mEntityList.push_back(entity);
-        }
-        
     }
     // --- INIT SCENE --- //
 

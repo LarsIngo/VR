@@ -2,14 +2,17 @@
 // Meta data.
 struct MetaData
 {
-    uint randomNumber;
+    float3 position;
+    float3 velocity;
+    float lifetime;
     uint emittIndex;
+    int emittPointIndex;
 };
 // Meta buffer.
 StructuredBuffer<MetaData> g_MetaBuffer : register(t0);
 
 // Input.
-//StructuredBuffer<float3> g_EmittPointsBuffer : register(t1);
+StructuredBuffer<float3> g_EmittPointsBuffer : register(t1);
 
 // Output.
 RWStructuredBuffer<float3> g_OutPositionBuffer : register(u0);
@@ -31,11 +34,20 @@ RWStructuredBuffer<float> g_OutLifetimeBuffer : register(u3);
 void main(uint3 threadID : SV_DispatchThreadID)
 {
     MetaData metaData = g_MetaBuffer[0];
-    uint randomNumber = metaData.randomNumber;
+    float3 position = metaData.position;
+    float3 velocity = metaData.velocity;
+    float lifetime = metaData.lifetime;
     uint emittIndex = metaData.emittIndex;
+    int emittPointIndex = metaData.emittPointIndex;
 
-    g_OutPositionBuffer[emittIndex] = float3(3,3,3);
+    float3 offset = float3(0.f, 0.f, 0.f);
+    if (emittPointIndex >= 0)
+    {
+        offset = g_EmittPointsBuffer[emittPointIndex];
+    }
+
+    g_OutPositionBuffer[emittIndex] = position + offset;
     g_OutOldPositionBuffer[emittIndex] = float3(3, 3, 3);
-    g_OutVelocityBuffer[emittIndex] = float3(0, 1, 0);
-    g_OutLifetimeBuffer[emittIndex] = float(10);
+    g_OutVelocityBuffer[emittIndex] = velocity;
+    g_OutLifetimeBuffer[emittIndex] = lifetime;
 }

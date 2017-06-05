@@ -1,6 +1,7 @@
 #pragma once
 
 #include <d3d11.h>
+#include <random>
 
 #include "../Camera.hpp"
 #include "../Scene.hpp"
@@ -43,8 +44,11 @@ class ParticleSystem
 
         struct EmittMetaData
         {
-            unsigned int randomNumber;
+            glm::vec3 position;
+            glm::vec3 velocity;
+            float lifetime;
             unsigned int emittIndex;
+            int emittPointIndex;
         } mEmittMetaData;
         StorageBuffer* mEmittMetaDataBuffer;
 
@@ -64,4 +68,6 @@ class ParticleSystem
             float pad[2];
         } mRenderMetaData;
         StorageBuffer* mRenderMetaDataBuffer;
+
+        std::default_random_engine mRandomEngine;
 };
