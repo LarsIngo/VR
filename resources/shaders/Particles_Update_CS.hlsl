@@ -11,15 +11,17 @@ StructuredBuffer<MetaData> g_MetaBuffer : register(t0);
 
 // Input.
 StructuredBuffer<float3> g_InPositionBuffer : register(t1);
-StructuredBuffer<float3> g_InOldPositionBuffer : register(t2);
+StructuredBuffer<float2> g_InScaleBuffer : register(t2);
 StructuredBuffer<float3> g_InVelocityBuffer : register(t3);
 StructuredBuffer<float> g_InLifetimeBuffer : register(t4);
+StructuredBuffer<float3> g_InColorBuffer : register(t5);
 
 // Output.
 RWStructuredBuffer<float3> g_OutPositionBuffer : register(u0);
-RWStructuredBuffer<float3> g_OutOldPositionBuffer : register(u1);
+RWStructuredBuffer<float2> g_OutScaleBuffer : register(u1);
 RWStructuredBuffer<float3> g_OutVelocityBuffer : register(u2);
 RWStructuredBuffer<float> g_OutLifetimeBuffer : register(u3);
+RWStructuredBuffer<float3> g_OutColorBuffer : register(u4);
 
 [numthreads(128, 1, 1)]
 void main(uint3 threadID : SV_DispatchThreadID)
@@ -30,13 +32,15 @@ void main(uint3 threadID : SV_DispatchThreadID)
     uint tID = threadID.x;
 
     float3 self_position = g_InPositionBuffer[tID];
-    float3 new_old_position = self_position;
-    float3 self_oldPosition = g_InOldPositionBuffer[tID];
+    float2 self_scale = g_InScaleBuffer[tID];
     float3 self_velocity = g_InVelocityBuffer[tID];
     float self_lifetime = g_InLifetimeBuffer[tID];
+    float3 self_color = g_InColorBuffer[tID];
 
     // +++ PHYSICS +++ //
-    self_position += float3(0.f, 1.f, 0.f) * dt;
+    self_position += self_velocity * dt;
+    self_lifetime -= dt;
+
     //self.velocity.xyz -= self.velocity.xyz * 0.5f * dt;
     //self.velocity.xyz += self.acceleration.xyz * dt;
     // --- PHYSICS --- //
@@ -51,7 +55,8 @@ void main(uint3 threadID : SV_DispatchThreadID)
     */
 
     g_OutPositionBuffer[tID] = self_position;
-    g_OutOldPositionBuffer[tID] = new_old_position;
+    g_OutScaleBuffer[tID] = self_scale;
     g_OutVelocityBuffer[tID] = self_velocity;
     g_OutLifetimeBuffer[tID] = self_lifetime;
+    g_OutColorBuffer[tID] = self_color;
 }

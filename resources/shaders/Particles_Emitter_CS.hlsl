@@ -4,7 +4,9 @@ struct MetaData
 {
     float3 position;
     float3 velocity;
+    float2 scale;
     float lifetime;
+    float3 color;
     uint emittIndex;
     int emittPointIndex;
 };
@@ -16,9 +18,10 @@ StructuredBuffer<float3> g_EmittPointsBuffer : register(t1);
 
 // Output.
 RWStructuredBuffer<float3> g_OutPositionBuffer : register(u0);
-RWStructuredBuffer<float3> g_OutOldPositionBuffer : register(u1);
+RWStructuredBuffer<float2> g_OutScaleBuffer : register(u1);
 RWStructuredBuffer<float3> g_OutVelocityBuffer : register(u2);
 RWStructuredBuffer<float> g_OutLifetimeBuffer : register(u3);
+RWStructuredBuffer<float3> g_OutColorBuffer : register(u4);
 
 //uint WangHash(uint seed)
 //{
@@ -36,7 +39,9 @@ void main(uint3 threadID : SV_DispatchThreadID)
     MetaData metaData = g_MetaBuffer[0];
     float3 position = metaData.position;
     float3 velocity = metaData.velocity;
+    float2 scale = metaData.scale;
     float lifetime = metaData.lifetime;
+    float3 color = metaData.color;
     uint emittIndex = metaData.emittIndex;
     int emittPointIndex = metaData.emittPointIndex;
 
@@ -47,7 +52,8 @@ void main(uint3 threadID : SV_DispatchThreadID)
     }
 
     g_OutPositionBuffer[emittIndex] = position + offset;
-    g_OutOldPositionBuffer[emittIndex] = float3(3, 3, 3);
+    g_OutScaleBuffer[emittIndex] = scale;
     g_OutVelocityBuffer[emittIndex] = velocity;
     g_OutLifetimeBuffer[emittIndex] = lifetime;
+    g_OutColorBuffer[emittIndex] = color;
 }

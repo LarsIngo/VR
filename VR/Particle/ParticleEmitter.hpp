@@ -18,7 +18,10 @@ class ParticleEmitter
         // pDeviceContext Pointer to D3D11 device context.
         // emittFrequency Number of particles emitted per second.
         // lifetime Lifetime of particles in seconds.
-        ParticleEmitter(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext, unsigned int emittFrequency, float lifeTime);
+        // velocity Velocity of particle.
+        // scale Scale of particle.
+        // color Color of particle.
+        ParticleEmitter(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext, unsigned int emittFrequency, float lifeTime, const glm::vec3& velocity, const glm::vec2& scale, const glm::vec3& color);
 
         // Destructor.
         ~ParticleEmitter();
@@ -30,12 +33,17 @@ class ParticleEmitter
         ID3D11ComputeShader* mEmittParticleCS;
 
         StorageSwapBuffer* mPositionBuffer;
-        StorageSwapBuffer* mOldPositionBuffer;
+        StorageSwapBuffer* mScaleBuffer;
         StorageSwapBuffer* mVelocityBuffer;
         StorageSwapBuffer* mLifetimeBuffer;
+        StorageSwapBuffer* mColorBuffer;
 
-        float mLifetime;
         unsigned int mEmittFrequency;
+
+        glm::vec3 mVelocity;
+        glm::vec2 mScale;
+        float mLifetime;
+        glm::vec3 mColor;
 
         unsigned int mParticleCount;
 

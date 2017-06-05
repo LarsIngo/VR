@@ -2,18 +2,20 @@
 struct GSInput
 {
     float3 position : POSITION;
-    float3 oldPosition : OLDPOSITION;
+    float2 scale : SCALE;
     float3 velocity : VELOCITY;
     float lifetime : LIFETIME;
+    float3 color : COLOR;
 };
 
 // Output.
 struct GSOutput
 {
     float4 position : SV_POSITION;
-    float3 oldPosition : OLDPOSITION;
+    float2 scale : SCALE;
     float3 velocity : VELOCITY;
     float lifetime : LIFETIME;
+    float3 color : COLOR;
     float3 worldPosition : WORLDPOSITION;
     float2 uv : UV;
 };
@@ -32,7 +34,8 @@ StructuredBuffer<MetaData> g_MetaBuffer : register(t0);
 [maxvertexcount(4)]
 void main(point GSInput input[1], inout TriangleStream<GSOutput> TriStream)
 {
-    if (input[0].lifetime > 0.f)
+    float lifetime = input[0].lifetime;
+    if (lifetime > 0.f)
     {
         GSOutput output;
 
@@ -42,7 +45,7 @@ void main(point GSInput input[1], inout TriangleStream<GSOutput> TriStream)
         float3 lensUpDirection = metaData.lensUpDirection;
 
         float3 worldPosition = input[0].position.xyz;
-        float2 scale = float2(1.f, 1.f);
+        float2 scale = input[0].scale;
 
         float3 particleFrontDirection = normalize(lensPosition - worldPosition);
         float3 paticleSideDirection = cross(particleFrontDirection, lensUpDirection);
@@ -54,9 +57,10 @@ void main(point GSInput input[1], inout TriangleStream<GSOutput> TriStream)
             float y = i == 0 || i == 1;
             output.position.xyz = worldPosition + paticleSideDirection * (x * 2.f - 1.f) * scale.x + paticleUpDirection * (y * 2.f - 1.f) * scale.y;
             output.position.w = 1.f;
-            output.oldPosition = input[0].oldPosition;
+            output.scale = scale;
             output.velocity = input[0].velocity;
-            output.lifetime = input[0].lifetime;
+            output.lifetime = lifetime;
+            output.color = input[0].color;
             output.worldPosition = output.position.xyz;
             output.position = mul(output.position, vpMatrix);
             output.uv = float2(x, 1.f - y);

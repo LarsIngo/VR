@@ -41,12 +41,15 @@ class ParticleSystem
         ID3D11GeometryShader* mGeometryShader;
         ID3D11PixelShader* mPixelShader;
         ID3D11BlendState* mBlendState;
+        ID3D11DepthStencilState* mDepthStencilState;
 
         struct EmittMetaData
         {
             glm::vec3 position;
             glm::vec3 velocity;
+            glm::vec2 scale;
             float lifetime;
+            glm::vec3 color;
             unsigned int emittIndex;
             int emittPointIndex;
         } mEmittMetaData;

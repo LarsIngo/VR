@@ -94,7 +94,7 @@ int main()
 	Texture2D black(pDevice, pDeviceContext);
 	Texture2D whiteBlack(pDevice, pDeviceContext);
 
-    ParticleEmitter particleEmitter(pDevice, pDeviceContext, 1, 10);
+    std::vector<ParticleEmitter*> particleEmitterList;
     Scene scene(pDevice, pDeviceContext);
     {
         scene.mpSkybox = &skybox;
@@ -129,10 +129,9 @@ int main()
                             if (z % 2) entity.mTransparent = true;
                             else entity.mTransparent = false;
 
-                            if (x + y + z == 0)
-                                entity.mpParticleEmitter = &particleEmitter;
-                            else
-                                entity.mpParticleEmitter = nullptr;
+                            ParticleEmitter* particleEmitter = new ParticleEmitter(pDevice, pDeviceContext, 400, 1.5, glm::vec3(0.f, 1.f, 0.f), glm::vec2(0.2f, 0.2f), glm::vec3(x % 2 + 0.1f, y % 2, z % 2));
+                            particleEmitterList.push_back(particleEmitter);
+                            entity.mpParticleEmitter = particleEmitter;
 
                             scene.mEntityList.push_back(entity);
                         }
@@ -205,13 +204,15 @@ int main()
 
         // +++ POST FRAME +++ //
         if (gpuProfile) gpuTimer.Stop();
-        if (gpuProfile) std::cout << "GPU: " << gpuTimer.GetDeltaTime() / 1000000.f << " ms." << std::endl;
-        if (cpuProfile) std::cout << "CPU: " << dt * 1000.f << " ms." << std::endl;
+        ///if (gpuProfile) std::cout << "GPU: " << gpuTimer.GetDeltaTime() / 1000000.f << " ms." << std::endl;
+        //if (cpuProfile) std::cout << "CPU: " << dt * 1000.f << " ms." << std::endl;
         // --- POST FRAME --- //
     }
     // --- MAIN LOOP --- //
 
     // +++ SHUTDOWN +++ //
+    for (ParticleEmitter* p : particleEmitterList)
+        delete p;
 
 #ifdef D3D_REPORT_LIVE_OBJ
     ID3D11Debug* debug;

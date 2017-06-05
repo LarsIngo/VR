@@ -2,9 +2,10 @@
 struct PSInput
 {
     float4 position : SV_POSITION;
-    float3 oldPosition : OLDPOSITION;
+    float2 scale : SCALE;
     float3 velocity : VELOCITY;
     float lifetime : LIFETIME;
+    float3 color : COLOR;
     float3 worldPosition : WORLDPOSITION;
     float2 uv : UV;
 };
@@ -25,7 +26,7 @@ PSOutput main(PSInput input) : SV_TARGET
     float factor = max(1.f - r * 2.f, 0.f); //[1,0]
     float sinFactor = 1.f - sin(3.14159265f / 2.f * (factor + 1.f));
 
-    output.color = float4(float3(0.2f, 0.2f, 0.7f), sinFactor);
+    output.color = float4(input.color, sinFactor);
 
     return output;
 }
